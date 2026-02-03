@@ -1,0 +1,379 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  background-image: url('./img/river.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background-color: rgba(25, 23, 36, 0.3); /* Rosé Pine Base with transparency */
+}
+
+/* ---------- TOP SECTION ---------- */
+.top {
+  height: 10vh;
+  display: flex;
+  align-items: center;
+  width: 100%; /* Ensure it spans full width */
+  justify-content: space-between; /* Push content to the edges */
+  position: relative; /* For absolute positioning of top-right */
+  background: transparent;
+  margin-bottom: 1vh; /* Add margin to keep spacing with middle section */
+}
+
+.top-inner-container {
+  flex-grow: 1; /* Allow it to grow and center its content */
+  max-width: 1200px; /* Constrain inner content width */
+  margin: 0 auto; /* Center the inner content */
+  display: flex; /* Use flex to align top-left inside */
+  justify-content: center; /* Center top-left horizontally */
+  align-items: center; /* Center top-left vertically */
+  height: 100%; /* Take full height */
+}
+
+.top-left {
+  /* Removed flex-grow: 1; width: auto; as top-inner-container manages it */
+  text-align: center; /* Ensure text is centered within its own div */
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2em;
+  color: #e0def4; /* Rosé Pine Text */
+}
+
+.top-right {
+  display: flex;
+  flex-direction: column; /* Stack vertically */
+  align-items: flex-end; /* Align to the right */
+  justify-content: center;
+  padding-right: 10px; /* Some padding */
+  height: 100%;
+  position: absolute; /* Position absolutely to the top right */
+  right: 0;
+  top: 0;
+}
+
+.clock-weather-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px; /* Space between clock and weather */
+  color: #e0def4; /* Rosé Pine Text */
+  font-size: 0.9em;
+  text-align: right;
+}
+
+/* ---------- MIDDLE SECTION ---------- */
+.middle {
+  height: 70vh;
+  min-height: 500px; /* Add minimum height */
+  display: flex;
+  /* Removed max-width and margin: 0 auto; to allow middle-left to go to screen edge */
+  width: 100%; /* Ensure it spans full width */
+  position: relative; /* For absolute positioning of middle-left */
+  justify-content: center; /* Center the middle-center within middle */
+  align-items: center; /* Vertically center middle-center */
+  margin-bottom: 1vh; /* Add margin to keep spacing with bottom section */
+}
+
+.middle-left {
+  width: 100px; /* Fixed width for middle-left */
+  height: 100%; /* Take full height of middle section */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent; /* Make transparent */
+  position: absolute; /* Position absolutely */
+  left: 0; /* To the left edge of the screen */
+  top: 0;
+  z-index: 10; /* Ensure it's on top */
+}
+
+.middle-center {
+  flex-grow: 1; /* Allow middle-center to grow and take available space */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 25%;
+  max-width: 1000px; /* Kept max-width to constrain content */
+}
+
+.glass-box {
+  width: 100%; /* Fill parent up to max-width */
+  height: 450px;
+  background-color: rgba(31, 29, 46, 0.5); /* Rosé Pine Surface with transparency */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 15px;
+  border: 1px solid rgba(224, 222, 244, 0.2); /* Rosé Pine Text with transparency */
+  display: flex; /* Enable flexbox for horizontal division */
+  overflow: hidden; /* Ensure rounded corners apply to children */
+  min-width: 700px; /* Add minimum width */
+  max-width: 800px; /* Match bottom-input width */
+  max-height: 450px;
+  overflow-y: auto; /* Add scroll if content exceeds max-height */
+}
+
+.glass-box-left {
+  width: 40%;
+  padding: 10px;
+  border-right: 1px solid #ffffff3f; /* Rosé Pine Love */
+}
+
+.glass-box-right {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(31, 29, 46, 0.4); /* Rosé Pine Surface with transparency */
+}
+
+.categories-header {
+  padding: 10px;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #e0def4; /* Rosé Pine Text */
+  text-align: center;
+  border-bottom: 1px solid #ffffff3f; /* Rosé Pine Love */
+}
+
+.links-grid {
+  flex-grow: 1; /* Take up remaining space */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Adjusted for more flexible link arrangement */
+  gap: 10px;
+  padding: 10px;
+  overflow-y: auto; /* Enable scrolling if content overflows */
+  justify-items: center; /* Center horizontally within grid cells */
+  align-items: center; /* Center vertically within grid cells */
+}
+
+.glass-link {
+  display: flex;
+  flex-direction: row; /* Icon left of text */
+  justify-content: center;
+  align-items: center;
+  text-decoration: none; /* No decorator */
+  color: #e0def4; /* Rosé Pine Text */
+  padding: 5px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+  font-size: 1.1em;
+  text-align: left; /* Align text to left now */
+}
+
+.glass-link:hover {
+  background-color: rgba(224, 222, 244, 0.1); /* Subtle hover effect */
+}
+
+.icon-placeholder {
+  width: 30px;
+  height: 30px;
+  background-color: #c4a7e7; /* Rosé Pine Iris */
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 5px; /* Space between icon and text */
+  color: #191724; /* Rosé Pine Base */
+  font-size: 18px;
+}
+
+.icon-placeholder::before {
+  content: "🔗"; /* Default icon */
+}
+
+.icon-list-container {
+  background-color: rgba(31, 29, 46, 0.5); /* Rosé Pine Surface with transparency, same as glass-box */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(224, 222, 244, 0.2); /* Rosé Pine Text with transparency */
+  height: 90%; /* Take full height of middle-left */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  width: 70%;
+  border-radius: 50px; /* Make it pill-like */
+  max-height: 450px;
+  overflow-y: auto; /* Add scroll if content exceeds max-height */
+}
+
+.icon-list-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.icon-list-container a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50px;
+  background-color: #c4a7e7; /* Rosé Pine Iris */
+  color: #191724; /* Rosé Pine Base */
+  text-decoration: none;
+  font-size: 24px;
+  transition: background-color 0.3s ease;
+}
+
+.icon-list-container a:hover {
+  background-color: #f6c177; /* Rosé Pine Gold */
+}
+
+/* ---------- BOTTOM SECTION ---------- */
+.bottom {
+  height: 10vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px; /* Align with middle section */
+  margin: 0 auto; /* Center the bottom section */
+}
+
+.bottom-input-container {
+  display: flex;
+  align-items: center;
+  /* Removed gap: 10px; */
+  max-width: 800px; /* Constrain container width */
+  width: calc(100% - 5pt); /* Match bottom-input width */
+
+  border: 1px solid rgba(224, 222, 244, 0.2); /* Apply border to container */
+  border-radius: 8px; /* Apply border-radius to container */
+  background-color: rgba(31, 29, 46, 0.7); /* Apply background to container */
+  /* REMOVED overflow: hidden; */
+}
+
+.browser-dropdown {
+  position: relative;
+  width: 120px; /* Fixed width for the dropdown */
+}
+
+.browser-dropdown .custom-dropdown-input {
+  width: 100%;
+  padding: 10px 15px; /* Revert padding-right to original */
+  border: none; /* No individual border */
+  border-right: 1px solid rgba(224, 222, 244, 0.2); /* Only right border as separator */
+  background-color: transparent; /* Transparent background, container has it */
+  color: #e0def4;
+  font-size: 16px;
+  outline: none;
+  cursor: pointer;
+  caret-color: transparent; /* Hide cursor */
+  /* Removed position: relative; */
+  /* Removed padding-right: 30px; */
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+/* New styling for the .dropdown-arrow element */
+.dropdown-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #e0def4; /* Rosé Pine Text */
+  transition: transform 0.2s ease;
+  pointer-events: none; /* Do not interfere with click on input */
+  z-index: 10; /* Ensure it's above input */
+}
+
+.dropdown-arrow::before {
+  content: '▾';
+}
+
+.browser-dropdown.active .dropdown-arrow { /* Rotate when dropdown is active */
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.browser-dropdown .custom-dropdown-input::placeholder {
+  color: #908caa;
+}
+
+.browser-dropdown.active .custom-dropdown-list {
+  display: block;
+}
+
+.browser-dropdown .custom-dropdown-list {
+  position: absolute;
+  /* top: 100%; handled by JS dynamically */
+  left: 0;
+  right: 0;
+  background-color: rgba(31, 29, 46, 0.9); /* Darker background for list */
+  border: 1px solid rgba(224, 222, 244, 0.2);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100; /* Ensure it's above other content */
+  display: none; /* Hidden by default */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.browser-dropdown .custom-dropdown-list-item {
+  padding: 10px 15px;
+  color: #e0def4;
+  cursor: pointer;
+}
+
+.browser-dropdown .custom-dropdown-list-item:hover {
+  background-color: rgba(224, 222, 244, 0.1);
+}
+
+.bottom-input {
+  flex-grow: 1; /* Take remaining space */
+  width: 100%; /* Fill available space */
+  padding: 10px 15px;
+  border: none; /* No individual border */
+  background-color: transparent; /* Transparent background, container has it */
+  color: #e0def4; /* Rosé Pine Text */
+  font-size: 16px;
+  outline: none;
+  /* Removed border-top-right-radius: 8px; */
+  /* Removed border-bottom-right-radius: 8px; */
+  border-right: none; /* No right border */
+}
+
+.bottom-input::placeholder {
+  color: #908caa; /* Rosé Pine Subtle */
+}
+
+/* Styling for the new search arrow */
+.search-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; /* Fixed width for the arrow button */
+  padding: 10px 5px; /* Adjust padding as needed */
+  color: #e0def4; /* Rosé Pine Text */
+  font-size: 16px;
+  cursor: pointer;
+  background-color: transparent; /* Transparent background, container has it */
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.search-arrow:hover {
+  background-color: rgba(224, 222, 244, 0.1); /* Subtle hover effect */
+}

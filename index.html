@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Layout Reproduction</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+
+    <section class="top">
+      <div class="top-inner-container">
+        <div class="top-left">Welcome!</div>
+      </div>
+      <div class="top-right">
+        <div class="clock-weather-container">
+          <span id="current-time"></span>
+          <span id="current-weather"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="middle">
+      <div class="middle-left">
+        <div class="icon-list-container">
+          <ul>
+            <li><a href="#"><div class="icon placeholder-icon"></div></a></li>
+            <li><a href="#"><div class="icon placeholder-icon"></div></a></li>
+            <li><a href="#"><div class="icon placeholder-icon"></div></a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="middle-center">
+        <div class="glass-box">
+          <div class="glass-box-left"></div>
+          <div class="glass-box-right">
+            <div class="categories-header">Categories</div>
+            <div class="links-grid">
+              <a href="#" class="glass-link">
+                <div class="icon-placeholder"></div>
+                <span>Link 1</span>
+              </a>
+              <a href="#" class="glass-link">
+                <div class="icon-placeholder"></div>
+                <span>Link 2</span>
+              </a>
+              <a href="#" class="glass-link">
+                <div class="icon-placeholder"></div>
+                <span>Link 3</span>
+              </a>
+              <a href="#" class="glass-link">
+                <div class="icon-placeholder"></div>
+                <span>Link 4</span>
+              </a>
+              <a href="#" class="glass-link">
+                <div class="icon-placeholder"></div>
+                <span>Link 5</span>
+              </a>
+              <a href="#" class="glass-link">
+                <div class="icon-placeholder"></div>
+                <span>Link 6</span>
+              </a>
+              <a href="#" class="glass-link">
+                <div class="icon-placeholder"></div>
+                <span>Link 7</span>
+              </a>
+              <a href="#" class="glass-link">
+                <div class="icon-placeholder"></div>
+                <span>Link 8</span>
+              </a> 
+              <a href="#" class="glass-link">
+                <div class="icon-placeholder"></div>
+                <span>Link 9</span>
+              </a>
+              <a href="#" class="glass-link">
+                <div class="icon-placeholder"></div>
+                <span>Link 10</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bottom">
+      <div class="bottom-input-container">
+        <div class="custom-dropdown browser-dropdown">
+          <input type="text" id="search-engine-select" class="custom-dropdown-input" placeholder="Search Engine" readonly>
+          <span class="dropdown-arrow"></span>
+          <input type="hidden" id="search-engine-select_hidden" data-setting-key="searchEngine.selected">
+          <div class="custom-dropdown-list" id="search-engine-select-dropdown-list"></div>
+        </div>
+        <input type="text" id="main-input" class="bottom-input" placeholder="Enter command...">
+        <span class="search-arrow">▶</span>
+      </div>
+    </section>
+
+  </div>
+  <script src="./src/dropdown.js"></script>
+  <script src="./src/clock-weather.js"></script>
+</body>
+</html>
