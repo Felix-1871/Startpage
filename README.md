@@ -1,0 +1,1 @@
+First project I fully tried vibecoding. A personal new tab page.
