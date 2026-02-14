@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch(`https:
+            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${WEATHER_CITY}&units=${WEATHER_UNITS}&appid=${OPENWEATHER_API_KEY}`);
             if (!response.ok) {
                 throw new Error(`Weather API error: ${response.statusText}`);
             }
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const temperature = Math.round(data.main.temp);
             const iconCode = data.weather[0].icon;
-            const iconUrl = `https:
+            const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
             currentWeatherElement.innerHTML = `${temperature}°C <img src="${iconUrl}" alt="Weather icon"> `;
         } catch (error) {
             console.error('Failed to fetch weather data:', error);

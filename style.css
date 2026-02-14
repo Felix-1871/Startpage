@@ -133,11 +133,11 @@ body {
   border-radius: 15px;
   border: 1px solid rgba(224, 222, 244, 0.2); 
   display: flex; 
-  overflow: hidden; 
+  overflow: visible; /* Changed to visible */
   min-width: 700px; 
   max-width: 800px; 
   max-height: 450px;
-  overflow-y: auto; 
+  /* Removed overflow-y: auto; */
 }
 
 
@@ -198,11 +198,6 @@ body {
   accent-color: #eb81cf; 
 }
 
-.todo-item-text {
-  flex-grow: 1;
-  word-break: break-all; 
-}
-
 .todo-item-text.done {
   text-decoration: line-through;
   color: #908caa; 
@@ -231,32 +226,96 @@ body {
   display: flex;
   flex-direction: column;
   background-color: rgba(31, 29, 46, 0.4); 
+  overflow: visible; /* Changed to visible */
 }
 
 .categories-header {
-  padding: 10px;
+  border-bottom: 1px solid #ffffff3f;
+  color: #e0def4;
   font-size: 1.2em;
   font-weight: bold;
-  color: #e0def4; 
-  text-align: center;
-  border-bottom: 1px solid #ffffff3f; 
+  position: relative; /* Ensure positioning context for absolute child */
+  overflow: visible; /* Allow content to overflow */
+}
+
+.categories-header.icons-only .category-text {
+  display: none;
+}
+
+#category-list {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  justify-content: space-around;
+  /* Removed overflow: hidden; to allow text to expand */
+}
+
+.category-item {
+  padding: 5px 10px; /* Smaller padding */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative; /* Ensure positioning context for absolute child */
+}
+
+.category-item:hover {
+  background-color: rgba(224, 222, 244, 0.1);
+}
+
+.category-item.active {
+  background-color: rgba(224, 222, 244, 0.2);
+}
+
+.category-icon {
+  width: 30px; /* Smaller icon size */
+  height: 30px;
+  filter: invert(1); /* Monochromatic effect */
+}
+
+/* Hover effect for category text when in icons-only mode */
+.categories-header.icons-only .category-item:hover .category-text {
+  display: inline;
+  position: absolute;
+  background-color: rgba(31, 29, 46, 0.9); /* Darker background for readability */
+  padding: 5px 10px;
+  border-radius: 5px;
+  left: 100%; /* Position to the right of the icon */
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transform: translateX(5px); /* Small offset from the icon */
+  color: #e0def4; /* Ensure text is visible */
+}
+
+@media (max-width: 768px) {
+  .category-text {
+    display: none;
+  }
+  .category-item {
+    padding: 10px;
+  }
 }
 
 .links-grid {
-  flex-grow: 1; 
+  flex-grow: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
-  gap: 10px;
-  padding: 10px;
-  overflow-y: auto; 
-  justify-items: center; 
-  align-items: center; 
+  grid-template-rows: repeat(4, 1fr); /* Fill 4 rows before moving to next column */
+  grid-auto-flow: column; /* Fill columns first */
+  gap: 5px; /* More packed together */
+  padding: 5px; /* More packed together */
+  overflow-x: auto; /* Enable horizontal scrolling */
+  justify-items: start; /* Align items to the start of their columns */
+  align-items: center;
 }
 
 .glass-link {
   display: flex;
   flex-direction: row; 
-  justify-content: center;
+  justify-content: flex-start; /* Align content of link to start */
   align-items: center;
   text-decoration: none; 
   color: #e0def4; 
@@ -265,6 +324,7 @@ body {
   transition: background-color 0.3s ease;
   font-size: 1.1em;
   text-align: left; 
+  position: relative; /* For hover menu positioning */
 }
 
 .glass-link:hover {
@@ -274,18 +334,45 @@ body {
 .icon-placeholder {
   width: 30px;
   height: 30px;
-  background-color: #c4a7e7; 
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   margin-right: 5px; 
-  color: #191724; 
-  font-size: 18px;
+  color: #FFFFFF; /* Set color to white for inherited SVG fill */
 }
 
-.icon-placeholder::before {
-  content: "🔗"; 
+.icon-placeholder .link-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.link-hover-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 200px;
+  height: 150px;
+  background-color: rgba(31, 29, 46, 0.9); /* Darker background for readability */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(224, 222, 244, 0.2); 
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 100;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  color: #e0def4;
+  font-size: 0.9em;
+}
+
+.glass-link:hover .link-hover-menu {
+  display: block;
+}
+
+.link-hover-menu p {
+  margin: 0 0 10px 0;
+  word-wrap: break-word;
 }
 
 .icon-list-container {
@@ -331,6 +418,198 @@ body {
   background-color: #f6c177; 
 }
 
+/* Context Menu Styles */
+.context-menu {
+  position: fixed;
+  z-index: 1000;
+  width: 200px;
+  background-color: rgba(31, 29, 46, 0.9); 
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(224, 222, 244, 0.2); 
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  color: #e0def4;
+}
+
+.context-menu-section {
+  margin-bottom: 10px;
+}
+
+.context-menu-section:last-child {
+  margin-bottom: 0;
+}
+
+.context-menu-title {
+  font-weight: bold;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(224, 222, 244, 0.2);
+  margin-bottom: 5px;
+}
+
+.context-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.context-menu li {
+  padding: 5px 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.context-menu li:hover {
+  background-color: rgba(224, 222, 244, 0.1);
+}
+
+/* Styles for nested action menu */
+.context-menu-item-actions {
+  position: absolute;
+  left: 100%; /* Position to the right of the main menu item */
+  top: 0;
+  min-width: 120px; /* Adjust as needed */
+  background-color: rgba(31, 29, 46, 0.95); /* Slightly darker to distinguish */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(224, 222, 244, 0.2);
+  border-radius: 8px;
+  padding: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  z-index: 101; /* Higher z-index than main context menu */
+}
+
+.context-menu-action-button {
+  background: none;
+  border: none;
+  color: #e0def4;
+  padding: 8px 10px;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  border-radius: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.context-menu-action-button:hover {
+  background-color: rgba(224, 222, 244, 0.15); /* Slightly more prominent hover */
+}
+
+.context-menu-action-button:active {
+  background-color: rgba(224, 222, 244, 0.25);
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000; /* Higher than context menu */
+}
+
+.modal-content {
+  background-color: rgba(31, 29, 46, 0.98);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(224, 222, 244, 0.2);
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  color: #e0def4;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #eb81cf;
+  border-bottom: 1px solid rgba(224, 222, 244, 0.2);
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group textarea,
+.form-group select {
+  width: calc(100% - 20px);
+  padding: 10px;
+  border: 1px solid rgba(224, 222, 244, 0.3);
+  border-radius: 5px;
+  background-color: rgba(25, 23, 36, 0.8);
+  color: #e0def4;
+  font-size: 1em;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.form-group input[type="text"]::placeholder,
+.form-group textarea::placeholder {
+  color: #908caa;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
+}
+
+.modal-buttons .save-button {
+  background-color: #eb81cf;
+  color: #191724;
+}
+
+.modal-buttons .save-button:hover {
+  background-color: #c4a7e7;
+}
+
+.modal-buttons .cancel-button {
+  background-color: rgba(224, 222, 244, 0.2);
+  color: #e0def4;
+}
+
+.modal-buttons .cancel-button:hover {
+  background-color: rgba(224, 222, 244, 0.3);
+}
+
+.icon-preview {
+  width: 30px;
+  height: 30px;
+  vertical-align: middle;
+  margin-left: 10px;
+  filter: invert(1);
+}
 
 .bottom {
   height: 10vh;

@@ -10,7 +10,7 @@
 
     <section class="top">
       <div class="top-inner-container">
-        <div class="top-left">Welcome!</div>
+        <div class="top-left">Welcome!</div> <!-- Todo: Make random quotes from a list of quotes or some api idk -->
       </div>
       <div class="top-right">
         <div class="clock-weather-container">
@@ -22,7 +22,7 @@
 
     <section class="middle">
       <div class="middle-left">
-        <div class="icon-list-container">
+        <div class="icon-list-container"> <!-- Todo: On hover expand with more icons-->
           <ul>
             <li><a href="#"><div class="icon placeholder-icon"></div></a></li>
             <li><a href="#"><div class="icon placeholder-icon"></div></a></li>
@@ -37,48 +37,11 @@
             <div id="todo-input-container"></div>
           </div>
           <div class="glass-box-right">
-            <div class="categories-header">Categories</div>
-            <div class="links-grid">
-              <a href="#" class="glass-link">
-                <div class="icon-placeholder"></div>
-                <span>Link 1</span>
-              </a>
-              <a href="#" class="glass-link">
-                <div class="icon-placeholder"></div>
-                <span>Link 2</span>
-              </a>
-              <a href="#" class="glass-link">
-                <div class="icon-placeholder"></div>
-                <span>Link 3</span>
-              </a>
-              <a href="#" class="glass-link">
-                <div class="icon-placeholder"></div>
-                <span>Link 4</span>
-              </a>
-              <a href="#" class="glass-link">
-                <div class="icon-placeholder"></div>
-                <span>Link 5</span>
-              </a>
-              <a href="#" class="glass-link">
-                <div class="icon-placeholder"></div>
-                <span>Link 6</span>
-              </a>
-              <a href="#" class="glass-link">
-                <div class="icon-placeholder"></div>
-                <span>Link 7</span>
-              </a>
-              <a href="#" class="glass-link">
-                <div class="icon-placeholder"></div>
-                <span>Link 8</span>
-              </a> 
-              <a href="#" class="glass-link">
-                <div class="icon-placeholder"></div>
-                <span>Link 9</span>
-              </a>
-              <a href="#" class="glass-link">
-                <div class="icon-placeholder"></div>
-                <span>Link 10</span>
-              </a>
+            <div class="categories-header">
+              <ul id="category-list"></ul>
+            </div>
+            <div class="links-grid" id="links-grid">
+
             </div>
           </div>
         </div>
@@ -99,9 +62,32 @@
     </section>
 
   </div>
+
+  <div id="context-menu" class="context-menu" style="display: none;">
+    <div class="context-menu-section">
+      <div class="context-menu-title">Categories</div>
+      <ul>
+        <li data-action="add-category">Add Category</li>
+        <li data-action="edit-category">Edit Category</li>
+        <li data-action="remove-category">Remove Category</li>
+      </ul>
+    </div>
+    <div class="context-menu-section">
+      <div class="context-menu-title">Links</div>
+      <ul>
+        <li data-action="add-link">Add Link</li>
+        <li data-action="edit-link">Edit Link</li>
+        <li data-action="remove-link">Remove Link</li>
+      </ul>
+    </div>
+  </div>
+
   <script type="module" src="./src/config.js"></script>
   <script type="module" src="./src/dropdown.js"></script>
   <script type="module" src="./src/clock-weather.js"></script>
   <script type="module" src="./src/todo.js"></script>
+  <script type="module" src="./src/links.js"></script>
+  <script type="module" src="./src/contextMenu.js"></script>
 </body>
+<div id="modal-container" class="modal-overlay" style="display: none;"></div>
 </html>
