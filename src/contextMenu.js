@@ -59,78 +59,37 @@ document.addEventListener("DOMContentLoaded", () => {
                 input = document.createElement('textarea');
                 input.rows = 3;
             } else if (field.type === 'select-icon') {
-                input = document.createElement('select');
-                // Option for manual input
-                const manualOption = document.createElement('option');
-                manualOption.value = '';
-                manualOption.textContent = 'Enter custom path...';
-                input.appendChild(manualOption);
+                const container = document.createElement('div');
+                container.className = 'icon-selector-container';
 
-                ICON_PATHS.forEach(iconPath => {
-                    const option = document.createElement('option');
-                    option.value = iconPath;
-                    option.textContent = iconPath.split('/').pop(); // Display filename
-                    input.appendChild(option);
-                });
-                // Current icon path might not be in ICON_PATHS, so add it if it's new
-                if (currentValues[field.name] && !ICON_PATHS.includes(currentValues[field.name])) {
-                    const customOption = document.createElement('option');
-                    customOption.value = currentValues[field.name];
-                    customOption.textContent = currentValues[field.name].split('/').pop() + ' (Custom)';
-                    input.appendChild(customOption);
-                }
+                input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = 'Local path (./img/...) or URL (https://...)';
+                input.value = currentValues[field.name] || '';
 
-                input.value = currentValues[field.name] || ''; // Set current value
-                
                 const iconPreview = document.createElement('img');
                 iconPreview.className = 'icon-preview';
-                iconPreview.style.display = 'none'; // Hidden by default
-                formGroup.appendChild(iconPreview);
+                iconPreview.style.width = '32px';
+                iconPreview.style.height = '32px';
+                iconPreview.style.marginLeft = '10px';
+                iconPreview.style.verticalAlign = 'middle';
+                iconPreview.style.display = input.value ? 'inline-block' : 'none';
+                if (input.value) iconPreview.src = input.value;
 
-                const customPathInput = document.createElement('input');
-                customPathInput.type = 'text';
-                customPathInput.placeholder = 'Or enter custom path (e.g., ./img/icons/my-icon.svg)';
-                customPathInput.style.display = 'none'; // Hidden by default
-                formGroup.appendChild(customPathInput);
-
-                const updateIconPreview = (path) => {
-                    if (path) {
-                        iconPreview.src = path;
+                input.addEventListener('input', () => {
+                    if (input.value) {
+                        iconPreview.src = input.value;
                         iconPreview.style.display = 'inline-block';
                     } else {
                         iconPreview.style.display = 'none';
                     }
-                };
+                });
 
-                // Logic to show/hide custom path input and update preview
-                const handleIconChange = () => {
-                    const selectedValue = input.value;
-                    if (selectedValue === '') {
-                        customPathInput.style.display = 'block';
-                        updateIconPreview(customPathInput.value);
-                    } else {
-                        customPathInput.style.display = 'none';
-                        updateIconPreview(selectedValue);
-                    }
-                };
+                container.appendChild(input);
+                container.appendChild(iconPreview);
+                formGroup.appendChild(container);
 
-                input.addEventListener('change', handleIconChange);
-                customPathInput.addEventListener('input', () => updateIconPreview(customPathInput.value));
-                
-                handleIconChange(); // Initial call to set correct state
-
-                // Set initial value for custom path if it's not a pre-selected icon
-                if (currentValues[field.name] && !ICON_PATHS.includes(currentValues[field.name])) {
-                    input.value = ''; // Select "Enter custom path..."
-                    customPathInput.value = currentValues[field.name];
-                    customPathInput.style.display = 'block';
-                    updateIconPreview(customPathInput.value);
-                } else if (currentValues[field.name]) {
-                    input.value = currentValues[field.name];
-                    updateIconPreview(currentValues[field.name]);
-                }
-
-
+                inputElements[field.name] = input;
             } else {
                 input = document.createElement('input');
                 input.type = field.type;
@@ -145,26 +104,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 formGroup.appendChild(input);
             }
             inputElements[field.name] = input; // Store reference
-
-            if (field.type === 'select-icon') {
-                 // Store a reference to the actual value we want to retrieve
-                inputElements[field.name] = {
-                    get value() {
-                        return input.value === '' ? customPathInput.value : input.value;
-                    },
-                    set value(val) {
-                        if (ICON_PATHS.includes(val)) {
-                            input.value = val;
-                            customPathInput.style.display = 'none';
-                        } else {
-                            input.value = '';
-                            customPathInput.value = val;
-                            customPathInput.style.display = 'block';
-                        }
-                        updateIconPreview(val);
-                    }
-                };
-            }
 
             form.appendChild(formGroup);
         });

@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     const searchEngines = [
+        { value: 'discord_webhook', label: 'Dummy', url: '' },
         { value: 'ecosia', label: 'Ecosia', url: 'https://www.ecosia.org/search?q=' },
         { value: 'arch_wiki', label: 'Arch', url: 'https://wiki.archlinux.org/index.php?title=Special%253ASearch&fulltext=1&search=' },
         { value: 'yt', label: 'Youtube', url: 'https://www.youtube.com/results?search_query=' },
@@ -93,6 +94,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedEngineValue = searchEngineHiddenInput.value;
 
         if (query) {
+            if (selectedEngineValue === 'discord_webhook') {
+                const webhookUrl = localStorage.getItem('discord_webhook_url');
+                if (!webhookUrl) {
+                    const url = prompt('Please enter your Discord Webhook URL:');
+                    if (url) {
+                        localStorage.setItem('discord_webhook_url', url);
+                        sendToDiscord(url, query);
+                    }
+                } else {
+                    sendToDiscord(webhookUrl, query);
+                }
+                mainInput.value = ''; // Clear input after sending
+                return;
+            }
+
             const selectedEngine = searchEngines.find(engine => engine.value === selectedEngineValue);
             if (selectedEngine && selectedEngine.url) {
                 window.location.href = selectedEngine.url + encodeURIComponent(query);
@@ -101,6 +117,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = 'https://www.ecosia.org/search?q=' + encodeURIComponent(query);
             }
         }
+    }
+
+    function sendToDiscord(url, message) {
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content: message }),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            console.log('Message sent to Discord successfully');
+        })
+        .catch(error => {
+            console.error('Error sending message to Discord:', error);
+            alert('Failed to send message to Discord. Check console for details.');
+        });
     }
 
     
