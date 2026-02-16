@@ -1,4 +1,4 @@
-import { linkData, renderCategories, renderLinks, syncLinksFromJson, syncLinksOverwrite, getSyncChanges, applyChange } from './links.js';
+import { linkData, renderCategories, renderLinks, syncLinksFromJson, syncLinksOverwrite, getSyncChanges, applyChange, findBestIcon } from './links.js';
 import { openModal, showAlert, showConfirm, showPrompt } from './modals.js';
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -154,8 +154,9 @@ document.addEventListener("DOMContentLoaded", () => {
                                 { name: 'name', label: 'Link Name', type: 'text' },
                                 { name: 'url', label: 'URL', type: 'text' },
                                 { name: 'icon', label: 'Icon', type: 'select-icon' },
+                                { name: 'color', label: 'Brand Color', type: 'color' },
                                 { name: 'description', label: 'Description', type: 'textarea' },
-                            ], { name: linkItem.name, url: linkItem.url, icon: linkItem.icon, description: linkItem.description }, (data) => {
+                            ], { name: linkItem.name, url: linkItem.url, icon: linkItem.icon, color: linkItem.color || '#cccccc', description: linkItem.description }, (data) => {
                                 linkData[index].links[subIndex] = { ...linkData[index].links[subIndex], ...data, icon: data.icon || './img/icons/default-link.svg' };
                                 saveAndRefresh();
                                 contextMenu.style.display = 'none';
@@ -191,8 +192,16 @@ document.addEventListener("DOMContentLoaded", () => {
                         label: 'Add New Link', 
                         action: () => {
                             const activeIdx = document.querySelector('.category-item.active')?.dataset.index || 0;
-                            openModal('Add Link', [{ name: 'name', label: 'Name', type: 'text' }, { name: 'url', label: 'URL', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }, { name: 'description', label: 'Description', type: 'textarea' }], {}, (data) => { 
-                                linkData[activeIdx].links.push({ ...data, color: '#cccccc', icon: data.icon || './img/icons/default-link.svg' }); 
+                            openModal('Add Link', [{ name: 'name', label: 'Name', type: 'text' }, { name: 'url', label: 'URL', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }, { name: 'color', label: 'Brand Color', type: 'color' }, { name: 'description', label: 'Description', type: 'textarea' }], { color: '#cccccc' }, async (data) => { 
+                                let finalIcon = data.icon;
+                                let finalColor = data.color;
+                                if (!finalIcon) {
+                                    const best = await findBestIcon(data.url);
+                                    finalIcon = best.icon;
+                                    // Only use auto color if user didn't change it from default #cccccc
+                                    if (finalColor === '#cccccc') finalColor = best.color;
+                                }
+                                linkData[activeIdx].links.push({ ...data, icon: finalIcon, color: finalColor }); 
                                 saveAndRefresh(); 
                                 contextMenu.style.display = 'none';
                             });

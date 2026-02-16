@@ -238,3 +238,73 @@ export function showPrompt(message, defaultValue = '') {
         input.select();
     });
 }
+
+export function showSelectionModal(message, options) {
+    return new Promise((resolve) => {
+        modalContainer.innerHTML = '';
+        modalContainer.style.display = 'flex';
+
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+        modalContent.style.maxWidth = '600px';
+
+        const h3 = document.createElement('h3');
+        h3.textContent = 'Select an Icon';
+        modalContent.appendChild(h3);
+
+        const p = document.createElement('p');
+        p.textContent = message;
+        p.style.marginBottom = '20px';
+        modalContent.appendChild(p);
+
+        const grid = document.createElement('div');
+        grid.style.display = 'grid';
+        grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(100px, 1fr))';
+        grid.style.gap = '10px';
+        grid.style.maxHeight = '400px';
+        grid.style.overflowY = 'auto';
+        grid.style.padding = '10px';
+        grid.style.border = '1px solid rgba(224, 222, 244, 0.2)';
+        grid.style.borderRadius = '8px';
+
+        options.forEach(opt => {
+            const item = document.createElement('div');
+            item.className = 'selection-item';
+            item.style.display = 'flex';
+            item.style.flexDirection = 'column';
+            item.style.alignItems = 'center';
+            item.style.padding = '10px';
+            item.style.cursor = 'pointer';
+            item.style.borderRadius = '8px';
+            item.style.transition = 'background 0.2s';
+            item.innerHTML = `
+                <img src="./img/icons/${opt}" style="width: 32px; height: 32px; margin-bottom: 5px; filter: invert(1);">
+                <span style="font-size: 0.7em; text-align: center; word-break: break-all;">${opt.replace('.svg', '')}</span>
+            `;
+            item.onclick = () => {
+                modalContainer.style.display = 'none';
+                resolve(opt);
+            };
+            item.onmouseenter = () => item.style.background = 'rgba(224, 222, 244, 0.1)';
+            item.onmouseleave = () => item.style.background = 'transparent';
+            grid.appendChild(item);
+        });
+
+        modalContent.appendChild(grid);
+
+        const modalButtons = document.createElement('div');
+        modalButtons.className = 'modal-buttons';
+
+        const skipBtn = document.createElement('button');
+        skipBtn.className = 'cancel-button';
+        skipBtn.textContent = 'Use Default';
+        skipBtn.onclick = () => {
+            modalContainer.style.display = 'none';
+            resolve(null);
+        };
+        modalButtons.appendChild(skipBtn);
+
+        modalContent.appendChild(modalButtons);
+        modalContainer.appendChild(modalContent);
+    });
+}

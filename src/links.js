@@ -1,3 +1,6 @@
+import { iconList } from './iconList.js';
+import { showSelectionModal } from './modals.js';
+
 export const linkData = [
    
   ];
@@ -5,6 +8,28 @@ export const linkData = [
   const categoryList = document.getElementById("category-list");
   const linksGrid = document.getElementById("links-grid");
   const categoriesHeader = document.querySelector('.categories-header');
+
+  const iconCache = {};
+  let simpleIcons = [];
+  let simpleIconsPromise = null;
+
+  async function loadSimpleIcons() {
+    if (simpleIconsPromise) return simpleIconsPromise;
+    
+    simpleIconsPromise = (async () => {
+        try {
+            const response = await fetch('./img/simple-icons.json');
+            if (response.ok) {
+                simpleIcons = await response.json();
+            }
+        } catch (e) {
+            console.error('Failed to load simple-icons.json', e);
+        }
+    })();
+    return simpleIconsPromise;
+  }
+
+  loadSimpleIcons();
 
   // Create global hover menu if it doesn't exist
   let globalHoverMenu = document.getElementById('global-link-hover-menu');
@@ -38,6 +63,100 @@ export const linkData = [
     }
   });
 
+  export async function findBestIcon(url, currentIcon = null, currentColor = null) {
+    // If we already have a non-default icon, keep it
+    if (currentIcon && !currentIcon.includes('default-link.svg') && currentIcon !== '') {
+        return { icon: currentIcon, color: currentColor || '#cccccc' };
+    }
+
+    await loadSimpleIcons();
+
+    try {
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname.toLowerCase().replace(/^www\./, '');
+        
+        if (iconCache[hostname]) return iconCache[hostname];
+
+        const hostnameWithDot = hostname.replace(/\./g, 'dot');
+        const parts = hostname.split('.').filter(p => p !== 'com' && p !== 'org' && p !== 'net' && p !== 'io' && p !== 'pl');
+        
+        // Exact candidates
+        const exactTerms = new Set([
+            hostname,
+            hostnameWithDot,
+            ...parts,
+            hostname.replace(/\.[^.]+$/, '').replace(/\./g, 'dot'),
+            hostname.replace(/\.[^.]+$/, '')
+        ]);
+
+        if (hostname.includes('mail.google')) exactTerms.add('gmail');
+        if (hostname.includes('store.ubi')) exactTerms.add('ubisoft');
+        if (hostname.includes('blizzard')) exactTerms.add('battledotnet');
+        const exactMatches = [];
+        const partialMatches = [];
+
+        iconList.forEach(iconFile => {
+            const iconName = iconFile.toLowerCase().replace('.svg', '');
+            if (exactTerms.has(iconName)) {
+                exactMatches.push(iconFile);
+                return;
+            }
+            const matchingParts = parts.filter(p => p.length > 2 && iconName.includes(p));
+            if (matchingParts.length >= 2) {
+                exactMatches.push(iconFile);
+                return;
+            }
+            if (iconName.length > 3 && (hostname.includes(iconName) || hostnameWithDot.includes(iconName))) {
+                partialMatches.push(iconFile);
+            }
+        });
+
+        let iconResult = './img/icons/default-link.svg';
+        let colorResult = '#cccccc';
+
+        if (exactMatches.length === 1 && partialMatches.length === 0) {
+            iconResult = `./img/icons/${exactMatches[0]}`;
+        } else {
+            const allMatches = [...new Set([...exactMatches, ...partialMatches])];
+            if (allMatches.length === 1) {
+                iconResult = `./img/icons/${allMatches[0]}`;
+            } else if (allMatches.length > 1) {
+                const message = exactMatches.length > 0
+                    ? `Found multiple relevant icons for "${hostname}". Please select one:`
+                    : `No exact match for "${hostname}", but found similar icons. Select one:`;
+                
+                const selected = await showSelectionModal(message, allMatches);
+                iconResult = selected ? `./img/icons/${selected}` : './img/icons/default-link.svg';
+            }
+        }
+
+        // Try to find color based on the resolved icon
+        const finalIconSlug = iconResult.split('/').pop().replace('.svg', '');
+        const colorMatch = simpleIcons.find(brand => {
+            const brandTitle = brand.title.toLowerCase();
+            const brandSlug = brandTitle.replace(/[^a-z0-9]/g, '');
+            return brandSlug === finalIconSlug || brandTitle.replace(/\s+/g, '') === finalIconSlug;
+        });
+        
+        if (colorMatch) colorResult = `#${colorMatch.hex}`;
+
+        const result = { icon: iconResult, color: colorResult };
+        iconCache[hostname] = result;
+        return result;
+    } catch (e) {
+        console.error('Error finding best icon:', e);
+    }
+    return { icon: './img/icons/default-link.svg', color: '#cccccc' };
+  }
+
+  function getLuminance(hex) {
+    const rgb = (hex || '#cccccc').replace('#', '');
+    const r = parseInt(rgb.substr(0, 2), 16);
+    const g = parseInt(rgb.substr(2, 2), 16);
+    const b = parseInt(rgb.substr(4, 2), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  }
+
   export async function fetchExternalLinks() {
     const response = await fetch('links.json');
     if (!response.ok) throw new Error('Failed to fetch links.json');
@@ -50,7 +169,7 @@ export const linkData = [
         linkData.length = 0;
         
         const grouped = {};
-        externalLinks.forEach(item => {
+        for (const item of externalLinks) {
             if (!grouped[item.group_title]) {
                 grouped[item.group_title] = {
                     category: item.group_title,
@@ -58,14 +177,15 @@ export const linkData = [
                     links: []
                 };
             }
+            const { icon, color } = await findBestIcon(item.tab_url);
             grouped[item.group_title].links.push({
                 name: item.tab_title,
                 url: item.tab_url,
-                icon: './img/icons/default-link.svg',
-                color: '#cccccc',
+                icon: icon,
+                color: color,
                 description: ''
             });
-        });
+        }
 
         Object.values(grouped).forEach(cat => linkData.push(cat));
         return true;
@@ -136,7 +256,7 @@ export const linkData = [
     return changes;
   }
 
-  export function applyChange(change, action) {
+  export async function applyChange(change, action) {
     if (action === 'reject') return;
 
     if (change.type === 'new' || (change.type === 'updated' && action === 'keep-both')) {
@@ -146,11 +266,12 @@ export const linkData = [
             category = { category: item.group_title, icon: './img/icons/default-category.svg', links: [] };
             linkData.push(category);
         }
+        const { icon, color } = await findBestIcon(item.tab_url);
         category.links.push({
             name: item.tab_title,
             url: item.tab_url,
-            icon: './img/icons/default-link.svg',
-            color: '#cccccc',
+            icon: icon,
+            color: color,
             description: ''
         });
     } else if (change.type === 'updated' && action === 'accept') {
@@ -184,7 +305,7 @@ export const linkData = [
     try {
         const externalLinks = await fetchExternalLinks();
 
-        externalLinks.forEach(item => {
+        for (const item of externalLinks) {
             const { group_title, tab_title, tab_url } = item;
             
             let category = linkData.find(c => c.category === group_title);
@@ -199,17 +320,24 @@ export const linkData = [
 
             let link = category.links.find(l => l.url === tab_url);
             if (!link) {
+                const { icon, color } = await findBestIcon(tab_url);
                 category.links.push({
                     name: tab_title,
                     url: tab_url,
-                    icon: './img/icons/default-link.svg', // Default icon
-                    color: '#cccccc',
+                    icon: icon,
+                    color: color,
                     description: ''
                 });
             } else {
                 link.name = tab_title;
+                // For legacy links that don't have icon/color yet
+                if (!link.icon || link.icon.includes('default-link.svg')) {
+                    const { icon, color } = await findBestIcon(tab_url);
+                    link.icon = icon;
+                    if (!link.color || link.color === '#cccccc') link.color = color;
+                }
             }
-        });
+        }
 
         return true;
     } catch (error) {
@@ -262,9 +390,13 @@ export const linkData = [
       a.className = "glass-link";
       a.dataset.subindex = subIndex;
       a.target = "_blank";
+      
+      const brandColor = link.color || '#cccccc';
+      const isDark = getLuminance(brandColor) < 0.5;
+      
       a.innerHTML = `
-        <div class="icon-placeholder" style="background-color: ${link.color};">
-            <img src="${link.icon}" alt="${link.name}" class="link-icon">
+        <div class="icon-container" style="background-color: ${brandColor};">
+            <img src="${link.icon || './img/icons/default-link.svg'}" alt="${link.name}" class="link-icon ${isDark ? 'inverted-icon' : ''}">
         </div>
         <span>${link.name}</span>
       `;
