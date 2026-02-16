@@ -1,6 +1,49 @@
 export const linkData = [
    
   ];
+
+  export async function syncLinksFromJson() {
+    try {
+        const response = await fetch('tab_groups.json');
+        if (!response.ok) throw new Error('Failed to fetch links.json');
+        const externalLinks = await response.json();
+
+        externalLinks.forEach(item => {
+            const { group_title, tab_title, tab_url } = item;
+            
+            // Find or create category
+            let category = linkData.find(c => c.category === group_title);
+            if (!category) {
+                category = {
+                    category: group_title,
+                    icon: './img/icons/default-category.svg', // Default icon
+                    links: []
+                };
+                linkData.push(category);
+            }
+
+            // Find or create link
+            let link = category.links.find(l => l.url === tab_url);
+            if (!link) {
+                category.links.push({
+                    name: tab_title,
+                    url: tab_url,
+                    icon: './img/icons/default-link.svg', // Default icon
+                    color: '#cccccc',
+                    description: ''
+                });
+            } else {
+                // Update title if it changed in JSON
+                link.name = tab_title;
+            }
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Sync error:', error);
+        return false;
+    }
+  }
   
   const categoryList = document.getElementById("category-list");
   const linksGrid = document.getElementById("links-grid");

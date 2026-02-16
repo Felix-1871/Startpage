@@ -1,4 +1,4 @@
-import { linkData, renderCategories, renderLinks } from './links.js';
+import { linkData, renderCategories, renderLinks, syncLinksFromJson } from './links.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     const contextMenu = document.getElementById('context-menu');
@@ -18,9 +18,27 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    async function performSync() {
+        const success = await syncLinksFromJson();
+        if (success) {
+            saveLinkData();
+            renderCategories();
+            const activeCategoryItem = document.querySelector(".category-item.active");
+            const activeIndex = activeCategoryItem ? parseInt(activeCategoryItem.dataset.index) : 0;
+            renderLinks(activeIndex < linkData.length ? activeIndex : 0);
+            console.log('Links synced successfully');
+        }
+    }
+
     loadLinkData();
+    performSync(); // Initial sync on load
     renderCategories();
     renderLinks(0);
+
+    // Set up periodic sync (every 1 hour)
+    setInterval(performSync, 3600000);
+
+    let openActionMenu = null;
 
     function closeOpenActionMenu() {
         if (openActionMenu) {
@@ -149,33 +167,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Function to save linkData to localStorage
-    function saveLinkData() {
-        localStorage.setItem('linkData', JSON.stringify(linkData));
-    }
-
-    // Function to load linkData from localStorage
-    function loadLinkData() {
-        const storedLinkData = localStorage.getItem('linkData');
-        if (storedLinkData) {
-            linkData.length = 0;
-            JSON.parse(storedLinkData).forEach(item => linkData.push(item));
-        }
-    }
-
-    loadLinkData();
-    renderCategories();
-    renderLinks(0);
-
-    let openActionMenu = null;
-
-    function closeOpenActionMenu() {
-        if (openActionMenu) {
-            openActionMenu.remove();
-            openActionMenu = null;
-        }
-    }
-
     function createActionMenu(parentLi, type, index, subIndex = null) {
         closeOpenActionMenu();
 
@@ -266,6 +257,23 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderContextMenu() {
         closeOpenActionMenu();
         contextMenu.innerHTML = '';
+
+        // Sync Section
+        const syncSection = document.createElement('div');
+        syncSection.className = 'context-menu-section';
+        syncSection.innerHTML = '<div class="context-menu-title">Actions</div>';
+        const syncUl = document.createElement('ul');
+        const syncLi = document.createElement('li');
+        syncLi.textContent = 'Sync Links from JSON';
+        syncLi.className = 'context-menu-action-item';
+        syncLi.addEventListener('click', (e) => {
+            e.stopPropagation();
+            performSync();
+            contextMenu.style.display = 'none';
+        });
+        syncUl.appendChild(syncLi);
+        syncSection.appendChild(syncUl);
+        contextMenu.appendChild(syncSection);
 
         // Categories Section
         const categoriesSection = document.createElement('div');
