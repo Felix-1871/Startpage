@@ -1,3 +1,5 @@
+import { showAlert, showConfirm, showPrompt } from './modals.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const todoListDisplay = document.getElementById('todo-list-display');
     const GLASSBOX_LEFT = document.querySelector('.glass-box-left'); 
@@ -35,9 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             
-            todoItem.querySelector('.todo-edit-icon').addEventListener('click', (event) => {
+            todoItem.querySelector('.todo-edit-icon').addEventListener('click', async (event) => {
                 const todoIndex = parseInt(event.target.dataset.index);
-                const newText = prompt('Edit your todo:', todos[todoIndex].text);
+                const newText = await showPrompt('Edit your todo:', todos[todoIndex].text);
                 if (newText !== null && newText.trim() !== '') {
                     todos[todoIndex].text = newText.trim();
                     saveTodos();
@@ -46,9 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             
-            todoItem.querySelector('.todo-remove-icon').addEventListener('click', (event) => {
+            todoItem.querySelector('.todo-remove-icon').addEventListener('click', async (event) => {
                 const todoIndex = parseInt(event.target.dataset.index);
-                if (confirm('Are you sure you want to remove this todo?')) {
+                if (await showConfirm('Are you sure you want to remove this todo?')) {
                     todos.splice(todoIndex, 1);
                     saveTodos();
                     renderTodos();

@@ -1,4 +1,5 @@
-import { linkData, renderCategories, renderLinks, syncLinksFromJson } from './links.js';
+import { linkData, renderCategories, renderLinks, syncLinksFromJson, syncLinksOverwrite, getSyncChanges, applyChange, findBestIcon } from './links.js';
+import { openModal, showAlert, showConfirm, showPrompt } from './modals.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     const contextMenu = document.getElementById('context-menu');
@@ -18,371 +19,281 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    async function performSync() {
+    async function performAutoSync() {
         const success = await syncLinksFromJson();
         if (success) {
-            saveLinkData();
-            renderCategories();
-            const activeCategoryItem = document.querySelector(".category-item.active");
-            const activeIndex = activeCategoryItem ? parseInt(activeCategoryItem.dataset.index) : 0;
-            renderLinks(activeIndex < linkData.length ? activeIndex : 0);
-            console.log('Links synced successfully');
+            saveAndRefresh();
+            console.log('Links auto-synced successfully');
         }
     }
 
+    function saveAndRefresh() {
+        saveLinkData();
+        const activeCategoryItem = document.querySelector(".category-item.active");
+        const activeIndex = activeCategoryItem ? parseInt(activeCategoryItem.dataset.index) : 0;
+        renderCategories(activeIndex);
+        renderLinks(activeIndex < linkData.length ? activeIndex : 0);
+    }
+
     loadLinkData();
-    performSync(); // Initial sync on load
+    performAutoSync(); 
     renderCategories();
     renderLinks(0);
 
     // Set up periodic sync (every 1 hour)
-    setInterval(performSync, 3600000);
+    setInterval(performAutoSync, 3600000);
 
-    let openActionMenu = null;
-
-    function closeOpenActionMenu() {
-        if (openActionMenu) {
-            openActionMenu.remove();
-            openActionMenu = null;
+    async function showSyncModalQueue(changes) {
+        if (changes.length === 0) {
+            await showAlert('No changes detected.');
+            return;
         }
+
+        let index = 0;
+
+        async function showNext() {
+            if (index >= changes.length) {
+                saveAndRefresh();
+                modalContainer.style.display = 'none'; // Hide modal
+                contextMenu.style.display = 'none'; // Ensure context menu is closed
+                await showAlert('Sync complete!');
+                return;
+            }
+
+            const change = changes[index];
+            modalContainer.innerHTML = '';
+            modalContainer.style.display = 'flex';
+
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+
+            const h3 = document.createElement('h3');
+            h3.textContent = `Sync Change (${index + 1}/${changes.length})`;
+            modalContent.appendChild(h3);
+
+            const p = document.createElement('p');
+            p.textContent = change.description;
+            p.style.marginBottom = '20px';
+            modalContent.appendChild(p);
+
+            const buttons = document.createElement('div');
+            buttons.className = 'modal-buttons';
+
+            const acceptBtn = document.createElement('button');
+            acceptBtn.textContent = 'Accept';
+            acceptBtn.className = 'save-button';
+            acceptBtn.onclick = () => { applyChange(change, 'accept'); index++; showNext(); };
+            buttons.appendChild(acceptBtn);
+
+            if (change.type === 'updated' || change.type === 'new') {
+                const keepBothBtn = document.createElement('button');
+                keepBothBtn.textContent = 'Keep Both';
+                keepBothBtn.className = 'save-button';
+                keepBothBtn.style.backgroundColor = '#c4a7e7';
+                keepBothBtn.onclick = () => { applyChange(change, 'keep-both'); index++; showNext(); };
+                buttons.appendChild(keepBothBtn);
+            }
+
+            const rejectBtn = document.createElement('button');
+            rejectBtn.textContent = 'Reject';
+            rejectBtn.className = 'cancel-button';
+            rejectBtn.onclick = () => { applyChange(change, 'reject'); index++; showNext(); };
+            buttons.appendChild(rejectBtn);
+
+            modalContent.appendChild(buttons);
+            modalContainer.appendChild(modalContent);
+        }
+
+        await showNext();
     }
 
-    function openModal(title, fields, currentValues = {}, onSubmit) {
-        modalContainer.innerHTML = ''; // Clear previous modal content
-        modalContainer.style.display = 'flex'; // Show modal overlay
-
-        const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content';
-
-        const h3 = document.createElement('h3');
-        h3.textContent = title;
-        modalContent.appendChild(h3);
-
-        const form = document.createElement('form');
-        form.addEventListener('submit', (e) => e.preventDefault()); // Prevent default form submission
-
-        const inputElements = {}; // To store references to input fields
-
-        fields.forEach(field => {
-            const formGroup = document.createElement('div');
-            formGroup.className = 'form-group';
-
-            const label = document.createElement('label');
-            label.textContent = field.label + ':';
-            label.htmlFor = field.name;
-            formGroup.appendChild(label);
-
-            let input;
-            if (field.type === 'textarea') {
-                input = document.createElement('textarea');
-                input.rows = 3;
-            } else if (field.type === 'select-icon') {
-                const container = document.createElement('div');
-                container.className = 'icon-selector-container';
-
-                input = document.createElement('input');
-                input.type = 'text';
-                input.placeholder = 'Local path (./img/...) or URL (https://...)';
-                input.value = currentValues[field.name] || '';
-
-                const iconPreview = document.createElement('img');
-                iconPreview.className = 'icon-preview';
-                iconPreview.style.width = '32px';
-                iconPreview.style.height = '32px';
-                iconPreview.style.marginLeft = '10px';
-                iconPreview.style.verticalAlign = 'middle';
-                iconPreview.style.display = input.value ? 'inline-block' : 'none';
-                if (input.value) iconPreview.src = input.value;
-
-                input.addEventListener('input', () => {
-                    if (input.value) {
-                        iconPreview.src = input.value;
-                        iconPreview.style.display = 'inline-block';
-                    } else {
-                        iconPreview.style.display = 'none';
-                    }
-                });
-
-                container.appendChild(input);
-                container.appendChild(iconPreview);
-                formGroup.appendChild(container);
-
-                inputElements[field.name] = input;
-            } else {
-                input = document.createElement('input');
-                input.type = field.type;
-            }
-
-            input.id = field.name;
-            input.name = field.name;
-            input.value = currentValues[field.name] || '';
-            input.placeholder = field.placeholder || '';
-            
-            if (field.type !== 'select-icon') { // select-icon handled separately
-                formGroup.appendChild(input);
-            }
-            inputElements[field.name] = input; // Store reference
-
-            form.appendChild(formGroup);
-        });
-
-        const modalButtons = document.createElement('div');
-        modalButtons.className = 'modal-buttons';
-
-        const saveButton = document.createElement('button');
-        saveButton.type = 'submit';
-        saveButton.className = 'save-button';
-        saveButton.textContent = 'Save';
-        saveButton.addEventListener('click', () => {
-            const data = {};
-            fields.forEach(field => {
-                data[field.name] = inputElements[field.name].value;
-            });
-            onSubmit(data);
-            modalContainer.style.display = 'none'; // Hide modal
-            contextMenu.style.display = 'none'; // Close context menu
-        });
-        modalButtons.appendChild(saveButton);
-
-        const cancelButton = document.createElement('button');
-        cancelButton.type = 'button';
-        cancelButton.className = 'cancel-button';
-        cancelButton.textContent = 'Cancel';
-        cancelButton.addEventListener('click', () => {
-            modalContainer.style.display = 'none'; // Hide modal
-            contextMenu.style.display = 'none'; // Close context menu
-        });
-        modalButtons.appendChild(cancelButton);
-
-        form.appendChild(modalButtons);
-        modalContent.appendChild(form);
-        modalContainer.appendChild(modalContent);
-
-        // Close modal when clicking outside (on the overlay)
-        modalContainer.addEventListener('click', (e) => {
-            if (e.target === modalContainer) {
-                modalContainer.style.display = 'none';
-                contextMenu.style.display = 'none';
-            }
-        });
-    }
-
-    function createActionMenu(parentLi, type, index, subIndex = null) {
-        closeOpenActionMenu();
-
-        const actionMenu = document.createElement('div');
-        actionMenu.className = 'context-menu-item-actions';
-
-        const editButton = document.createElement('button');
-        editButton.className = 'context-menu-action-button';
-        editButton.textContent = 'Edit';
-        editButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            closeOpenActionMenu();
-            if (type === 'category') {
-                const categoryItem = linkData[index];
-                openModal('Edit Category', [
-                    { name: 'category', label: 'Category Name', type: 'text' },
-                    { name: 'icon', label: 'Icon', type: 'select-icon' },
-                ], {
-                    category: categoryItem.category,
-                    icon: categoryItem.icon
-                }, (data) => {
-                    linkData[index].category = data.category;
-                    linkData[index].icon = data.icon;
-                    saveLinkData();
-                    renderCategories();
-                    const currentActiveIndex = parseInt(document.querySelector('.category-item.active')?.dataset.index || '0');
-                    renderLinks(currentActiveIndex < linkData.length ? currentActiveIndex : 0);
-                    renderContextMenu();
-                });
-            } else if (type === 'link') {
-                const linkItem = linkData[index].links[subIndex];
-                openModal('Edit Link', [
-                    { name: 'name', label: 'Link Name', type: 'text' },
-                    { name: 'url', label: 'URL', type: 'text' },
-                    { name: 'icon', label: 'Icon', type: 'select-icon' },
-                    { name: 'description', label: 'Description', type: 'textarea' },
-                ], {
-                    name: linkItem.name,
-                    url: linkItem.url,
-                    icon: linkItem.icon,
-                    description: linkItem.description
-                }, (data) => {
-                    linkData[index].links[subIndex].name = data.name;
-                    linkData[index].links[subIndex].url = data.url;
-                    linkData[index].links[subIndex].icon = data.icon;
-                    linkData[index].links[subIndex].description = data.description;
-                    saveLinkData();
-                    renderLinks(index);
-                    renderContextMenu();
-                });
-            }
-        });
-        actionMenu.appendChild(editButton);
-
-        const removeButton = document.createElement('button');
-        removeButton.className = 'context-menu-action-button';
-        removeButton.textContent = 'Remove';
-        removeButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            closeOpenActionMenu();
-            if (type === 'category') {
-                const categoryItem = linkData[index];
-                if (confirm(`Are you sure you want to remove category "${categoryItem.category}"?`)) {
-                    linkData.splice(index, 1);
-                    saveLinkData();
-                    renderCategories();
-                    renderLinks(0);
-                    renderContextMenu();
-                }
-            } else if (type === 'link') {
-                const linkItem = linkData[index].links[subIndex];
-                if (confirm(`Are you sure you want to remove link "${linkItem.name}"?`)) {
-                    linkData[index].links.splice(subIndex, 1);
-                    saveLinkData();
-                    renderLinks(index);
-                    renderContextMenu();
-                }
-            }
-        });
-        actionMenu.appendChild(removeButton);
-
-        parentLi.style.position = 'relative';
-        parentLi.appendChild(actionMenu);
-        openActionMenu = actionMenu;
-    }
-
-
-    function renderContextMenu() {
-        closeOpenActionMenu();
+    function renderContextMenu(type = null, index = null, subIndex = null) {
         contextMenu.innerHTML = '';
+        const sections = [];
 
-        // Sync Section
-        const syncSection = document.createElement('div');
-        syncSection.className = 'context-menu-section';
-        syncSection.innerHTML = '<div class="context-menu-title">Actions</div>';
-        const syncUl = document.createElement('ul');
-        const syncLi = document.createElement('li');
-        syncLi.textContent = 'Sync Links from JSON';
-        syncLi.className = 'context-menu-action-item';
-        syncLi.addEventListener('click', (e) => {
-            e.stopPropagation();
-            performSync();
-            contextMenu.style.display = 'none';
-        });
-        syncUl.appendChild(syncLi);
-        syncSection.appendChild(syncUl);
-        contextMenu.appendChild(syncSection);
-
-        // Categories Section
-        const categoriesSection = document.createElement('div');
-        categoriesSection.className = 'context-menu-section';
-        categoriesSection.innerHTML = '<div class="context-menu-title">Categories</div>';
-        const categoryUl = document.createElement('ul');
-
-        linkData.forEach((categoryItem, index) => {
-            const li = document.createElement('li');
-            li.textContent = categoryItem.category;
-            li.className = 'context-menu-action-item';
-            li.addEventListener('click', (e) => {
-                e.stopPropagation();
-                createActionMenu(li, 'category', index);
+        if (type === 'category') {
+            sections.push({
+                title: 'Category Actions',
+                items: [
+                    { 
+                        label: 'Edit Category', 
+                        action: () => {
+                            const categoryItem = linkData[index];
+                            openModal('Edit Category', [
+                                { name: 'category', label: 'Category Name', type: 'text' },
+                                { name: 'icon', label: 'Icon', type: 'select-icon' },
+                            ], { category: categoryItem.category, icon: categoryItem.icon }, (data) => {
+                                linkData[index].category = data.category;
+                                linkData[index].icon = data.icon || './img/icons/default-category.svg';
+                                saveAndRefresh();
+                                contextMenu.style.display = 'none';
+                            });
+                        }
+                    },
+                    { 
+                        label: 'Remove Category', 
+                        action: async () => {
+                            if (await showConfirm(`Remove category "${linkData[index].category}"?`)) {
+                                linkData.splice(index, 1);
+                                saveAndRefresh();
+                                contextMenu.style.display = 'none';
+                            }
+                        }
+                    }
+                ]
             });
-            categoryUl.appendChild(li);
-        });
-
-        const addCategoryLi = document.createElement('li');
-        addCategoryLi.textContent = 'Add New Category';
-        addCategoryLi.dataset.action = 'add-category';
-        addCategoryLi.addEventListener('click', (e) => {
-            e.stopPropagation();
-            closeOpenActionMenu();
-            openModal('Add New Category', [
-                { name: 'category', label: 'Category Name', type: 'text' },
-                { name: 'icon', label: 'Icon', type: 'select-icon' },
-            ], {}, (data) => {
-                linkData.push({ category: data.category, icon: data.icon, links: [] });
-                saveLinkData();
-                renderCategories();
-                renderContextMenu();
+        } else if (type === 'link') {
+            sections.push({
+                title: 'Link Actions',
+                items: [
+                    { 
+                        label: 'Edit Link', 
+                        action: () => {
+                            const linkItem = linkData[index].links[subIndex];
+                            openModal('Edit Link', [
+                                { name: 'name', label: 'Link Name', type: 'text' },
+                                { name: 'url', label: 'URL', type: 'text' },
+                                { name: 'icon', label: 'Icon', type: 'select-icon' },
+                                { name: 'color', label: 'Brand Color', type: 'color' },
+                                { name: 'description', label: 'Description', type: 'textarea' },
+                            ], { name: linkItem.name, url: linkItem.url, icon: linkItem.icon, color: linkItem.color || '#cccccc', description: linkItem.description }, (data) => {
+                                linkData[index].links[subIndex] = { ...linkData[index].links[subIndex], ...data, icon: data.icon || './img/icons/default-link.svg' };
+                                saveAndRefresh();
+                                contextMenu.style.display = 'none';
+                            });
+                        }
+                    },
+                    { 
+                        label: 'Remove Link', 
+                        action: async () => {
+                            if (await showConfirm(`Remove link "${linkData[index].links[subIndex].name}"?`)) {
+                                linkData[index].links.splice(subIndex, 1);
+                                saveAndRefresh();
+                                contextMenu.style.display = 'none';
+                            }
+                        }
+                    }
+                ]
             });
-        });
-        categoryUl.appendChild(addCategoryLi);
-        categoriesSection.appendChild(categoryUl);
-        contextMenu.appendChild(categoriesSection);
-
-        // Links Section (for currently active category)
-        const activeCategoryItem = document.querySelector('.category-item.active');
-        const activeCategoryIndex = activeCategoryItem ? parseInt(activeCategoryItem.dataset.index) : 0;
-        const activeCategory = linkData[activeCategoryIndex];
-
-        if (activeCategory) {
-            const linksSection = document.createElement('div');
-            linksSection.className = 'context-menu-section';
-            linksSection.innerHTML = `<div class="context-menu-title">Links in ${activeCategory.category}</div>`;
-            const linksUl = document.createElement('ul');
-
-            activeCategory.links.forEach((linkItem, subIndex) => {
-                const li = document.createElement('li');
-                li.textContent = linkItem.name;
-                li.className = 'context-menu-action-item';
-                li.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    createActionMenu(li, 'link', activeCategoryIndex, subIndex);
-                });
-                linksUl.appendChild(li);
+        } else {
+            // Default Empty Space Menu
+            sections.push({ 
+                title: 'Sync Actions', 
+                items: [
+                    { label: 'Full Sync', action: async () => { if(await showConfirm('Overwrite ALL links with JSON data?')) { await syncLinksOverwrite(); saveAndRefresh(); contextMenu.style.display = 'none'; } } },
+                    { label: 'Interactive Sync', action: async () => { const changes = await getSyncChanges(); showSyncModalQueue(changes); contextMenu.style.display = 'none'; } }
+                ] 
             });
-
-            const addLinkLi = document.createElement('li');
-            addLinkLi.textContent = `Add New Link to ${activeCategory.category}`;
-            addLinkLi.dataset.action = 'add-link';
-            addLinkLi.addEventListener('click', (e) => {
-                e.stopPropagation();
-                closeOpenActionMenu();
-                openModal(`Add New Link to ${activeCategory.category}`, [
-                    { name: 'name', label: 'Link Name', type: 'text' },
-                    { name: 'url', label: 'URL', type: 'text' },
-                    { name: 'icon', label: 'Icon', type: 'select-icon' },
-                    { name: 'description', label: 'Description', type: 'textarea' },
-                ], {}, (data) => {
-                    linkData[activeCategoryIndex].links.push({
-                        name: data.name,
-                        url: data.url,
-                        icon: data.icon,
-                        color: "#cccccc", // Default color for now
-                        description: data.description
-                    });
-                    saveLinkData();
-                    renderLinks(activeCategoryIndex);
-                    renderContextMenu();
-                });
+            sections.push({
+                title: 'Add Actions',
+                items: [
+                    { label: 'Add New Category', action: () => openModal('Add Category', [{ name: 'category', label: 'Name', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }], {}, (data) => { linkData.push({ category: data.category, icon: data.icon || './img/icons/default-category.svg', links: [] }); saveAndRefresh(); contextMenu.style.display = 'none'; }) },
+                    { 
+                        label: 'Add New Link', 
+                        action: () => {
+                            const activeIdx = document.querySelector('.category-item.active')?.dataset.index || 0;
+                            openModal('Add Link', [{ name: 'name', label: 'Name', type: 'text' }, { name: 'url', label: 'URL', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }, { name: 'color', label: 'Brand Color', type: 'color' }, { name: 'description', label: 'Description', type: 'textarea' }], { color: '#cccccc' }, async (data) => { 
+                                let finalIcon = data.icon;
+                                let finalColor = data.color;
+                                if (!finalIcon) {
+                                    const best = await findBestIcon(data.url);
+                                    finalIcon = best.icon;
+                                    // Only use auto color if user didn't change it from default #cccccc
+                                    if (finalColor === '#cccccc') finalColor = best.color;
+                                }
+                                linkData[activeIdx].links.push({ ...data, icon: finalIcon, color: finalColor }); 
+                                saveAndRefresh(); 
+                                contextMenu.style.display = 'none';
+                            });
+                        }
+                    }
+                ]
             });
-            linksUl.appendChild(addLinkLi);
-            linksSection.appendChild(linksUl);
-            contextMenu.appendChild(linksSection);
         }
+
+        sections.forEach(sec => {
+            const div = document.createElement('div');
+            div.className = 'context-menu-section';
+            div.innerHTML = `<div class="context-menu-title">${sec.title}</div>`;
+            const ul = document.createElement('ul');
+            sec.items.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item.label;
+                li.className = 'context-menu-action-item';
+                li.onclick = (e) => { e.stopPropagation(); item.action(); };
+                ul.appendChild(li);
+            });
+            div.appendChild(ul);
+            contextMenu.appendChild(div);
+        });
     }
 
     document.addEventListener('contextmenu', (e) => {
       e.preventDefault();
-      closeOpenActionMenu();
       
-      const { clientX: mouseX, clientY: mouseY } = e;
+      const categoryItem = e.target.closest('.category-item');
+      const glassLink = e.target.closest('.glass-link');
+
+      if (categoryItem) {
+          renderContextMenu('category', parseInt(categoryItem.dataset.index));
+      } else if (glassLink) {
+          const activeIdx = parseInt(document.querySelector('.category-item.active')?.dataset.index || 0);
+          renderContextMenu('link', activeIdx, parseInt(glassLink.dataset.subindex));
+      } else {
+          renderContextMenu();
+      }
       
-      contextMenu.style.top = `${mouseY}px`;
-      contextMenu.style.left = `${mouseX}px`;
+      contextMenu.style.display = 'flex';
+      contextMenu.style.alignContent = 'flex-start';
+      contextMenu.style.width = 'fit-content';
+      contextMenu.style.height = 'auto';
+      contextMenu.style.maxHeight = 'none';
+      contextMenu.style.overflow = 'visible';
       
-      renderContextMenu();
-      contextMenu.style.display = 'block';
+      const sections = contextMenu.querySelectorAll('.context-menu-section');
+      sections.forEach(s => {
+          s.style.width = '200px';
+          s.style.marginRight = '10px';
+      });
+
+      // 2. Measure natural size
+      let width = contextMenu.offsetWidth;
+      let height = contextMenu.offsetHeight;
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+
+      // 3. Handle Vertical Overflow by Forcing Column Layout
+      if (height > viewportHeight - 20) {
+          // Too tall! Force columnar layout by restricting height
+          contextMenu.style.height = (viewportHeight - 20) + 'px';
+          // Re-measure width because it wrapped into columns
+          width = contextMenu.offsetWidth;
+          height = contextMenu.offsetHeight;
+      }
+
+      // 4. Calculate Final Position
+      let top = e.clientY;
+      let left = e.clientX;
+
+      // Vertical correction
+      if (top + height > viewportHeight - 10) {
+          top = viewportHeight - height - 10;
+      }
+      if (top < 10) top = 10;
+
+      // Horizontal correction
+      if (left + width > viewportWidth - 10) {
+          left = viewportWidth - width - 10;
+      }
+      if (left < 10) left = 10;
+
+      contextMenu.style.top = `${top}px`;
+      contextMenu.style.left = `${left}px`;
     });
   
     document.addEventListener('click', (e) => {
       if (!contextMenu.contains(e.target)) {
         contextMenu.style.display = 'none';
-        closeOpenActionMenu();
-      } else if (openActionMenu && !openActionMenu.contains(e.target) && !e.target.closest('.context-menu-action-item')) {
-        closeOpenActionMenu();
       }
     });
 });
