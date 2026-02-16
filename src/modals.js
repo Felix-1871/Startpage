@@ -201,14 +201,7 @@ export function showPrompt(message, defaultValue = '') {
         const input = document.createElement('input');
         input.type = 'text';
         input.value = defaultValue;
-        input.className = 'modal-prompt-input'; // We'll add some style for this
-        input.style.width = '100%';
-        input.style.padding = '10px';
-        input.style.marginBottom = '20px';
-        input.style.backgroundColor = 'rgba(25, 23, 36, 0.8)';
-        input.style.border = '1px solid rgba(224, 222, 244, 0.3)';
-        input.style.borderRadius = '5px';
-        input.style.color = '#e0def4';
+        input.className = 'modal-prompt-input';
         modalContent.appendChild(input);
 
         const modalButtons = document.createElement('div');

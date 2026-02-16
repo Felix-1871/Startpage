@@ -256,10 +256,11 @@ export const linkData = [
     const category = linkData[categoryIndex];
     linksGrid.innerHTML = "";
     if (!category) return;
-    category.links.forEach((link) => {
+    category.links.forEach((link, subIndex) => {
       const a = document.createElement("a");
       a.href = link.url;
       a.className = "glass-link";
+      a.dataset.subindex = subIndex;
       a.target = "_blank";
       a.innerHTML = `
         <div class="icon-placeholder" style="background-color: ${link.color};">

@@ -43,15 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Set up periodic sync (every 1 hour)
     setInterval(performAutoSync, 3600000);
 
-    let openActionMenu = null;
-
-    function closeOpenActionMenu() {
-        if (openActionMenu) {
-            openActionMenu.remove();
-            openActionMenu = null;
-        }
-    }
-
     async function showSyncModalQueue(changes) {
         if (changes.length === 0) {
             await showAlert('No changes detected.');
@@ -116,83 +107,100 @@ document.addEventListener("DOMContentLoaded", () => {
         await showNext();
     }
 
-    function createActionMenu(parentLi, type, index, subIndex = null) {
-        if (openActionMenu) openActionMenu.remove();
-
-        const actionMenu = document.createElement('div');
-        actionMenu.className = 'context-menu-item-actions';
-
-        const editButton = document.createElement('button');
-        editButton.className = 'context-menu-action-button';
-        editButton.textContent = 'Edit';
-        editButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            actionMenu.remove();
-            if (type === 'category') {
-                const categoryItem = linkData[index];
-                openModal('Edit Category', [
-                    { name: 'category', label: 'Category Name', type: 'text' },
-                    { name: 'icon', label: 'Icon', type: 'select-icon' },
-                ], { category: categoryItem.category, icon: categoryItem.icon }, (data) => {
-                    linkData[index].category = data.category;
-                    linkData[index].icon = data.icon;
-                    saveAndRefresh();
-                    renderContextMenu();
-                });
-            } else if (type === 'link') {
-                const linkItem = linkData[index].links[subIndex];
-                openModal('Edit Link', [
-                    { name: 'name', label: 'Link Name', type: 'text' },
-                    { name: 'url', label: 'URL', type: 'text' },
-                    { name: 'icon', label: 'Icon', type: 'select-icon' },
-                    { name: 'description', label: 'Description', type: 'textarea' },
-                ], { name: linkItem.name, url: linkItem.url, icon: linkItem.icon, description: linkItem.description }, (data) => {
-                    linkData[index].links[subIndex] = { ...linkData[index].links[subIndex], ...data };
-                    saveAndRefresh();
-                    renderContextMenu();
-                });
-            }
-        });
-        actionMenu.appendChild(editButton);
-
-        const removeButton = document.createElement('button');
-        removeButton.className = 'context-menu-action-button';
-        removeButton.textContent = 'Remove';
-        removeButton.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            actionMenu.remove();
-            if (await showConfirm(`Remove ${type}?`)) {
-                if (type === 'category') linkData.splice(index, 1);
-                else linkData[index].links.splice(subIndex, 1);
-                saveAndRefresh();
-                renderContextMenu();
-            }
-        });
-        actionMenu.appendChild(removeButton);
-
-        parentLi.appendChild(actionMenu);
-        openActionMenu = actionMenu;
-    }
-
-
-    function renderContextMenu() {
-        if (openActionMenu) openActionMenu.remove();
+    function renderContextMenu(type = null, index = null, subIndex = null) {
         contextMenu.innerHTML = '';
+        const sections = [];
 
-        const sections = [
-            { 
+        if (type === 'category') {
+            sections.push({
+                title: 'Category Actions',
+                items: [
+                    { 
+                        label: 'Edit Category', 
+                        action: () => {
+                            const categoryItem = linkData[index];
+                            openModal('Edit Category', [
+                                { name: 'category', label: 'Category Name', type: 'text' },
+                                { name: 'icon', label: 'Icon', type: 'select-icon' },
+                            ], { category: categoryItem.category, icon: categoryItem.icon }, (data) => {
+                                linkData[index].category = data.category;
+                                linkData[index].icon = data.icon;
+                                saveAndRefresh();
+                                contextMenu.style.display = 'none';
+                            });
+                        }
+                    },
+                    { 
+                        label: 'Remove Category', 
+                        action: async () => {
+                            if (await showConfirm(`Remove category "${linkData[index].category}"?`)) {
+                                linkData.splice(index, 1);
+                                saveAndRefresh();
+                                contextMenu.style.display = 'none';
+                            }
+                        }
+                    }
+                ]
+            });
+        } else if (type === 'link') {
+            sections.push({
+                title: 'Link Actions',
+                items: [
+                    { 
+                        label: 'Edit Link', 
+                        action: () => {
+                            const linkItem = linkData[index].links[subIndex];
+                            openModal('Edit Link', [
+                                { name: 'name', label: 'Link Name', type: 'text' },
+                                { name: 'url', label: 'URL', type: 'text' },
+                                { name: 'icon', label: 'Icon', type: 'select-icon' },
+                                { name: 'description', label: 'Description', type: 'textarea' },
+                            ], { name: linkItem.name, url: linkItem.url, icon: linkItem.icon, description: linkItem.description }, (data) => {
+                                linkData[index].links[subIndex] = { ...linkData[index].links[subIndex], ...data };
+                                saveAndRefresh();
+                                contextMenu.style.display = 'none';
+                            });
+                        }
+                    },
+                    { 
+                        label: 'Remove Link', 
+                        action: async () => {
+                            if (await showConfirm(`Remove link "${linkData[index].links[subIndex].name}"?`)) {
+                                linkData[index].links.splice(subIndex, 1);
+                                saveAndRefresh();
+                                contextMenu.style.display = 'none';
+                            }
+                        }
+                    }
+                ]
+            });
+        } else {
+            // Default Empty Space Menu
+            sections.push({ 
                 title: 'Sync Actions', 
                 items: [
-                    { label: 'Full Sync', action: async () => { if(await showConfirm('Overwrite ALL links with JSON data?')) { await syncLinksOverwrite(); saveAndRefresh(); } } },
-                    { label: 'Interactive Sync', action: async () => { const changes = await getSyncChanges(); showSyncModalQueue(changes); } }
+                    { label: 'Full Sync', action: async () => { if(await showConfirm('Overwrite ALL links with JSON data?')) { await syncLinksOverwrite(); saveAndRefresh(); contextMenu.style.display = 'none'; } } },
+                    { label: 'Interactive Sync', action: async () => { const changes = await getSyncChanges(); showSyncModalQueue(changes); contextMenu.style.display = 'none'; } }
                 ] 
-            },
-            {
-                title: 'Categories',
-                items: linkData.map((cat, i) => ({ label: cat.category, action: (e, li) => createActionMenu(li, 'category', i) })),
-                footer: { label: 'Add New Category', action: () => openModal('Add Category', [{ name: 'category', label: 'Name', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }], {}, (data) => { linkData.push({ category: data.category, icon: data.icon, links: [] }); saveAndRefresh(); renderContextMenu(); }) }
-            }
-        ];
+            });
+            sections.push({
+                title: 'Add Actions',
+                items: [
+                    { label: 'Add New Category', action: () => openModal('Add Category', [{ name: 'category', label: 'Name', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }], {}, (data) => { linkData.push({ category: data.category, icon: data.icon, links: [] }); saveAndRefresh(); contextMenu.style.display = 'none'; }) },
+                    { 
+                        label: 'Add New Link', 
+                        action: () => {
+                            const activeIdx = document.querySelector('.category-item.active')?.dataset.index || 0;
+                            openModal('Add Link', [{ name: 'name', label: 'Name', type: 'text' }, { name: 'url', label: 'URL', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }, { name: 'description', label: 'Description', type: 'textarea' }], {}, (data) => { 
+                                linkData[activeIdx].links.push({ ...data, color: '#cccccc' }); 
+                                saveAndRefresh(); 
+                                contextMenu.style.display = 'none';
+                            });
+                        }
+                    }
+                ]
+            });
+        }
 
         sections.forEach(sec => {
             const div = document.createElement('div');
@@ -203,50 +211,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 const li = document.createElement('li');
                 li.textContent = item.label;
                 li.className = 'context-menu-action-item';
-                li.onclick = (e) => { e.stopPropagation(); item.action(e, li); };
+                li.onclick = (e) => { e.stopPropagation(); item.action(); };
                 ul.appendChild(li);
             });
-            if (sec.footer) {
-                const li = document.createElement('li');
-                li.textContent = sec.footer.label;
-                li.style.fontStyle = 'italic';
-                li.onclick = (e) => { e.stopPropagation(); sec.footer.action(); };
-                ul.appendChild(li);
-            }
             div.appendChild(ul);
             contextMenu.appendChild(div);
         });
-
-        // Add Active Category Links section
-        const activeIdx = document.querySelector('.category-item.active')?.dataset.index || 0;
-        const activeCat = linkData[activeIdx];
-        if (activeCat) {
-            const div = document.createElement('div');
-            div.className = 'context-menu-section';
-            div.innerHTML = `<div class="context-menu-title">${activeCat.category}</div>`;
-            const ul = document.createElement('ul');
-            activeCat.links.forEach((link, i) => {
-                const li = document.createElement('li');
-                li.textContent = link.name;
-                li.className = 'context-menu-action-item';
-                li.onclick = (e) => { e.stopPropagation(); createActionMenu(li, 'link', activeIdx, i); };
-                ul.appendChild(li);
-            });
-            const addLi = document.createElement('li');
-            addLi.textContent = 'Add New Link';
-            addLi.style.fontStyle = 'italic';
-            addLi.onclick = (e) => { e.stopPropagation(); openModal('Add Link', [{ name: 'name', label: 'Name', type: 'text' }, { name: 'url', label: 'URL', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }, { name: 'description', label: 'Description', type: 'textarea' }], {}, (data) => { linkData[activeIdx].links.push({ ...data, color: '#cccccc' }); saveAndRefresh(); renderContextMenu(); }); };
-            ul.appendChild(addLi);
-            div.appendChild(ul);
-            contextMenu.appendChild(div);
-        }
     }
 
     document.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       
-      // 1. Render content and prepare for measurement
-      renderContextMenu();
+      const categoryItem = e.target.closest('.category-item');
+      const glassLink = e.target.closest('.glass-link');
+
+      if (categoryItem) {
+          renderContextMenu('category', parseInt(categoryItem.dataset.index));
+      } else if (glassLink) {
+          const activeIdx = parseInt(document.querySelector('.category-item.active')?.dataset.index || 0);
+          renderContextMenu('link', activeIdx, parseInt(glassLink.dataset.subindex));
+      } else {
+          renderContextMenu();
+      }
       
       contextMenu.style.display = 'flex';
       contextMenu.style.alignContent = 'flex-start';
@@ -299,7 +285,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener('click', (e) => {
       if (!contextMenu.contains(e.target)) {
         contextMenu.style.display = 'none';
-        if (openActionMenu) openActionMenu.remove();
       }
     });
 });
