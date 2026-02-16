@@ -1,5 +1,74 @@
+/* Global Hover Menu Styles (Shared) */
+.link-hover-menu, .category-hover-menu {
+  display: none;
+  position: fixed;
+  width: auto;
+  min-width: 150px;
+  max-width: 250px;
+  background-color: rgba(31, 29, 46, 0.98);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(224, 222, 244, 0.3);
+  border-radius: 10px;
+  padding: 12px;
+  z-index: 1000000; 
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  color: #e0def4;
+  pointer-events: none;
+  font-size: 0.85em;
+}
+
+.category-hover-menu {
+  min-width: 100px;
+  padding: 8px 12px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Context Menu Item Limit */
+.context-menu-action-item {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Limit to 2 lines */
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  line-height: 1.2;
+  max-height: 2.4em; /* 1.2 * 2 */
+  padding: 5px 8px !important;
+}
+
+@font-face {
+  font-family: 'Lilex';
+  src: url('./ttf/Lilex-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lilex';
+  src: url('./ttf/Lilex-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lilex';
+  src: url('./ttf/Lilex-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Lilex';
+  src: url('./ttf/Lilex-Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
 * {
   box-sizing: border-box;
+  font-family: 'Lilex', monospace;
 }
 
 html {
@@ -16,6 +85,7 @@ body {
   background-repeat: no-repeat;
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
+  color: #e0def4;
 }
 
 .page {
@@ -133,11 +203,10 @@ body {
   border-radius: 15px;
   border: 1px solid rgba(224, 222, 244, 0.2); 
   display: flex; 
-  overflow: visible; /* Changed to visible */
+  overflow: visible; 
   min-width: 700px; 
   max-width: 800px; 
   max-height: 450px;
-  /* Removed overflow-y: auto; */
 }
 
 
@@ -226,7 +295,7 @@ body {
   display: flex;
   flex-direction: column;
   background-color: rgba(31, 29, 46, 0.4); 
-  overflow: visible; /* Changed to visible */
+  overflow: visible; 
 }
 
 .categories-header {
@@ -234,8 +303,9 @@ body {
   color: #e0def4;
   font-size: 1.2em;
   font-weight: bold;
-  position: relative; /* Ensure positioning context for absolute child */
-  overflow: visible; /* Allow content to overflow */
+  position: relative;
+  overflow: visible;
+  width: 100%;
 }
 
 .categories-header.icons-only .category-text {
@@ -247,19 +317,72 @@ body {
   list-style: none;
   padding: 0;
   margin: 0;
-  justify-content: space-around;
-  /* Removed overflow: hidden; to allow text to expand */
+  justify-content: flex-start;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(224, 222, 244, 0.3) transparent;
+}
+
+#category-list::-webkit-scrollbar {
+  height: 8px;
+  background: transparent;
+}
+
+#category-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+#category-list::-webkit-scrollbar-thumb {
+  background: rgba(224, 222, 244, 0.3);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+#category-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(224, 222, 244, 0.5);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Global scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(224, 222, 244, 0.2);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(224, 222, 244, 0.4);
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 .category-item {
-  padding: 5px 10px; /* Smaller padding */
+  padding: 8px 15px;
   cursor: pointer;
   transition: background-color 0.3s ease;
   border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
-  position: relative; /* Ensure positioning context for absolute child */
+  position: relative;
+  flex-shrink: 0;
 }
 
 .category-item:hover {
@@ -271,24 +394,9 @@ body {
 }
 
 .category-icon {
-  width: 30px; /* Smaller icon size */
-  height: 30px;
-  filter: invert(1); /* Monochromatic effect */
-}
-
-/* Hover effect for category text when in icons-only mode */
-.categories-header.icons-only .category-item:hover .category-text {
-  display: inline;
-  position: absolute;
-  background-color: rgba(31, 29, 46, 0.9); /* Darker background for readability */
-  padding: 5px 10px;
-  border-radius: 5px;
-  left: 100%; /* Position to the right of the icon */
-  white-space: nowrap;
-  z-index: 100;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  transform: translateX(5px); /* Small offset from the icon */
-  color: #e0def4; /* Ensure text is visible */
+  width: 24px;
+  height: 24px;
+  filter: invert(1);
 }
 
 @media (max-width: 768px) {
@@ -303,67 +411,90 @@ body {
 .links-grid {
   flex-grow: 1;
   display: grid;
-  grid-template-rows: repeat(4, 1fr); /* Fill 4 rows before moving to next column */
-  grid-auto-flow: column; /* Fill columns first */
-  gap: 5px; /* More packed together */
-  padding: 5px; /* More packed together */
-  overflow-x: auto; /* Enable horizontal scrolling */
-  justify-items: start; /* Align items to the start of their columns */
-  align-items: center;
+  grid-template-columns: repeat(3, 1fr); 
+  grid-auto-rows: min-content;
+  gap: 8px;
+  padding: 10px;
+  overflow-y: auto; 
+  overflow-x: hidden; 
 }
 
 .glass-link {
   display: flex;
-  flex-direction: row; 
-  justify-content: flex-start; /* Align content of link to start */
+  flex-direction: row;
+  justify-content: flex-start;
   align-items: center;
-  text-decoration: none; 
-  color: #e0def4; 
-  padding: 5px;
+  text-decoration: none;
+  color: #e0def4;
+  padding: 6px;
   border-radius: 8px;
-  transition: background-color 0.3s ease;
-  font-size: 1.1em;
-  text-align: left; 
-  position: relative; /* For hover menu positioning */
+  transition: all 0.2s ease;
+  font-size: 0.9em; 
+  text-align: left;
+  position: relative;
+  width: 100%;
+  min-width: 0; 
+}
+
+.glass-link span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
 .glass-link:hover {
-  background-color: rgba(224, 222, 244, 0.1); 
+  background-color: rgba(224, 222, 244, 0.1);
 }
 
 .icon-placeholder {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-right: 5px; 
-  color: #FFFFFF; /* Set color to white for inherited SVG fill */
+  margin-right: 8px;
+  flex-shrink: 0;
 }
 
 .icon-placeholder .link-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .link-hover-menu {
   display: none;
+  position: fixed; /* Use fixed to avoid clipping by overflow-y: auto */
+  width: 240px;
+  background-color: rgba(31, 29, 46, 0.98);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(224, 222, 244, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  z-index: 100000; 
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  color: #e0def4;
+  pointer-events: none;
+  transform: translate(10px, 10px); /* Small offset from cursor/link */
+}
+
+/* We need JS to position fixed elements correctly relative to the link, 
+   but for now we'll try to improve absolute positioning with overflow: visible hacks */
+.links-grid {
+    /* If we want absolute children to be visible outside, we might have to remove overflow-y: auto 
+       but that breaks scrolling. A common trick is to use a large padding and negative margin, 
+       but that's brittle. Let's try to keep it simple. */
+}
+
+/* Redefining hover menu to stay absolute but with higher z-index and ensuring parents allow it */
+.link-hover-menu {
   position: absolute;
   top: 100%;
   left: 0;
-  width: 200px;
-  height: 150px;
-  background-color: rgba(31, 29, 46, 0.9); /* Darker background for readability */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(224, 222, 244, 0.2); 
-  border-radius: 8px;
-  padding: 10px;
-  z-index: 100;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  color: #e0def4;
-  font-size: 0.9em;
+  display: none;
+  pointer-events: none;
 }
 
 .glass-link:hover .link-hover-menu {
@@ -371,8 +502,11 @@ body {
 }
 
 .link-hover-menu p {
-  margin: 0 0 10px 0;
+  margin: 0 0 8px 0;
   word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all; 
+  font-size: 0.85em;
 }
 
 .icon-list-container {
@@ -422,7 +556,8 @@ body {
 .context-menu {
   position: fixed;
   z-index: 1000;
-  width: 200px;
+  min-width: 200px;
+  width: fit-content;
   background-color: rgba(31, 29, 46, 0.9); 
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -435,6 +570,8 @@ body {
 
 .context-menu-section {
   margin-bottom: 10px;
+  width: 200px; /* Fixed width for column sections */
+  flex-shrink: 0;
 }
 
 .context-menu-section:last-child {
@@ -467,10 +604,10 @@ body {
 /* Styles for nested action menu */
 .context-menu-item-actions {
   position: absolute;
-  left: 100%; /* Position to the right of the main menu item */
+  left: 100%; 
   top: 0;
-  min-width: 120px; /* Adjust as needed */
-  background-color: rgba(31, 29, 46, 0.95); /* Slightly darker to distinguish */
+  min-width: 120px; 
+  background-color: rgba(31, 29, 46, 0.95); 
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(224, 222, 244, 0.2);
@@ -479,7 +616,7 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  z-index: 101; /* Higher z-index than main context menu */
+  z-index: 101; 
 }
 
 .context-menu-action-button {
@@ -495,7 +632,7 @@ body {
 }
 
 .context-menu-action-button:hover {
-  background-color: rgba(224, 222, 244, 0.15); /* Slightly more prominent hover */
+  background-color: rgba(224, 222, 244, 0.15); 
 }
 
 .context-menu-action-button:active {
@@ -513,7 +650,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10000; /* Higher than context menu */
+  z-index: 10000; 
 }
 
 .modal-content {
