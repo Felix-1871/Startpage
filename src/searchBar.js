@@ -1,3 +1,5 @@
+import { showAlert, showPrompt } from './modals.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     
     function setupCustomDropdown(dropdownElementId, hiddenInputId, listElementId, options) {
@@ -89,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchArrow = document.querySelector('.search-arrow');
     const searchEngineHiddenInput = document.getElementById('search-engine-select_hidden');
 
-    function performSearch() {
+    async function performSearch() {
         const query = mainInput.value.trim();
         const selectedEngineValue = searchEngineHiddenInput.value;
 
@@ -97,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedEngineValue === 'discord_webhook') {
                 const webhookUrl = localStorage.getItem('discord_webhook_url');
                 if (!webhookUrl) {
-                    const url = prompt('Please enter your Discord Webhook URL:');
+                    const url = await showPrompt('Please enter your Discord Webhook URL:');
                     if (url) {
                         localStorage.setItem('discord_webhook_url', url);
                         sendToDiscord(url, query);
@@ -119,24 +121,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function sendToDiscord(url, message) {
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ content: message }),
-        })
-        .then(response => {
+    async function sendToDiscord(url, message) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content: message }),
+            });
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
             console.log('Message sent to Discord successfully');
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error sending message to Discord:', error);
-            alert('Failed to send message to Discord. Check console for details.');
-        });
+            await showAlert('Failed to send message to Discord. Check console for details.');
+        }
     }
 
     
