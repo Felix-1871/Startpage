@@ -29,9 +29,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function saveAndRefresh() {
         saveLinkData();
-        renderCategories();
         const activeCategoryItem = document.querySelector(".category-item.active");
         const activeIndex = activeCategoryItem ? parseInt(activeCategoryItem.dataset.index) : 0;
+        renderCategories(activeIndex);
         renderLinks(activeIndex < linkData.length ? activeIndex : 0);
     }
 
@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 { name: 'icon', label: 'Icon', type: 'select-icon' },
                             ], { category: categoryItem.category, icon: categoryItem.icon }, (data) => {
                                 linkData[index].category = data.category;
-                                linkData[index].icon = data.icon;
+                                linkData[index].icon = data.icon || './img/icons/default-category.svg';
                                 saveAndRefresh();
                                 contextMenu.style.display = 'none';
                             });
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 { name: 'icon', label: 'Icon', type: 'select-icon' },
                                 { name: 'description', label: 'Description', type: 'textarea' },
                             ], { name: linkItem.name, url: linkItem.url, icon: linkItem.icon, description: linkItem.description }, (data) => {
-                                linkData[index].links[subIndex] = { ...linkData[index].links[subIndex], ...data };
+                                linkData[index].links[subIndex] = { ...linkData[index].links[subIndex], ...data, icon: data.icon || './img/icons/default-link.svg' };
                                 saveAndRefresh();
                                 contextMenu.style.display = 'none';
                             });
@@ -186,13 +186,13 @@ document.addEventListener("DOMContentLoaded", () => {
             sections.push({
                 title: 'Add Actions',
                 items: [
-                    { label: 'Add New Category', action: () => openModal('Add Category', [{ name: 'category', label: 'Name', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }], {}, (data) => { linkData.push({ category: data.category, icon: data.icon, links: [] }); saveAndRefresh(); contextMenu.style.display = 'none'; }) },
+                    { label: 'Add New Category', action: () => openModal('Add Category', [{ name: 'category', label: 'Name', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }], {}, (data) => { linkData.push({ category: data.category, icon: data.icon || './img/icons/default-category.svg', links: [] }); saveAndRefresh(); contextMenu.style.display = 'none'; }) },
                     { 
                         label: 'Add New Link', 
                         action: () => {
                             const activeIdx = document.querySelector('.category-item.active')?.dataset.index || 0;
                             openModal('Add Link', [{ name: 'name', label: 'Name', type: 'text' }, { name: 'url', label: 'URL', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }, { name: 'description', label: 'Description', type: 'textarea' }], {}, (data) => { 
-                                linkData[activeIdx].links.push({ ...data, color: '#cccccc' }); 
+                                linkData[activeIdx].links.push({ ...data, color: '#cccccc', icon: data.icon || './img/icons/default-link.svg' }); 
                                 saveAndRefresh(); 
                                 contextMenu.style.display = 'none';
                             });

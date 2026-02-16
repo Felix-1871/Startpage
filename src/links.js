@@ -218,12 +218,12 @@ export const linkData = [
     }
   }
 
-  export function renderCategories() {
+  export function renderCategories(activeIndex = 0) {
     categoryList.innerHTML = "";
     linkData.forEach((category, index) => {
       const li = document.createElement("li");
       li.className = "category-item";
-      if (index === 0) {
+      if (index === parseInt(activeIndex)) {
         li.classList.add("active");
       }
       li.dataset.index = index;
