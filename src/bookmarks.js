@@ -1,100 +1,92 @@
-export const linkData = [
-   
-  ];
-  
-  const categoryList = document.getElementById("category-list");
-  const linksGrid = document.getElementById("links-grid");
-  const categoriesHeader = document.querySelector('.categories-header');
+import { findBestIcon } from './links.js';
 
-  export function renderCategories() {
-    categoryList.innerHTML = "";
-    linkData.forEach((category, index) => {
-      const li = document.createElement("li");
-      li.className = "category-item";
-      if (index === 0) {
-        li.classList.add("active");
-      }
-      li.dataset.index = index;
-      li.innerHTML = `<img src="${category.icon}" alt="${category.category}" class="category-icon"> <span class="category-text">${category.category}</span>`;
-      categoryList.appendChild(li);
+export const bookmarks = [];
 
-      // Add event listeners for hover effect only if categoriesHeader has 'icons-only' class
-      li.addEventListener("mouseover", () => {
-        if (categoriesHeader.classList.contains('icons-only')) {
-            li.querySelector('.category-text').style.display = 'inline';
-            li.style.position = 'relative'; // Ensure positioning context for absolute child
-            li.style.zIndex = '100'; // Bring hovered item to front
-        }
-      });
-      li.addEventListener("mouseout", () => {
-        if (categoriesHeader.classList.contains('icons-only')) {
-            li.querySelector('.category-text').style.display = 'none';
-            li.style.zIndex = 'auto'; // Reset z-index
-        }
-      });
+const bookmarksList = document.getElementById('bookmarks-list');
+
+function getLuminance(hex) {
+    const rgb = (hex || '#cccccc').replace('#', '');
+    const r = parseInt(rgb.substr(0, 2), 16);
+    const g = parseInt(rgb.substr(2, 2), 16);
+    const b = parseInt(rgb.substr(4, 2), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
+export function saveBookmarks() {
+    localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+}
+
+export function loadBookmarks() {
+    const stored = localStorage.getItem('bookmarks');
+    if (stored) {
+        bookmarks.length = 0;
+        JSON.parse(stored).forEach(b => bookmarks.push(b));
+    }
+}
+
+// Create global hover menu if it doesn't exist
+let globalHoverMenu = document.getElementById('global-link-hover-menu');
+if (!globalHoverMenu) {
+    globalHoverMenu = document.createElement('div');
+    globalHoverMenu.id = 'global-link-hover-menu';
+    globalHoverMenu.className = 'link-hover-menu';
+    globalHoverMenu.style.position = 'fixed';
+    globalHoverMenu.style.display = 'none';
+    globalHoverMenu.style.zIndex = '1000000';
+    document.body.appendChild(globalHoverMenu);
+}
+
+export function renderBookmarks() {
+    if (!bookmarksList) return;
+    bookmarksList.innerHTML = '';
+    
+    bookmarks.forEach((b, index) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = b.url;
+        a.className = 'bookmark-item';
+        a.dataset.index = index;
+        a.target = '_blank';
+        a.style.backgroundColor = b.color || '#c4a7e7';
+        
+        const isDark = getLuminance(b.color || '#c4a7e7') < 0.5;
+        
+        a.innerHTML = `<img src="${b.icon || './img/icons/default-link.svg'}" alt="${b.name}" class="bookmark-icon ${isDark ? 'inverted-icon' : ''}">`;
+        
+        // Hover menu integration
+        a.addEventListener('mouseenter', () => {
+            const rect = a.getBoundingClientRect();
+            globalHoverMenu.innerHTML = `
+                <p><strong>${b.name}</strong></p>
+                <p>${b.url}</p>
+                <p>${b.description || 'No description available.'}</p>
+            `;
+            globalHoverMenu.style.display = 'block';
+            
+            let top = rect.top;
+            let left = rect.right + 10;
+            
+            if (left + globalHoverMenu.offsetWidth > window.innerWidth) {
+                left = rect.left - globalHoverMenu.offsetWidth - 10;
+            }
+            if (top + globalHoverMenu.offsetHeight > window.innerHeight) {
+                top = window.innerHeight - globalHoverMenu.offsetHeight - 10;
+            }
+
+            globalHoverMenu.style.top = `${top}px`;
+            globalHoverMenu.style.left = `${left}px`;
+        });
+
+        a.addEventListener('mouseleave', () => {
+            globalHoverMenu.style.display = 'none';
+        });
+
+        li.appendChild(a);
+        bookmarksList.appendChild(li);
     });
-  }
-  
-  export function renderLinks(categoryIndex) {
-    const category = linkData[categoryIndex];
-    linksGrid.innerHTML = "";
-    category.links.forEach((link) => {
-      const a = document.createElement("a");
-      a.href = link.url;
-      a.className = "glass-link";
-      a.target = "_blank"; // Open in new tab
-      a.innerHTML = `
-        <div class="icon-placeholder" style="background-color: ${link.color};">
-            <img src="${link.icon}" alt="${link.name}" class="link-icon">
-        </div>
-        <span>${link.name}</span>
-        <div class="link-hover-menu">
-            <p><strong>${link.name}</strong></p>
-            <p>${link.url}</p>
-            <p>${link.description}</p>
-        </div>
-      `;
-      linksGrid.appendChild(a);
-    });
-  }
+}
 
-  categoryList.addEventListener("click", (e) => {
-    const categoryItem = e.target.closest(".category-item");
-    if (categoryItem) {
-      const previouslyActive = document.querySelector(".category-item.active");
-      if (previouslyActive) {
-        previouslyActive.classList.remove("active");
-      }
-      categoryItem.classList.add("active");
-      renderLinks(categoryItem.dataset.index);
-    }
-  });
-
-  function checkCategoryOverflow() {
-    // Temporarily show text to measure full width
-    const tempTextElements = categoryList.querySelectorAll('.category-text');
-    tempTextElements.forEach(el => el.style.display = 'inline');
-
-    const hasOverflow = categoryList.scrollWidth > categoryList.clientWidth;
-
-    // Reset display for text elements
-    tempTextElements.forEach(el => el.style.display = '');
-
-    if (hasOverflow) {
-      categoriesHeader.classList.add('icons-only');
-    } else {
-      categoriesHeader.classList.remove('icons-only');
-    }
-    // Re-render categories to apply correct hover listeners based on new state
-    renderCategories();
-  }
-
-
-  window.addEventListener('resize', () => {
-    checkCategoryOverflow();
-    // Re-render links for active category after resize to ensure proper layout
-    const activeCategoryItem = document.querySelector(".category-item.active");
-    if (activeCategoryItem) {
-      renderLinks(activeCategoryItem.dataset.index);
-    }
-  });
+document.addEventListener('DOMContentLoaded', () => {
+    loadBookmarks();
+    renderBookmarks();
+});

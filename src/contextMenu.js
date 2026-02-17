@@ -1,4 +1,5 @@
 import { linkData, renderCategories, renderLinks, syncLinksFromJson, syncLinksOverwrite, getSyncChanges, applyChange, findBestIcon } from './links.js';
+import { bookmarks, renderBookmarks, saveBookmarks } from './bookmarks.js';
 import { openModal, showAlert, showConfirm, showPrompt } from './modals.js';
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -175,6 +176,41 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 ]
             });
+        } else if (type === 'bookmark') {
+            sections.push({
+                title: 'Bookmark Actions',
+                items: [
+                    {
+                        label: 'Edit Bookmark',
+                        action: () => {
+                            const b = bookmarks[index];
+                            openModal('Edit Bookmark', [
+                                { name: 'name', label: 'Name', type: 'text' },
+                                { name: 'url', label: 'URL', type: 'text' },
+                                { name: 'icon', label: 'Icon', type: 'select-icon' },
+                                { name: 'color', label: 'Brand Color', type: 'color' },
+                                { name: 'description', label: 'Description', type: 'textarea' },
+                            ], { name: b.name, url: b.url, icon: b.icon, color: b.color || '#c4a7e7', description: b.description }, (data) => {
+                                bookmarks[index] = { ...bookmarks[index], ...data, icon: data.icon || './img/icons/default-link.svg' };
+                                saveBookmarks();
+                                renderBookmarks();
+                                contextMenu.style.display = 'none';
+                            });
+                        }
+                    },
+                    {
+                        label: 'Remove Bookmark',
+                        action: async () => {
+                            if (await showConfirm(`Remove bookmark "${bookmarks[index].name}"?`)) {
+                                bookmarks.splice(index, 1);
+                                saveBookmarks();
+                                renderBookmarks();
+                                contextMenu.style.display = 'none';
+                            }
+                        }
+                    }
+                ]
+            });
         } else {
             // Default Empty Space Menu
             sections.push({ 
@@ -198,11 +234,34 @@ document.addEventListener("DOMContentLoaded", () => {
                                 if (!finalIcon) {
                                     const best = await findBestIcon(data.url);
                                     finalIcon = best.icon;
-                                    // Only use auto color if user didn't change it from default #cccccc
                                     if (finalColor === '#cccccc') finalColor = best.color;
                                 }
                                 linkData[activeIdx].links.push({ ...data, icon: finalIcon, color: finalColor }); 
                                 saveAndRefresh(); 
+                                contextMenu.style.display = 'none';
+                            });
+                        }
+                    },
+                    {
+                        label: 'Add New Bookmark',
+                        action: () => {
+                            openModal('Add Bookmark', [
+                                { name: 'name', label: 'Name', type: 'text' },
+                                { name: 'url', label: 'URL', type: 'text' },
+                                { name: 'icon', label: 'Icon', type: 'select-icon' },
+                                { name: 'color', label: 'Brand Color', type: 'color' },
+                                { name: 'description', label: 'Description', type: 'textarea' },
+                            ], { color: '#c4a7e7' }, async (data) => {
+                                let finalIcon = data.icon;
+                                let finalColor = data.color;
+                                if (!finalIcon) {
+                                    const best = await findBestIcon(data.url);
+                                    finalIcon = best.icon;
+                                    if (finalColor === '#c4a7e7') finalColor = best.color;
+                                }
+                                bookmarks.push({ ...data, icon: finalIcon, color: finalColor });
+                                saveBookmarks();
+                                renderBookmarks();
                                 contextMenu.style.display = 'none';
                             });
                         }
@@ -233,12 +292,15 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const categoryItem = e.target.closest('.category-item');
       const glassLink = e.target.closest('.glass-link');
+      const bookmarkItem = e.target.closest('.bookmark-item');
 
       if (categoryItem) {
           renderContextMenu('category', parseInt(categoryItem.dataset.index));
       } else if (glassLink) {
           const activeIdx = parseInt(document.querySelector('.category-item.active')?.dataset.index || 0);
           renderContextMenu('link', activeIdx, parseInt(glassLink.dataset.subindex));
+      } else if (bookmarkItem) {
+          renderContextMenu('bookmark', parseInt(bookmarkItem.dataset.index));
       } else {
           renderContextMenu();
       }
@@ -256,32 +318,26 @@ document.addEventListener("DOMContentLoaded", () => {
           s.style.marginRight = '10px';
       });
 
-      // 2. Measure natural size
+      // Natural size measurement
       let width = contextMenu.offsetWidth;
       let height = contextMenu.offsetHeight;
       const viewportHeight = window.innerHeight;
       const viewportWidth = window.innerWidth;
 
-      // 3. Handle Vertical Overflow by Forcing Column Layout
       if (height > viewportHeight - 20) {
-          // Too tall! Force columnar layout by restricting height
           contextMenu.style.height = (viewportHeight - 20) + 'px';
-          // Re-measure width because it wrapped into columns
           width = contextMenu.offsetWidth;
           height = contextMenu.offsetHeight;
       }
 
-      // 4. Calculate Final Position
       let top = e.clientY;
       let left = e.clientX;
 
-      // Vertical correction
       if (top + height > viewportHeight - 10) {
           top = viewportHeight - height - 10;
       }
       if (top < 10) top = 10;
 
-      // Horizontal correction
       if (left + width > viewportWidth - 10) {
           left = viewportWidth - width - 10;
       }
