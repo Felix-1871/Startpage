@@ -1,4 +1,4 @@
-import { linkData, renderCategories, renderLinks, syncLinksFromJson, syncLinksOverwrite, getSyncChanges, applyChange, findBestIcon } from './links.js';
+import { linkData, renderCategories, renderLinks, syncLinksFromJson, syncLinksOverwrite, getSyncChanges, applyChange, findBestIcon } from './tabs.js';
 import { bookmarks, renderBookmarks, saveBookmarks } from './bookmarks.js';
 import { openModal, showAlert, showConfirm, showPrompt } from './modals.js';
 

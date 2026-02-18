@@ -1,4 +1,4 @@
-import { findBestIcon } from './links.js';
+import { findBestIcon } from './tabs.js';
 
 export const bookmarks = [];
 

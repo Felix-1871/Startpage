@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     const searchEngines = [
-        { value: 'discord_webhook', label: 'Dummy', url: '' },
+        { value: 'discord_webhook', label: 'Discord', url: '' },
         { value: 'ecosia', label: 'Ecosia', url: 'https://www.ecosia.org/search?q=' },
         { value: 'arch_wiki', label: 'Arch', url: 'https://wiki.archlinux.org/index.php?title=Special%253ASearch&fulltext=1&search=' },
         { value: 'yt', label: 'Youtube', url: 'https://www.youtube.com/results?search_query=' },

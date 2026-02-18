@@ -158,8 +158,8 @@ export const linkData = [
   }
 
   export async function fetchExternalLinks() {
-    const response = await fetch('links.json');
-    if (!response.ok) throw new Error('Failed to fetch links.json');
+    const response = await fetch('tabs.json');
+    if (!response.ok) throw new Error('Failed to fetch tabs.json');
     return await response.json();
   }
 
