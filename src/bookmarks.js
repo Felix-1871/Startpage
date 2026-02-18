@@ -63,14 +63,17 @@ export function renderBookmarks() {
             `;
             globalHoverMenu.style.display = 'block';
             
-            let top = rect.top;
-            let left = rect.right + 10;
+            // Position above the icon
+            let top = rect.top - globalHoverMenu.offsetHeight - 10;
+            let left = rect.left + (rect.width / 2) - (globalHoverMenu.offsetWidth / 2);
             
+            // Adjust if out of bounds
+            if (left < 10) left = 10;
             if (left + globalHoverMenu.offsetWidth > window.innerWidth) {
-                left = rect.left - globalHoverMenu.offsetWidth - 10;
+                left = window.innerWidth - globalHoverMenu.offsetWidth - 10;
             }
-            if (top + globalHoverMenu.offsetHeight > window.innerHeight) {
-                top = window.innerHeight - globalHoverMenu.offsetHeight - 10;
+            if (top < 10) {
+                top = rect.bottom + 10; // Show below if no room above
             }
 
             globalHoverMenu.style.top = `${top}px`;
