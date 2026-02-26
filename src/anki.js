@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const easeButtons = document.getElementById('anki-ease-buttons');
 
     const ANKI_CONNECT_URL = 'http://127.0.0.1:8765';
+    let activeBlobUrls = [];
 
     async function invoke(action, version, params = {}) {
         try {
@@ -35,17 +36,83 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Helper to fix image/media paths in Anki HTML
-    function fixMediaPaths(html) {
-        if (!html) return '';
-        // Anki media is served by AnkiConnect at this URL if configured, 
-        // or we can try to point to Anki's internal web server.
-        // Usually, AnkiConnect provides a way to get media, but the simplest 
-        // way for a local setup is to regex replace src/href.
-        return html.replace(/(src|href)="([^":]+)"/g, (match, attr, path) => {
-            if (path.startsWith('http') || path.startsWith('data:')) return match;
-            return `${attr}="${ANKI_CONNECT_URL}/${path}"`;
-        });
+    function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
+        const byteCharacters = atob(b64Data);
+        const byteArrays = [];
+        for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+            const slice = byteCharacters.slice(offset, offset + sliceSize);
+            const byteNumbers = new Array(slice.length);
+            for (let i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+        }
+        return new Blob(byteArrays, { type: contentType });
+    }
+
+    function clearBlobUrls() {
+        activeBlobUrls.forEach(url => URL.revokeObjectURL(url));
+        activeBlobUrls = [];
+    }
+
+    async function processAnkiHtml(container, html) {
+        if (!html) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+
+        // Fix media paths by fetching them via AnkiConnect
+        const mediaElements = tempDiv.querySelectorAll('[src], [href], link[rel="stylesheet"]');
+        for (const el of mediaElements) {
+            const attr = el.hasAttribute('src') ? 'src' : 'href';
+            let path = el.getAttribute(attr);
+            
+            if (!path || path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) continue;
+
+            // Handle relative paths in Anki (often just the filename)
+            const filename = path.split('/').pop();
+            const base64 = await invoke('retrieveMediaFile', 6, { filename });
+            
+            if (base64) {
+                let mime = 'application/octet-stream';
+                if (filename.endsWith('.js')) mime = 'application/javascript';
+                else if (filename.endsWith('.css')) mime = 'text/css';
+                else if (filename.endsWith('.png')) mime = 'image/png';
+                else if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) mime = 'image/jpeg';
+                else if (filename.endsWith('.svg')) mime = 'image/svg+xml';
+                else if (filename.endsWith('.gif')) mime = 'image/gif';
+                
+                const blob = b64toBlob(base64, mime);
+                const blobUrl = URL.createObjectURL(blob);
+                activeBlobUrls.push(blobUrl);
+                el.setAttribute(attr, blobUrl);
+                            }
+                        }
+
+        // Inject the HTML
+        container.innerHTML = tempDiv.innerHTML;
+
+        // Manually execute scripts
+        const scripts = tempDiv.querySelectorAll('script');
+        for (const oldScript of scripts) {
+            const newScript = document.createElement('script');
+            if (oldScript.src) {
+                newScript.src = oldScript.src;
+                // Wait for external scripts to load to preserve execution order
+                await new Promise((resolve) => {
+                    newScript.onload = resolve;
+                    newScript.onerror = resolve;
+                    document.head.appendChild(newScript);
+                });
+            } else {
+                newScript.textContent = oldScript.textContent;
+                document.head.appendChild(newScript);
+            }
+        }
     }
 
     async function updateAnkiStats() {
@@ -91,10 +158,10 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('anki.selectedDeck', selectedDeck);
 
         try {
-            const deckStats = await invoke('getDeckStats', 6, { decks: [selectedDeck] });
-            
-            if (deckStats && deckStats[selectedDeck]) {
-                const stat = deckStats[selectedDeck];
+        const deckStats = await invoke('getDeckStats', 6, { decks: [selectedDeck] });
+        
+        if (deckStats && deckStats[selectedDeck]) {
+            const stat = deckStats[selectedDeck];
                 ankiNew.textContent = stat.new_count ?? 0;
                 ankiLearning.textContent = stat.learn_count ?? 0;
                 ankiDue.textContent = stat.review_count ?? 0;
@@ -149,9 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCard(card);
     }
 
-    function renderCard(card) {
-        cardFront.innerHTML = fixMediaPaths(card.question);
-        cardBack.innerHTML = fixMediaPaths(card.answer);
+    async function renderCard(card) {
+        clearBlobUrls();
+        await processAnkiHtml(cardFront, card.question);
+        await processAnkiHtml(cardBack, card.answer);
         
         cardBack.style.display = 'none';
         cardDivider.style.display = 'none';
@@ -192,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cardBack.style.display = 'block';
         cardDivider.style.display = 'block';
         showAnswerBtn.style.display = 'none';
-        easeButtons.style.display = 'grid';
+        easeButtons.style.display = 'flex';
     });
 
     document.querySelectorAll('#anki-ease-buttons .anki-btn').forEach(btn => {

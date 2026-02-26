@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedEngineValue === 'discord_webhook') {
                 const webhookUrl = localStorage.getItem('discord_webhook_url');
                 if (!webhookUrl) {
+                    console.log("Hey ya")
                     const url = await showPrompt('Please enter your Discord Webhook URL:');
                     if (url) {
                         localStorage.setItem('discord_webhook_url', url);

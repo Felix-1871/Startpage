@@ -154,28 +154,98 @@ body {
   min-height: 500px; 
   display: flex;
   width: 100%; 
-  position: relative; 
-  justify-content: center; 
+  justify-content: space-between; 
   align-items: center; 
   margin-bottom: 1vh; 
-  padding: 0 20px;
+  padding: 0 40px;
+  gap: 20px;
+  position: relative;
 }
 
 .middle-left {
-  width: 150px; /* Increased for Anki widget */
+  width: 250px; 
   height: 100%; 
   display: flex;
   flex-direction: column;
   justify-content: center; 
   align-items: flex-start;
   background: transparent; 
-  position: absolute; 
-  left: 40px; 
-  top: 0;
   z-index: 10; 
+  flex-shrink: 0;
 }
 
-/* Anki Container Styles */
+.middle-center {
+  flex-grow: 1; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1000px; 
+  z-index: 5;
+  min-width: 0;
+  transition: all 0.3s ease;
+}
+
+.middle-lute {
+  width: 250px; 
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 10;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.middle-lute.expanded {
+  position: absolute;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  padding: 0 40px 0 20px;
+  background: rgba(25, 23, 36, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 100;
+}
+
+.lute-container {
+  background-color: rgba(31, 29, 46, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(224, 222, 244, 0.2);
+  border-radius: 15px;
+  padding: 10px;
+  width: 100%;
+  height: 150px; 
+  color: #e0def4;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.middle-lute.expanded .lute-container {
+  height: 100%;
+  background-color: rgba(31, 29, 46, 0.8);
+}
+
+.lute-header {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(224, 222, 244, 0.2);
+  padding-bottom: 5px;
+  color: #9ccfd8;
+}
+
+.lute-iframe-container {
+  flex-grow: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(25, 23, 36, 0.3);
+}
+
 .anki-container {
   background-color: rgba(31, 29, 46, 0.5);
   backdrop-filter: blur(10px);
@@ -278,6 +348,12 @@ body {
   gap: 10px;
 }
 
+#anki-ease-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .anki-btn {
   padding: 8px;
   border: none;
@@ -295,12 +371,6 @@ body {
 .anki-btn.main {
   background-color: #eb81cf;
   color: #191724;
-}
-
-#anki-ease-buttons {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
 }
 
 .anki-btn.again { background-color: #eb6f92; color: #191724; }
@@ -594,7 +664,7 @@ body {
 }
 
 /* Bookmarks Styles */
-.bookmarks-container {
+.dock-container {
   background-color: rgba(31, 29, 46, 0.5); 
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -614,9 +684,9 @@ body {
   scrollbar-width: none;
 }
 
-.bookmarks-container::-webkit-scrollbar {
+.dock-container::-webkit-scrollbar {
   display: none;
-}
+} 
 
 .bookmarks-list {
   list-style: none;
