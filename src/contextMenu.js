@@ -1,17 +1,17 @@
 import { linkData, renderCategories, renderLinks, syncLinksFromJson, syncLinksOverwrite, getSyncChanges, applyChange, findBestIcon } from './tabs.js';
 import { bookmarks, renderBookmarks, saveBookmarks } from './bookmarks.js';
 import { openModal, showAlert, showConfirm, showPrompt } from './modals.js';
+import { updateAnkiStats } from './anki.js';
+import { renderLute } from './lute.js';
 
 document.addEventListener("DOMContentLoaded", () => {
     const contextMenu = document.getElementById('context-menu');
     const modalContainer = document.getElementById('modal-container');
 
-    // Function to save linkData to localStorage
     function saveLinkData() {
         localStorage.setItem('linkData', JSON.stringify(linkData));
     }
 
-    // Function to load linkData from localStorage
     function loadLinkData() {
         const storedLinkData = localStorage.getItem('linkData');
         if (storedLinkData) {
@@ -41,7 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderCategories();
     renderLinks(0);
 
-    // Set up periodic sync (every 1 hour)
     setInterval(performAutoSync, 3600000);
 
     async function showSyncModalQueue(changes) {
@@ -55,8 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
         async function showNext() {
             if (index >= changes.length) {
                 saveAndRefresh();
-                modalContainer.style.display = 'none'; // Hide modal
-                contextMenu.style.display = 'none'; // Ensure context menu is closed
+                modalContainer.style.display = 'none'; 
+                contextMenu.style.display = 'none'; 
                 await showAlert('Sync complete!');
                 return;
             }
@@ -212,7 +211,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 ]
             });
         } else {
-            // Default Empty Space Menu
+            sections.push({
+                title: 'Connection Actions',
+                items: [
+                    { label: 'Update Anki', action: () => { updateAnkiStats(); contextMenu.style.display = 'none'; } },
+                    { label: 'Update Lute', action: () => { renderLute(); contextMenu.style.display = 'none'; } }
+                ]
+            });
             sections.push({ 
                 title: 'Sync Actions', 
                 items: [
@@ -318,7 +323,6 @@ document.addEventListener("DOMContentLoaded", () => {
           s.style.marginRight = '10px';
       });
 
-      // Natural size measurement
       let width = contextMenu.offsetWidth;
       let height = contextMenu.offsetHeight;
       const viewportHeight = window.innerHeight;

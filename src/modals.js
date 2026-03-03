@@ -38,6 +38,15 @@ export function openModal(title, fields, currentValues = {}, onSubmit) {
         if (field.type === 'textarea') {
             input = document.createElement('textarea');
             input.rows = 3;
+        } else if (field.type === 'select') {
+            input = document.createElement('select');
+            field.options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt.value;
+                option.textContent = opt.label;
+                input.appendChild(option);
+            });
+            input.value = currentValues[field.name] || '';
         } else if (field.type === 'select-icon') {
             const container = document.createElement('div');
             container.className = 'icon-selector-container';
@@ -108,7 +117,6 @@ export function openModal(title, fields, currentValues = {}, onSubmit) {
     modalContent.appendChild(form);
     modalContainer.appendChild(modalContent);
 
-    // Focus first input
     const firstInput = modalContent.querySelector('input, textarea');
     if (firstInput) firstInput.focus();
 }

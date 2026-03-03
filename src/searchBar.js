@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     sendToDiscord(webhookUrl, query);
                 }
-                mainInput.value = ''; // Clear input after sending
+                mainInput.value = ''; 
                 return;
             }
 

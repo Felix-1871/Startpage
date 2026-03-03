@@ -52,21 +52,25 @@
           </div>
 
           <div id="anki-study-view" style="display: none;">
-            <div id="anki-card-container" class="anki-card-container">
-              <div id="anki-card-front" class="anki-card-side"></div>
-              <div id="anki-card-divider" style="display: none;"></div>
-              <div id="anki-card-back" class="anki-card-side" style="display: none;"></div>
-            </div>
-            <div id="anki-controls" class="anki-controls">
-              <button id="anki-show-answer" class="anki-btn main">Show Answer</button>
-              <div id="anki-ease-buttons" style="display: none;">
-                <button class="anki-btn again" data-ease="1">Again</button>
-                <button class="anki-btn hard" data-ease="2">Hard</button>
-                <button class="anki-btn good" data-ease="3">Good</button>
-                <button class="anki-btn easy" data-ease="4">Easy</button>
+            <div class="anki-study-content">
+              <div id="anki-card-container" class="anki-card-container">
+                <div id="anki-card-front" class="anki-card-side"></div>
+                <div id="anki-card-divider" style="display: none;"></div>
+                <div id="anki-card-back" class="anki-card-side" style="display: none;"></div>
+              </div>
+              <div id="anki-controls" class="anki-controls">
+                <button id="anki-show-answer" class="anki-btn main">Show Answer</button>
+                <div id="anki-ease-buttons" style="display: none;">
+                  <button class="anki-btn again" data-ease="1">Again</button>
+                  <button class="anki-btn hard" data-ease="2">Hard</button>
+                  <button class="anki-btn good" data-ease="3">Good</button>
+                  <button class="anki-btn easy" data-ease="4">Easy</button>
+                  <button id="anki-back-btn" class="anki-small-btn" style="margin-top: 10px;">Back</button>
+                  <button id="anki-settings-btn" class="anki-small-btn" style="margin-top: 10px;">Settings</button>
+                  <button class="anki-play-audio">🔊</button>
+                </div>
               </div>
             </div>
-            <button id="anki-back-btn" class="anki-small-btn" style="margin-top: 10px;">Back</button>
           </div>
         </div>
       </div>

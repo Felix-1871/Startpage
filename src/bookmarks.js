@@ -24,7 +24,6 @@ export function loadBookmarks() {
     }
 }
 
-// Create global hover menu if it doesn't exist
 let globalHoverMenu = document.getElementById('global-link-hover-menu');
 if (!globalHoverMenu) {
     globalHoverMenu = document.createElement('div');
@@ -53,7 +52,6 @@ export function renderBookmarks() {
         
         a.innerHTML = `<img src="${b.icon || './img/icons/default-link.svg'}" alt="${b.name}" class="bookmark-icon ${isDark ? 'inverted-icon' : ''}">`;
         
-        // Hover menu integration
         a.addEventListener('mouseenter', () => {
             const rect = a.getBoundingClientRect();
             globalHoverMenu.innerHTML = `
@@ -63,17 +61,15 @@ export function renderBookmarks() {
             `;
             globalHoverMenu.style.display = 'block';
             
-            // Position above the icon
             let top = rect.top - globalHoverMenu.offsetHeight - 10;
             let left = rect.left + (rect.width / 2) - (globalHoverMenu.offsetWidth / 2);
             
-            // Adjust if out of bounds
             if (left < 10) left = 10;
             if (left + globalHoverMenu.offsetWidth > window.innerWidth) {
                 left = window.innerWidth - globalHoverMenu.offsetWidth - 10;
             }
             if (top < 10) {
-                top = rect.bottom + 10; // Show below if no room above
+                top = rect.bottom + 10;
             }
 
             globalHoverMenu.style.top = `${top}px`;
