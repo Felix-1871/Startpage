@@ -40,15 +40,34 @@ export function saveSettingsForDeck(deckName, data) {
 }
 
 export function setCSSDisplay() {
+    const ankiContainer = document.getElementById('anki-container');
+    if (!ankiContainer) return;
+
+    // Hide modal footer if it exists inside anki
+    const footers = ankiContainer.querySelectorAll('.modal-footer1');
+    footers.forEach(f => {
+        f.classList.add('hidden');
+        f.style.display = 'none';
+    });
+
     for (const name in ANKI_SETTINGS) {
         const item = ANKI_SETTINGS[name];
         if (name.startsWith('char_')) {
             const val = sessionStorage.getItem(item.key);
-            const element = document.getElementById(name);
-            if (element) {
-                const displayVal = (val === '"true"' || val === 'true');
-                element.style.display = displayVal ? "block" : "none";
-            }
+            const isVisible = (val === '"true"' || val === 'true');
+            
+            // Targeted selectors for elements INSIDE the card content
+            const elements = ankiContainer.querySelectorAll(`#${name}, .${name}`);
+            
+            elements.forEach(el => {
+                if (isVisible) {
+                    el.classList.remove('hidden');
+                    el.style.display = 'block';
+                } else {
+                    el.classList.add('hidden');
+                    el.style.display = 'none';
+                }
+            });
         }
     }
 }

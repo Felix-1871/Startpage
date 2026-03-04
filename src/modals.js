@@ -13,6 +13,7 @@ export function openModal(title, fields, currentValues = {}, onSubmit) {
     modalContent.appendChild(h3);
 
     const form = document.createElement('form');
+    form.className = 'modal-form';
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const data = {};

@@ -49,15 +49,14 @@ async function processAnkiHtml(container, html) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
 
-    // Fix media paths by fetching them via AnkiConnect
+    const footers = tempDiv.querySelectorAll('.modal-footer1');
+    footers.forEach(f => f.remove());
+
     const mediaElements = tempDiv.querySelectorAll('[src], [href], link[rel="stylesheet"]');
     for (const el of mediaElements) {
         const attr = el.hasAttribute('src') ? 'src' : 'href';
         let path = el.getAttribute(attr);
-        
-        if (!path || path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) {
-            continue;
-        }
+        if (!path || path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) continue;
 
         const filename = path.split('/').pop();
         const base64 = await invoke('retrieveMediaFile', 6, { filename });
@@ -69,8 +68,6 @@ async function processAnkiHtml(container, html) {
             else if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) mime = 'image/jpeg';
             else if (filename.endsWith('.svg')) mime = 'image/svg+xml';
             else if (filename.endsWith('.gif')) mime = 'image/gif';
-            else if (filename.endsWith('.woff')) mime = 'font/woff';
-            else if (filename.endsWith('.woff2')) mime = 'font/woff2';
             
             const blob = b64toBlob(base64, mime);
             const blobUrl = URL.createObjectURL(blob);
@@ -79,7 +76,26 @@ async function processAnkiHtml(container, html) {
         }
     }
 
-    container.innerHTML = tempDiv.innerHTML;
+    if (container.id === 'char_meaning') {
+        const children = Array.from(tempDiv.children);
+        container.innerHTML = '';
+        let currentGroup = null;
+
+        children.forEach((child) => {
+            if (child.tagName === 'DIV' && (child.classList.contains('char') || child.id?.startsWith('char'))) {
+                currentGroup = document.createElement('div');
+                currentGroup.className = 'meaning-item-group';
+                container.appendChild(currentGroup);
+            }
+            if (currentGroup) {
+                currentGroup.appendChild(child);
+            } else {
+                container.appendChild(child);
+            }
+        });
+    } else {
+        container.innerHTML = tempDiv.innerHTML;
+    }
 
     const scripts = tempDiv.querySelectorAll('script');
     for (const oldScript of scripts) {
@@ -99,6 +115,7 @@ async function processAnkiHtml(container, html) {
 }
 
 export async function updateAnkiStats() {
+    console.log('Updating Anki stats...');
     const ankiStats = document.getElementById('anki-stats');
     const ankiMessage = document.getElementById('anki-message');
     const ankiStudyBtn = document.getElementById('anki-study-btn');
@@ -148,8 +165,15 @@ export async function updateAnkiStats() {
 
     try {
         const deckStats = await invoke('getDeckStats', 6, { decks: [selectedDeck] });
-        if (deckStats && deckStats[selectedDeck]) {
-            const stat = deckStats[selectedDeck];
+        console.log('Stats for', selectedDeck, ':', deckStats);
+        const deckIDs = await invoke('deckNamesAndIds', 6);
+        console.log('Deck IDs:', deckIDs);
+        const selectedDeckId = deckIDs[selectedDeck];
+        console.log('Selected deck ID:', selectedDeckId);
+        
+        if (deckStats && deckStats[selectedDeckId]) {
+            console.log('Deck stats:', deckStats[selectedDeckId]);
+            const stat = deckStats[selectedDeckId];
             ankiNew.textContent = stat.new_count ?? 0;
             ankiLearning.textContent = stat.learn_count ?? 0;
             ankiDue.textContent = stat.review_count ?? 0;
@@ -189,8 +213,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const ankiPlayAudioBtn = document.querySelector('.anki-play-audio');
 
     async function loadCurrentCard() {
+        console.log('Loading current card...');
         let card = await invoke('guiCurrentCard', 6);
+        
         if (!card) {
+            console.log('No card returned, checking stats...');
             await updateAnkiStats();
             const total = parseInt(document.getElementById('anki-new').textContent) + 
                           parseInt(document.getElementById('anki-learning').textContent) + 
@@ -198,33 +225,46 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (total === 0) {
                 cardFront.innerHTML = '<div style="text-align:center; padding:20px;">All done!</div>';
-                cardBack.style.display = 'none';
-                cardDivider.style.display = 'none';
-                showAnswerBtn.style.display = 'none';
-                easeButtons.style.display = 'none';
+                cardFront.classList.remove('hidden');
+                cardBack.classList.add('hidden');
+                cardDivider.classList.add('hidden');
+                showAnswerBtn.classList.add('hidden');
+                easeButtons.classList.add('hidden');
                 return;
             } else {
                 const selectedDeck = deckSelect.value;
                 await invoke('guiDeckReview', 6, { name: selectedDeck });
-                setTimeout(async () => {
-                    card = await invoke('guiCurrentCard', 6);
-                    if (card) renderCard(card);
-                }, 200);
+                setTimeout(loadCurrentCard, 300);
                 return;
             }
         }
+
         renderCard(card);
     }
 
     async function renderCard(card) {
+        console.log('Rendering card:', card.cardId);
         clearBlobUrls();
+        
+        const selectedDeck = deckSelect.value;
+        loadSettingsForDeck(selectedDeck);
+
         await processAnkiHtml(cardFront, card.question);
         await processAnkiHtml(cardBack, card.answer);
-        cardBack.style.display = 'none';
-        cardDivider.style.display = 'none';
-        showAnswerBtn.style.display = 'block';
-        easeButtons.style.display = 'none';
+        
+        cardFront.classList.remove('hidden');
+        cardBack.classList.add('hidden');
+        cardDivider.classList.add('hidden');
+        showAnswerBtn.classList.remove('hidden');
+        easeButtons.classList.add('hidden');
+        
+        cardFront.style.display = '';
+        cardBack.style.display = '';
+        showAnswerBtn.style.display = '';
+        easeButtons.style.display = '';
+
         setCSSDisplay();
+        setTimeout(setCSSDisplay, 100);
     }
 
     async function startStudy() {
@@ -248,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function playAudio() {
         const currentCard = await invoke('guiCurrentCard', 6);
+        if (!currentCard) return;
         const audioField = currentCard.fields.Audio?.value;
         if (!audioField) return;
         const match = audioField.match(/\[sound:(.+?)\]/);
@@ -267,16 +308,22 @@ document.addEventListener('DOMContentLoaded', () => {
     ankiBackBtn.addEventListener('click', stopStudy);
     ankiSettingsBtn.addEventListener('click', () => {
         const selectedDeck = deckSelect.value;
-        if (selectedDeck) openAnkiSettings(selectedDeck);
+        if (selectedDeck) {
+            openAnkiSettings(selectedDeck, () => {
+                setCSSDisplay();
+            });
+        }
     });
     ankiPlayAudioBtn.addEventListener('click', playAudio);
     deckSelect.addEventListener('change', () => updateAnkiStats());
+    
     showAnswerBtn.addEventListener('click', async () => {
         await invoke('guiShowAnswer', 6);
-        cardBack.style.display = 'block';
-        cardDivider.style.display = 'block';
-        showAnswerBtn.style.display = 'none';
-        easeButtons.style.display = 'flex';
+        cardFront.classList.add('hidden');
+        cardBack.classList.remove('hidden');
+        cardDivider.classList.remove('hidden');
+        showAnswerBtn.classList.add('hidden');
+        easeButtons.classList.remove('hidden');
         setCSSDisplay();
     });
 
@@ -284,7 +331,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', async () => {
             const ease = parseInt(btn.dataset.ease);
             await invoke('guiAnswerCard', 6, { ease });
-            setTimeout(loadCurrentCard, 150);
+            // Refresh stats after answering
+            updateAnkiStats();
+            setTimeout(loadCurrentCard, 300);
         });
     });
 
