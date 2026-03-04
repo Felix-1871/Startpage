@@ -43,7 +43,7 @@ export function setCSSDisplay() {
     const ankiContainer = document.getElementById('anki-container');
     if (!ankiContainer) return;
 
-    // Hide modal footer if it exists inside anki
+    
     const footers = ankiContainer.querySelectorAll('.modal-footer1');
     footers.forEach(f => {
         f.classList.add('hidden');
@@ -56,7 +56,7 @@ export function setCSSDisplay() {
             const val = sessionStorage.getItem(item.key);
             const isVisible = (val === '"true"' || val === 'true');
             
-            // Targeted selectors for elements INSIDE the card content
+            
             const elements = ankiContainer.querySelectorAll(`#${name}, .${name}`);
             
             elements.forEach(el => {

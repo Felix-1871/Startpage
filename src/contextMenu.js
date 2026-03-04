@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const success = await syncLinksFromJson();
         if (success) {
             saveAndRefresh();
-            console.log('Links auto-synced successfully');
+            
         }
     }
 

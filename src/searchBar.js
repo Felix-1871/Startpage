@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedEngineValue === 'discord_webhook') {
                 const webhookUrl = localStorage.getItem('discord_webhook_url');
                 if (!webhookUrl) {
-                    console.log("Hey ya")
+                    
                     const url = await showPrompt('Please enter your Discord Webhook URL:');
                     if (url) {
                         localStorage.setItem('discord_webhook_url', url);
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            console.log('Message sent to Discord successfully');
+            
         } catch (error) {
             console.error('Error sending message to Discord:', error);
             await showAlert('Failed to send message to Discord. Check console for details.');
