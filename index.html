@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Layout Reproduction</title>
+  <title>Lumin Startpage</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -56,6 +56,7 @@
               <div id="anki-card-container" class="anki-card-container">
                 <div id="anki-card-front" class="anki-card-side"></div>
                 <div id="anki-card-divider" style="display: none;"></div>
+                <div id="character-target" style="margin-top: 15px; display: flex; justify-content: center;"></div>
                 <div id="anki-card-back" class="anki-card-side" style="display: none;"></div>
               </div>
               <div id="anki-controls" class="anki-controls">
@@ -65,6 +66,10 @@
                   <button class="anki-btn hard" data-ease="2">Hard</button>
                   <button class="anki-btn good" data-ease="3">Good</button>
                   <button class="anki-btn easy" data-ease="4">Easy</button>
+                  <div class="anki-practice-controls" style="margin-top: 10px; display: flex; gap: 5px;">
+                    <button id="btnShowMenu" class="anki-small-btn">Menu</button>
+                    <button id="btnMoreOptions" class="anki-small-btn">More</button>
+                  </div>
                 </div>
                 <div id="anki-persistent-controls" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
                   <button id="anki-back-btn" class="anki-small-btn">Back</button>
@@ -114,12 +119,13 @@
 
   <script type="module" src="./src/config.js"></script>
   <script type="module" src="./src/tabs.js"></script>
-  <script type="module" src="./src/searchBar.js"></script>
+  <script type="module" src="./src/search-bar.js"></script>
   <script type="module" src="./src/clock-weather.js"></script>
   <script type="module" src="./src/todo.js"></script>
-  <script type="module" src="./src/contextMenu.js"></script>
+  <script type="module" src="./src/context-menu.js"></script>
   <script type="module" src="./src/anki.js"></script>
   <script type="module" src="./src/lute.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 </body>
 <div id="modal-container" class="modal-overlay" style="display: none;"></div>
 </html>

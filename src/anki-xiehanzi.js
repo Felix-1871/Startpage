@@ -1,13 +1,14 @@
 import { openModal } from './modals.js';
+import { getStorage, setStorage, showHide, invoke } from './helpers.js';
 
 export const ANKI_SETTINGS = {
     "char_zhuyin": { label: 'Show Zhuyin', key: 'backtext-zhuyin', default: 'false', type: 'select' },
-    "char_pinyin": { label: 'Show Pinyin', key: 'backtext-pinyin', default: 'false', type: 'select' },
-    "char_meaning": { label: 'Show Meaning', key: 'backtext-meaning', default: 'false', type: 'select' },
-    "char_sentence": { label: 'Show Sentence', key: 'backtext-sentence', default: 'false', type: 'select' },
+    "char_pinyin": { label: 'Show Pinyin', key: 'backtext-pinyin', default: 'true', type: 'select' },
+    "char_meaning": { label: 'Show Meaning', key: 'backtext-meaning', default: 'true', type: 'select' },
+    "char_sentence": { label: 'Show Sentence', key: 'backtext-sentence', default: 'true', type: 'select' },
     "char_trad": { label: 'Show Traditional', key: 'backtext-trad', default: 'false', type: 'select' },
-    "char_sim": { label: 'Show Simplified', key: 'backtext-sim', default: 'false', type: 'select' },
-    "char_sentence-random": { label: 'Random Sentence', key: 'backtext-sentence-random', default: 'false', type: 'select' },
+    "char_sim": { label: 'Show Simplified', key: 'backtext-sim', default: 'true', type: 'select' },
+    "char_sentence-random": { label: 'Random Sentence', key: 'backtext-sentence-random', default: 'true', type: 'select' },
     "noOfSentence": { label: 'Number of Sentences', key: 'backno-of-sentence', default: '5', type: 'number' },
     "levelOfSentence": { label: 'Sentence Level', key: 'backlevel-of-sentence', default: '6', type: 'number' },
     "lengthOfSentence": { label: 'Sentence Length', key: 'backlength-of-sentence', default: '30', type: 'number' }
@@ -42,7 +43,6 @@ export function setCSSDisplay() {
     const ankiContainer = document.getElementById('anki-container');
     if (!ankiContainer) return;
 
-    
     const footers = ankiContainer.querySelectorAll('.modal-footer1');
     footers.forEach(f => {
         f.classList.add('hidden');

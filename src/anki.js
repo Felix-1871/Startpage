@@ -1,47 +1,13 @@
-import { openAnkiSettings, setCSSDisplay, loadSettingsForDeck, ANKI_SETTINGS } from './ankiSettings.js';
+import { openAnkiSettings, setCSSDisplay, loadSettingsForDeck, ANKI_SETTINGS } from './anki-xiehanzi.js';
+import { getStorage, setStorage, showHide, invoke, b64toBlob} from './helpers.js';
 
-const ANKI_CONNECT_URL = 'http://127.0.0.1:8765';
 let activeBlobUrls = [];
-
-
 let sentencesData = null;
 let indexByChar = null;
 let cachedResults = [];
 let lastQueryKey = "";
 let sentenceOffset = 0;
 let isSentenceLoading = false;
-
-async function invoke(action, version, params = {}) {
-    try {
-        const response = await fetch(ANKI_CONNECT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, version, params })
-        });
-        if (!response.ok) throw new Error('Network response was not ok');
-        const result = await response.json();
-        if (result.error) throw new Error(result.error);
-        return result.result;
-    } catch (error) {
-        console.error('AnkiConnect Error:', error);
-        return null;
-    }
-}
-
-function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
-    const byteCharacters = atob(b64Data);
-    const byteArrays = [];
-    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-        const slice = byteCharacters.slice(offset, offset + sliceSize);
-        const byteNumbers = new Array(slice.length);
-        for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        byteArrays.push(byteArray);
-    }
-    return new Blob(byteArrays, { type: contentType });
-}
 
 function clearBlobUrls() {
     activeBlobUrls.forEach(url => URL.revokeObjectURL(url));
@@ -449,10 +415,21 @@ document.addEventListener('DOMContentLoaded', () => {
         easeButtons.style.display = '';
 
         setCSSDisplay();
+        const currentCard = await invoke('guiCurrentCard', 6);
+        const writerContainer = document.getElementById('character-target');
+        if (currentCard.deckName.includes('Audio')) writerContainer.style.display = 'none';
+        else writerContainer.style.display = 'block';
         
+
         const char = getCardCharacter();
         if (char) {
             loadSentences(char);
+
+            const perIndex = getStorage(frontBack + "practice-select");
+            const tradChar = document.getElementById('char_trad')?.innerText || "";
+            const simChar = document.getElementById('char_sim')?.innerText || char;
+            characters = perIndex == 1 ? tradChar : simChar;
+            doPractice();
         }
 
         setTimeout(setCSSDisplay, 100);
@@ -529,7 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    
+
     const ankiContainer = document.getElementById('anki-container');
     if (ankiContainer) {
         ankiContainer.addEventListener('click', (e) => {
@@ -543,4 +520,271 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateAnkiStats();
     setInterval(updateAnkiStats, 60 * 1000);
+
+    // --- Drawing Exercise Integration ---
+
+    const switchIdList = ["text-grid", "text-pinyin", "text-meaning", "text-sim", "text-trad", "text-stroke-color", "text-outline"];
+    const numberInputList = ["draw-size", "stroke-size", "hint-miss", "no-of-sentence", "level-of-sentence", "length-of-sentence"];
+    const sentenceCheckboxList = ["text-sentence", "text-sentence-random", "text-sentence-colored"];
+    let frontBack = "front";
+    let characters = "";
+
+    function setActive(side) {
+        frontBack = side === "text-front" ? "front" : "back";
+        const frontBtn = document.getElementById("text-front");
+        const backBtn = document.getElementById("text-back");
+        if (frontBtn && backBtn) {
+        if (side === "text-front") {
+            frontBtn.classList.add("btn-active");
+            backBtn.classList.remove("btn-active");
+        } else {
+            backBtn.classList.add("btn-active");
+            frontBtn.classList.remove("btn-active");
+        }
+        }
+        initSwitchPrefs();
+    }
+
+    function initPractice() {
+        const elem = document.getElementById("practice-select");
+        if (!elem) return;
+        const stored = getStorage(frontBack + "practice-select");
+        elem.selectedIndex = (stored !== null && stored !== undefined) ? parseInt(stored) : 0;
+        setStorage(frontBack + "practice-select", elem.selectedIndex);
+    }
+
+    function initSwitchPrefs() {
+        const drawIds = ["text-grid", "text-stroke-color", "text-outline"];
+
+        switchIdList.forEach(_id => {
+            const perId = frontBack + _id;
+            const elem = document.getElementById(_id);
+            if (!elem) return;
+            const divId = _id.replace("text-", "char_");
+            const divElem = document.getElementById(divId);
+
+            const stored = getStorage(perId);
+            elem.checked = stored !== "false";
+            setStorage(perId, elem.checked.toString());
+
+            if (divElem && !drawIds.includes(_id)) {
+                showHide(divElem, elem.checked, "block");
+            }
+
+            applyToggleEffect(_id, elem.checked);
+        });
+
+        sentenceCheckboxList.forEach(_id => {
+            const elem = document.getElementById(_id);
+            if (elem) {
+                const saved = getStorage(frontBack + _id);
+                elem.checked = saved !== "false";
+                setStorage(frontBack + _id, elem.checked.toString());
+            }
+        });
+
+        showTraditionalChar();
+    }
+
+    function applyToggleEffect(id, isShow) {
+        const effects = {
+            "text-pinyin": [".pinyin"],
+            "text-sim": ["#char-sim-id"],
+            "text-trad": ["#char-trad-id", ".sep"]
+        };
+
+        if (effects[id]) {
+            effects[id].forEach(selector => showHide(selector, isShow));
+        }
+    }
+
+    function showTraditionalChar() {
+        const tradChar = document.getElementById("char_trad");
+        const simChar = document.getElementById("char_sim");
+        if (!tradChar || !simChar) return;
+
+        if (tradChar.innerHTML !== simChar.innerHTML) {
+            showHide(tradChar, getStorage(frontBack + "text-trad") === "true", "block");
+        } else {
+            if (getStorage(frontBack + "text-sim") === "true") {
+                showHide(tradChar, false);
+            }
+        }
+    }
+
+    function initDrawPrefs() {
+        const defaults = { "draw-size": 400, "stroke-size": 64, "hint-miss": 5, "no-of-sentence": 5, "level-of-sentence": 3 };
+
+        numberInputList.forEach(_id => {
+            const elem = document.getElementById(_id);
+            if (elem) {
+                const stored = getStorage(frontBack + _id);
+                elem.value = stored || defaults[_id] || elem.value;
+                setStorage(frontBack + _id, elem.value);
+            }
+        });
+
+        const perIndex = getStorage(frontBack + "practice-select");
+        const practiceSelect = document.getElementById("practice-select");
+        if (practiceSelect) {
+        practiceSelect.selectedIndex = perIndex || 0;
+            const tradChar = document.getElementById('char_trad');
+            const simChar = document.getElementById('char_sim');
+            if (tradChar && simChar) {
+                characters = perIndex == 1 ? tradChar.innerHTML : simChar.innerHTML;
+            }
+        }
+    }
+
+    function setPrefs(e) {
+        if (!e || !e.id) return;
+        const perId = frontBack + e.id;
+        setStorage(perId, e.type === "checkbox" ? e.checked.toString() : e.type === "number" ? e.value : e.selectedIndex);
+
+        if (e.id === "practice-select") {
+            const tradChar = document.getElementById('char_trad');
+            const simChar = document.getElementById('char_sim');
+            if (tradChar && simChar) {
+                characters = e.selectedIndex === 1
+                    ? tradChar.innerHTML
+                    : simChar.innerHTML;
+            doPractice();
+            }
+            return;
+        }
+
+        if (e.type === "checkbox") {
+            const drawIds = ["text-stroke-color", "text-outline"];
+            if (drawIds.includes(e.id)) return;
+
+            const divId = e.id.replace("text-", "char_");
+            const divElem = document.getElementById(divId);
+            if (divElem) {
+                showHide(divElem, e.checked, "block");
+                applyToggleEffect(e.id, e.checked);
+            }
+
+            if (["text-sim", "text-trad", "text-pinyin", "text-meaning"].includes(e.id)) {
+                updateSentenceVisibility();
+            }
+        }
+    }
+
+    function updateSentenceVisibility() {
+        const showSim = getStorage(frontBack + "text-sim") !== "false";
+        const showTrad = getStorage(frontBack + "text-trad") !== "false";
+        const showPinyin = getStorage(frontBack + "text-pinyin") !== "false";
+        const showMeaning = getStorage(frontBack + "text-meaning") !== "false";
+
+        showHide(document.querySelectorAll(".sen-sim"), showSim, 'block');
+        showHide(document.querySelectorAll(".sen-trad"), showTrad, 'block');
+        showHide(document.querySelectorAll(".sen-pin"), showPinyin, 'block');
+        showHide(document.querySelectorAll(".sen-eng"), showMeaning, 'block');
+    }
+
+    function openSidebar(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.width = id === "sidebar" ? "250px" : "160px";
+    }
+    function closeSidebar(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.width = "0";
+    }
+
+    function doPractice() {
+        const target = document.getElementById('character-target');
+        if (!target) return;
+        target.innerHTML = '';
+        if (!characters) return;
+
+        const drawSize = parseInt(document.getElementById('draw-size')?.value) || 200;
+        const strokeSize = parseInt(document.getElementById('stroke-size')?.value) || 20;
+        const hintMiss = parseInt(document.getElementById('hint-miss')?.value) || 3;
+        const showOutline = document.getElementById('text-outline')?.checked;
+        const customColor = document.getElementById('text-stroke-color')?.checked;
+        const showGrid = document.getElementById('text-grid')?.checked;
+
+        const chars = characters.split('').filter(c => /[\u4e00-\u9fa5]/.test(c));
+        
+        chars.forEach(char => {
+            const charDiv = document.createElement('div');
+            charDiv.style.display = 'inline-block';
+            charDiv.style.margin = '5px';
+            if (showGrid) {
+                charDiv.style.border = '1px solid rgba(224, 222, 244, 0.1)';
+                charDiv.style.background = 'repeating-linear-gradient(0deg, transparent, transparent 49%, rgba(224, 222, 244, 0.05) 50%, transparent 51%), repeating-linear-gradient(90deg, transparent, transparent 49%, rgba(224, 222, 244, 0.05) 50%, transparent 51%)';
+            }
+            target.appendChild(charDiv);
+
+            const writer = HanziWriter.create(charDiv, char, {
+                width: drawSize,
+                height: drawSize,
+                padding: 5,
+                showOutline: showOutline !== false,
+                showCharacter: false,
+                strokeAnimationSpeed: 1,
+                delayBetweenStrokes: 200,
+                strokeColor: customColor ? '#eb81cf' : '#e0def4',
+                outlineColor: '#403d52',
+                drawingColor: '#9ccfd8',
+                drawingThickness: strokeSize / 5,
+                showHintAfterMisses: hintMiss
+            });
+            writer.quiz();
+        });
+    }
+
+    [...switchIdList, ...numberInputList, ...sentenceCheckboxList].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', () => {
+                setPrefs(el);
+                if (id.startsWith('text-sentence') || ['no-of-sentence', 'level-of-sentence', 'length-of-sentence'].includes(id)) {
+                    const char = getCardCharacter();
+                    if (char) loadMoreSentences(char);
+                } else {
+                    doPractice();
+                }
+            });
+        }
+    });
+
+    const practiceSelect = document.getElementById('practice-select');
+    if (practiceSelect) {
+        practiceSelect.addEventListener('change', () => setPrefs(practiceSelect));
+    }
+
+    const btnMenu = document.getElementById("btnShowMenu");
+    const btnMore = document.getElementById("btnMoreOptions");
+    const btnFront = document.getElementById("text-front");
+    const btnBack = document.getElementById("text-back");
+
+    if (btnMenu) btnMenu.addEventListener('click', (e) => { e.stopPropagation(); openSidebar("sidebar"); });
+    if (btnMore) btnMore.addEventListener('click', (e) => { e.stopPropagation(); openSidebar("more-info-sidebar"); });
+    if (btnFront) btnFront.addEventListener('click', () => setActive('text-front'));
+    if (btnBack) btnBack.addEventListener('click', () => setActive('text-back'));
+
+    document.addEventListener('click', function (event) {
+        const sidebar = document.getElementById("sidebar");
+        const moreSidebar = document.getElementById("more-info-sidebar");
+        const btnMenu = document.getElementById("btnShowMenu");
+        const btnMore = document.getElementById("btnMoreOptions");
+
+        if (sidebar && btnMenu && !sidebar.contains(event.target) && !btnMenu.contains(event.target)) {
+            closeSidebar("sidebar");
+        }
+
+        if (moreSidebar && btnMore && !moreSidebar.contains(event.target) && !btnMore.contains(event.target)) {
+            closeSidebar("more-info-sidebar");
+        }
+    });
+
+    function initAll() {
+        setActive(document.getElementById("back") ? "text-back" : "text-front");
+        initPractice();
+        initSwitchPrefs();
+        initDrawPrefs();
+    }
+
+    initAll();
 });

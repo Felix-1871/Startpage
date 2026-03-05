@@ -1,0 +1,62 @@
+// Wrapper for AnkiConnect API calls
+export async function invoke(action, version, params = {}) {
+    const ANKI_CONNECT_URL = 'http://127.0.0.1:8765';
+    try {
+        const response = await fetch(ANKI_CONNECT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, version, params })
+        });
+        if (!response.ok) throw new Error('Network response was not ok');
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+        return result.result;
+    } catch (error) {
+        console.error('AnkiConnect Error:', error);
+        return null;
+    }
+}
+
+// Converts base64 string to Blob
+export function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
+    const byteCharacters = atob(b64Data);
+    const byteArrays = [];
+    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+        const slice = byteCharacters.slice(offset, offset + sliceSize);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+    }
+    return new Blob(byteArrays, { type: contentType });
+}
+
+// Randomizes array order
+export function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// Toggles display of elements matching a selector
+export function showHide(type, isShow, style = "inline") {
+    const elements = typeof type === 'string' ? document.querySelectorAll(type) : [type];
+    elements.forEach(function (val) {
+        if (val) val.style.display = isShow ? style : 'none';
+    });
+}
+
+// Helper to get value from localStorage with a default
+export function getStorage(key, defaultValue = null, storageType = localStorage) {
+    const stored = storageType.getItem(key);
+    return stored !== null ? stored : defaultValue;
+}
+
+// Helper to set value to localStorage
+export function setStorage(key, value, storageType = localStorage) {
+    storageType.setItem(key, value);
+}
