@@ -8,7 +8,6 @@ export const ANKI_SETTINGS = {
     "char_trad": { label: 'Show Traditional', key: 'backtext-trad', default: 'false', type: 'select' },
     "char_sim": { label: 'Show Simplified', key: 'backtext-sim', default: 'false', type: 'select' },
     "char_sentence-random": { label: 'Random Sentence', key: 'backtext-sentence-random', default: 'false', type: 'select' },
-    "char_sentence-random-colored": { label: 'Colored Random Sentence', key: 'backtext-sentence-random-colored', default: 'false', type: 'select' },
     "noOfSentence": { label: 'Number of Sentences', key: 'backno-of-sentence', default: '5', type: 'number' },
     "levelOfSentence": { label: 'Sentence Level', key: 'backlevel-of-sentence', default: '6', type: 'number' },
     "lengthOfSentence": { label: 'Sentence Length', key: 'backlength-of-sentence', default: '30', type: 'number' }

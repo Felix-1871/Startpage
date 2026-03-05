@@ -3,7 +3,7 @@ import { openAnkiSettings, setCSSDisplay, loadSettingsForDeck, ANKI_SETTINGS } f
 const ANKI_CONNECT_URL = 'http://127.0.0.1:8765';
 let activeBlobUrls = [];
 
-// Sentence State
+
 let sentencesData = null;
 let indexByChar = null;
 let cachedResults = [];
@@ -81,6 +81,8 @@ async function processAnkiHtml(container, html) {
             const blobUrl = URL.createObjectURL(blob);
             activeBlobUrls.push(blobUrl);
             el.setAttribute(attr, blobUrl);
+        } else {
+            el.setAttribute(attr, 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
         }
     }
 
@@ -107,22 +109,24 @@ async function processAnkiHtml(container, html) {
 
     const scripts = tempDiv.querySelectorAll('script');
     for (const oldScript of scripts) {
-        const newScript = document.createElement('script');
-        if (oldScript.src) {
-            newScript.src = oldScript.src;
-            await new Promise((resolve) => {
-                newScript.onload = resolve;
-                newScript.onerror = resolve;
+        try {
+            const newScript = document.createElement('script');
+            if (oldScript.src) {
+                newScript.src = oldScript.src;
+                await new Promise((resolve) => {
+                    newScript.onload = resolve;
+                    newScript.onerror = resolve;
+                    document.head.appendChild(newScript);
+                });
+            } else {
+                newScript.textContent = oldScript.textContent;
                 document.head.appendChild(newScript);
-            });
-        } else {
-            newScript.textContent = oldScript.textContent;
-            document.head.appendChild(newScript);
+            }
+        } catch (e) {
         }
     }
 }
 
-// Sentence Logic Functions
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -136,19 +140,11 @@ function buildCharIndex(data) {
     for (let i = 0; i < data.length; i++) {
         const sentence = data[i];
         if (!sentence.simplified) continue;
-        
-        // Correctly iterate over Unicode characters (handles surrogate pairs)
+           
         const chars = [...sentence.simplified];
         const uniqueChars = new Set(chars);
-        if (i === 5){
-        console.log(`Indexing sentence ${i}: "${sentence.simplified}" with chars:`, uniqueChars);
-        console.log(chars)  
-        console.log(sentence.simplified.length, chars.length)
-        console.log(sentence.simplified)
-        }
 
         uniqueChars.forEach(ch => {
-            // Only index if it's a Chinese character
             if (/[\u4e00-\u9fa5]/.test(ch)) {
                 if (!index[ch]) index[ch] = [];
                 index[ch].push(sentence);
@@ -177,7 +173,6 @@ async function loadSentences(searchText) {
         const response = await invoke('retrieveMediaFile', 6, { filename: '_chinese_sentences.json' });
         if (!response) throw new Error("No sentence data returned from Anki");
         
-        // Use TextDecoder to handle UTF-8 correctly instead of just atob()
         const binaryString = atob(response);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
@@ -186,9 +181,7 @@ async function loadSentences(searchText) {
         const decoded = new TextDecoder('utf-8').decode(bytes);
         
         sentencesData = JSON.parse(decoded);
-        console.log("Loaded sentences:", sentencesData.length);
         indexByChar = buildCharIndex(sentencesData);
-        console.log(indexByChar);
 
         cachedResults = [];
         lastQueryKey = "";
@@ -207,14 +200,12 @@ async function loadSentences(searchText) {
 function loadMoreSentences(searchText) {
     if (!sentencesData || !indexByChar || !searchText) return;
 
-    // Get current settings from sessionStorage
     const settings = {
         limit: parseInt(sessionStorage.getItem(ANKI_SETTINGS.noOfSentence.key)) || 5,
         level: parseInt(sessionStorage.getItem(ANKI_SETTINGS.levelOfSentence.key)) || 9,
         length: parseInt(sessionStorage.getItem(ANKI_SETTINGS.lengthOfSentence.key)) || 10,
         random: sessionStorage.getItem(ANKI_SETTINGS["char_sentence-random"].key) === '"true"',
         show: sessionStorage.getItem(ANKI_SETTINGS.char_sentence.key) === '"true"',
-        colored: sessionStorage.getItem(ANKI_SETTINGS["char_sentence-random-colored"].key) === '"true"'
     };
 
     const container = document.getElementById("char_sentence");
@@ -232,13 +223,11 @@ function loadMoreSentences(searchText) {
         sentenceOffset = 0;
 
         let pool = searchText.length === 1 ? (indexByChar[searchText] || []) : sentencesData;
-        console.log(`Pool size for "${searchText}":`, pool.length);
 
         cachedResults = pool.filter(s => {
             const levelMatch = s.hsk_level === undefined || s.hsk_level <= settings.level;
             const lengthMatch = s.simplified.length <= settings.length;
             if (!levelMatch || !lengthMatch) {
-                // Silently filter or log if needed
             }
             return (
                 s.simplified &&
@@ -247,7 +236,6 @@ function loadMoreSentences(searchText) {
                 lengthMatch
             );
         });
-        console.log(`Filtered results for "${searchText}":`, cachedResults.length);
 
         if (settings.random) {
             shuffle(cachedResults);
@@ -277,7 +265,6 @@ function loadMoreSentences(searchText) {
         div.className = "sentence";
         
         let simplifiedHTML = s.simplified;
-        // Highlight search text
         const regex = new RegExp(searchText, "g");
         simplifiedHTML = simplifiedHTML.replace(regex, `<b>${searchText}</b>`);
 
@@ -465,7 +452,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const char = getCardCharacter();
         if (char) {
-            console.log("Extracted character for sentences:", char);
             loadSentences(char);
         }
 
@@ -543,11 +529,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    const loadMoreBtn = document.getElementById("loadMore");
-    if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', () => {
-            const char = getCardCharacter();
-            if (char) loadMoreSentences(char);
+    
+    const ankiContainer = document.getElementById('anki-container');
+    if (ankiContainer) {
+        ankiContainer.addEventListener('click', (e) => {
+            const target = e.target.closest('#loadMore');
+            if (target) {
+                const char = getCardCharacter();
+                if (char) loadMoreSentences(char);
+            }
         });
     }
 
