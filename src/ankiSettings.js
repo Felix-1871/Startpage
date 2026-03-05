@@ -10,8 +10,8 @@ export const ANKI_SETTINGS = {
     "char_sentence-random": { label: 'Random Sentence', key: 'backtext-sentence-random', default: 'false', type: 'select' },
     "char_sentence-random-colored": { label: 'Colored Random Sentence', key: 'backtext-sentence-random-colored', default: 'false', type: 'select' },
     "noOfSentence": { label: 'Number of Sentences', key: 'backno-of-sentence', default: '5', type: 'number' },
-    "levelOfSentence": { label: 'Sentence Level', key: 'backlevel-of-sentence', default: '1', type: 'number' },
-    "lengthOfSentence": { label: 'Sentence Length', key: 'backlength-of-sentence', default: '10', type: 'number' }
+    "levelOfSentence": { label: 'Sentence Level', key: 'backlevel-of-sentence', default: '6', type: 'number' },
+    "lengthOfSentence": { label: 'Sentence Length', key: 'backlength-of-sentence', default: '30', type: 'number' }
 };
 
 export function loadSettingsForDeck(deckName) {
@@ -52,7 +52,7 @@ export function setCSSDisplay() {
 
     for (const name in ANKI_SETTINGS) {
         const item = ANKI_SETTINGS[name];
-        if (name.startsWith('char_')) {
+        if (name.startsWith('char_') ) {
             const val = sessionStorage.getItem(item.key);
             const isVisible = (val === '"true"' || val === 'true');
             

@@ -1,7 +1,15 @@
-import { openAnkiSettings, setCSSDisplay, loadSettingsForDeck } from './ankiSettings.js';
+import { openAnkiSettings, setCSSDisplay, loadSettingsForDeck, ANKI_SETTINGS } from './ankiSettings.js';
 
 const ANKI_CONNECT_URL = 'http://127.0.0.1:8765';
 let activeBlobUrls = [];
+
+// Sentence State
+let sentencesData = null;
+let indexByChar = null;
+let cachedResults = [];
+let lastQueryKey = "";
+let sentenceOffset = 0;
+let isSentenceLoading = false;
 
 async function invoke(action, version, params = {}) {
     try {
@@ -114,8 +122,188 @@ async function processAnkiHtml(container, html) {
     }
 }
 
-export async function updateAnkiStats() {
+// Sentence Logic Functions
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function buildCharIndex(data) {
+    const index = Object.create(null);
+    for (let i = 0; i < data.length; i++) {
+        const sentence = data[i];
+        if (!sentence.simplified) continue;
+        
+        // Correctly iterate over Unicode characters (handles surrogate pairs)
+        const chars = [...sentence.simplified];
+        const uniqueChars = new Set(chars);
+        if (i === 5){
+        console.log(`Indexing sentence ${i}: "${sentence.simplified}" with chars:`, uniqueChars);
+        console.log(chars)  
+        console.log(sentence.simplified.length, chars.length)
+        console.log(sentence.simplified)
+        }
+
+        uniqueChars.forEach(ch => {
+            // Only index if it's a Chinese character
+            if (/[\u4e00-\u9fa5]/.test(ch)) {
+                if (!index[ch]) index[ch] = [];
+                index[ch].push(sentence);
+            }
+        });
+    }
+    return index;
+}
+
+function makeQueryKey(char, settings) {
+    return `${char}|${settings.level}|${settings.length}|${settings.limit}|${settings.random ? 1 : 0}`;
+}
+
+async function loadSentences(searchText) {
+    if (!searchText) return;
     
+    if (sentencesData && indexByChar) {
+        loadMoreSentences(searchText);
+        return;
+    }
+
+    if (isSentenceLoading) return;
+    isSentenceLoading = true;
+
+    try {
+        const response = await invoke('retrieveMediaFile', 6, { filename: '_chinese_sentences.json' });
+        if (!response) throw new Error("No sentence data returned from Anki");
+        
+        // Use TextDecoder to handle UTF-8 correctly instead of just atob()
+        const binaryString = atob(response);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        const decoded = new TextDecoder('utf-8').decode(bytes);
+        
+        sentencesData = JSON.parse(decoded);
+        console.log("Loaded sentences:", sentencesData.length);
+        indexByChar = buildCharIndex(sentencesData);
+        console.log(indexByChar);
+
+        cachedResults = [];
+        lastQueryKey = "";
+        sentenceOffset = 0;
+
+        loadMoreSentences(searchText);
+    } catch (error) {
+        console.error("Failed to load sentences:", error);
+        const container = document.getElementById("char_sentence");
+        if (container) container.classList.add("hidden");
+    } finally {
+        isSentenceLoading = false;
+    }
+}
+
+function loadMoreSentences(searchText) {
+    if (!sentencesData || !indexByChar || !searchText) return;
+
+    // Get current settings from sessionStorage
+    const settings = {
+        limit: parseInt(sessionStorage.getItem(ANKI_SETTINGS.noOfSentence.key)) || 5,
+        level: parseInt(sessionStorage.getItem(ANKI_SETTINGS.levelOfSentence.key)) || 9,
+        length: parseInt(sessionStorage.getItem(ANKI_SETTINGS.lengthOfSentence.key)) || 10,
+        random: sessionStorage.getItem(ANKI_SETTINGS["char_sentence-random"].key) === '"true"',
+        show: sessionStorage.getItem(ANKI_SETTINGS.char_sentence.key) === '"true"',
+        colored: sessionStorage.getItem(ANKI_SETTINGS["char_sentence-random-colored"].key) === '"true"'
+    };
+
+    const container = document.getElementById("char_sentence");
+    if (!settings.show) {
+        if (container) container.classList.add("hidden");
+        return;
+    } else {
+        if (container) container.classList.remove("hidden");
+    }
+
+    const queryKey = makeQueryKey(searchText, settings);
+
+    if (queryKey !== lastQueryKey) {
+        lastQueryKey = queryKey;
+        sentenceOffset = 0;
+
+        let pool = searchText.length === 1 ? (indexByChar[searchText] || []) : sentencesData;
+        console.log(`Pool size for "${searchText}":`, pool.length);
+
+        cachedResults = pool.filter(s => {
+            const levelMatch = s.hsk_level === undefined || s.hsk_level <= settings.level;
+            const lengthMatch = s.simplified.length <= settings.length;
+            if (!levelMatch || !lengthMatch) {
+                // Silently filter or log if needed
+            }
+            return (
+                s.simplified &&
+                s.simplified.includes(searchText) &&
+                levelMatch &&
+                lengthMatch
+            );
+        });
+        console.log(`Filtered results for "${searchText}":`, cachedResults.length);
+
+        if (settings.random) {
+            shuffle(cachedResults);
+        } else {
+            cachedResults.sort((a, b) => a.id - b.id);
+        }
+    }
+
+    const sentencesGrid = document.getElementById("sentences");
+    if (!sentencesGrid) return;
+
+    if (sentenceOffset === 0) sentencesGrid.innerHTML = '';
+
+    const page = cachedResults.slice(sentenceOffset, sentenceOffset + settings.limit);
+    
+    if (page.length === 0 && sentenceOffset === 0) {
+        sentencesGrid.innerHTML = '<div style="text-align:center; padding:10px; opacity:0.6;">No example sentences found.</div>';
+        return;
+    }
+
+    const showSim = sessionStorage.getItem(ANKI_SETTINGS.char_sim.key) !== '"false"';
+    const showPin = sessionStorage.getItem(ANKI_SETTINGS.char_pinyin.key) !== '"false"';
+    const showMean = sessionStorage.getItem(ANKI_SETTINGS.char_meaning.key) !== '"false"';
+
+    page.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "sentence";
+        
+        let simplifiedHTML = s.simplified;
+        // Highlight search text
+        const regex = new RegExp(searchText, "g");
+        simplifiedHTML = simplifiedHTML.replace(regex, `<b>${searchText}</b>`);
+
+        div.innerHTML = `
+            <div class="sen-card">
+                <div class="sen-sim" style="display:${showSim ? 'block' : 'none'}">${simplifiedHTML}</div>
+                <div class="sen-pin" style="display:${showPin ? 'block' : 'none'}">${s.pinyin}</div>
+                <div class="sen-eng" style="display:${showMean ? 'block' : 'none'}">${s.english || ""}</div>
+            </div>
+        `;
+        sentencesGrid.appendChild(div);
+    });
+
+    sentenceOffset += settings.limit;
+    
+    const loadMoreBtn = document.getElementById("loadMore");
+    if (loadMoreBtn) {
+        if (sentenceOffset >= cachedResults.length) {
+            loadMoreBtn.classList.add("hidden");
+        } else {
+            loadMoreBtn.classList.remove("hidden");
+        }
+    }
+}
+
+export async function updateAnkiStats() {
     const ankiStats = document.getElementById('anki-stats');
     const ankiMessage = document.getElementById('anki-message');
     const ankiStudyBtn = document.getElementById('anki-study-btn');
@@ -181,8 +369,8 @@ export async function updateAnkiStats() {
             
             const total = (stat.new_count || 0) + (stat.learn_count || 0) + (stat.review_count || 0);
             
-            // Only show study button if NOT currently in study view
-            if (ankiStudyView.style.display === 'none') {
+            const isStudying = ankiStudyView.style.display !== 'none' && ankiStudyView.style.display !== '';
+            if (!isStudying) {
                 ankiStudyBtn.style.display = total > 0 ? 'block' : 'none';
             } else {
                 ankiStudyBtn.style.display = 'none';
@@ -221,11 +409,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const ankiPlayAudioBtn = document.querySelector('.anki-play-audio');
 
     async function loadCurrentCard() {
-        
         let card = await invoke('guiCurrentCard', 6);
-        
         if (!card) {
-            
             await updateAnkiStats();
             const total = parseInt(document.getElementById('anki-new').textContent) + 
                           parseInt(document.getElementById('anki-learning').textContent) + 
@@ -246,14 +431,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
         }
-
         renderCard(card);
     }
 
+    function getCardCharacter() {
+        const cardFront = document.getElementById('anki-card-front');
+        if (!cardFront) return null;
+        const text = cardFront.textContent.trim();
+        const match = text.match(/[\u4e00-\u9fa5]/);
+        return match ? match[0] : text.charAt(0) || null;
+    }
+
     async function renderCard(card) {
-        
         clearBlobUrls();
-        
         const selectedDeck = deckSelect.value;
         loadSettingsForDeck(selectedDeck);
 
@@ -272,6 +462,13 @@ document.addEventListener('DOMContentLoaded', () => {
         easeButtons.style.display = '';
 
         setCSSDisplay();
+        
+        const char = getCardCharacter();
+        if (char) {
+            console.log("Extracted character for sentences:", char);
+            loadSentences(char);
+        }
+
         setTimeout(setCSSDisplay, 100);
     }
 
@@ -283,7 +480,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ankiStudyView.style.display = 'block';
         ankiStudyBtn.style.display = 'none';
         middleLeft.classList.add('expanded');
-        loadJsonSentences();
         loadCurrentCard();
     }
 
@@ -312,6 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
             audioPlayer.onended = () => URL.revokeObjectURL(blobUrl);
         }
     }
+
     ankiStudyBtn.addEventListener('click', startStudy);
     ankiBackBtn.addEventListener('click', stopStudy);
     ankiSettingsBtn.addEventListener('click', () => {
@@ -319,6 +516,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedDeck) {
             openAnkiSettings(selectedDeck, () => {
                 setCSSDisplay();
+                const char = getCardCharacter();
+                if (char) loadSentences(char);
             });
         }
     });
@@ -339,213 +538,19 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', async () => {
             const ease = parseInt(btn.dataset.ease);
             await invoke('guiAnswerCard', 6, { ease });
-            // Refresh stats after answering
             updateAnkiStats();
             setTimeout(loadCurrentCard, 300);
         });
     });
 
+    const loadMoreBtn = document.getElementById("loadMore");
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => {
+            const char = getCardCharacter();
+            if (char) loadMoreSentences(char);
+        });
+    }
+
     updateAnkiStats();
     setInterval(updateAnkiStats, 60 * 1000);
 });
-
-
-    var offset = 0;
-    var db = null;
-
-    function getSentenceSettings() {
-        return {
-            limit: parseInt(localStorage.getItem("no-of-sentence") ||
-                document.getElementById("no-of-sentence")?.value) || 5,
-            level: parseInt(localStorage.getItem("level-of-sentence") ||
-                document.getElementById("level-of-sentence")?.value) || 9,
-            length: parseInt(localStorage.getItem("length-of-sentence") ||
-                document.getElementById("length-of-sentence")?.value) || 10,
-            random: localStorage.getItem("text-sentence-random") !== "false" &&
-                (document.getElementById("text-sentence-random")?.checked ?? true),
-            colored: localStorage.getItem("text-sentence-colored") !== "false" &&
-                (document.getElementById("text-sentence-colored")?.checked ?? true),
-            show: localStorage.getItem("text-sentence") !== "false" &&
-                (document.getElementById("text-sentence")?.checked ?? true)
-        };
-    }
-
-    setTimeout(() => {
-        var settings = getSentenceSettings();
-        var sentenceDiv = document.getElementById("char_sentence");
-        if (sentenceDiv) {
-            sentenceDiv.style.display = settings.show ? "block" : "none";
-        }
-        if (settings.show) {
-            loadSentences();
-        }
-    }, 100);
-
-    var sentences = null;
-    var indexByChar = null;
-    var cachedResults = [];
-    var lastQueryKey = "";
-    var offset = 0;
-    var isLoading = false;
-
-    function shuffle(array) {
-        for (var i = array.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
-            var tmp = array[i];
-            array[i] = array[j];
-            array[j] = tmp;
-        }
-        return array;
-    }
-
-    function buildCharIndex(data) {
-        var index = Object.create(null);
-
-        for (var i = 0; i < data.length; i++) {
-            var sentence = data[i];
-            if (!sentence.simplified) continue;
-
-            var uniqueChars = new Set(sentence.simplified);
-            uniqueChars.forEach(function (ch) {
-                if (!index[ch]) index[ch] = [];
-                index[ch].push(sentence);
-            });
-        }
-        return index;
-    }
-
-    function makeQueryKey(char, settings) {
-        return (
-            char + "|" +
-            settings.level + "|" +
-            settings.length + "|" +
-            settings.limit + "|" +
-            (settings.random ? 1 : 0)
-        );
-    }
-
-    function escapeRegex(text) {
-        return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    }
-loadSentences();
-    async function loadSentences() {
-        if (sentences && indexByChar) {
-            loadMore();
-            return;
-        }
-
-        if (isLoading) return;
-        isLoading = true;
-
-        try {
-            var response = await invoke('retrieveMediaFile', 6, { filename: '_chinese_sentences.json' });
-
-            sentences = await JSON.parse(atob(response));
-            console.log("Loaded sentences:", sentences.length);
-            indexByChar = buildCharIndex(sentences);
-
-            cachedResults = [];
-            lastQueryKey = "";
-            offset = 0;
-
-            loadMore();
-        } catch (error) {
-            console.log("Failed to load sentences:", error);
-            var container = document.getElementById("char_sentence");
-            if (container) container.style.display = "none";
-        } finally {
-            isLoading = false;
-        }
-    }
-
-    function loadMore() {
-        if (!sentences || !indexByChar) return;
-
-        var settings = getSentenceSettings();
-        var searchText = "有";
-
-        var queryKey = makeQueryKey(searchText, settings);
-
-        if (queryKey !== lastQueryKey) {
-            lastQueryKey = queryKey;
-            offset = 0;
-
-            var pool;
-            if (searchText.length === 1) {
-                pool = indexByChar[searchText] || [];
-            } else {
-                pool = sentences;
-            }
-
-            cachedResults = pool.filter(function (s) {
-                return (
-                    s.simplified &&
-                    s.simplified.includes(searchText) &&
-                    s.hsk_level <= settings.level &&
-                    s.simplified.length < settings.length
-                );
-            });
-
-            if (settings.random) {
-                shuffle(cachedResults);
-            } else {
-                cachedResults.sort(function (a, b) {
-                    return a.id - b.id;
-                });
-            }
-        }
-
-        var page = cachedResults.slice(offset, offset + settings.limit);
-        if (!page.length) {
-            var loadMoreBtn = document.getElementById("loadMore");
-            if (loadMoreBtn) {
-                loadMoreBtn.disabled = true;
-                loadMoreBtn.textContent = "No more sentences";
-            }
-            return;
-        }
-
-        var container = document.getElementById("sentences");
-        if (!container) return;
-
-        var showSimplified = Persistence.getItem(frontBack + "text-sim") !== "false";
-        var showTraditional = Persistence.getItem(frontBack + "text-trad") !== "false";
-        var showPinyin = Persistence.getItem(frontBack + "text-pinyin") !== "false";
-        var showMeaning = Persistence.getItem(frontBack + "text-meaning") !== "false";
-
-        var highlightRegex = new RegExp(escapeRegex(searchText), "g");
-
-        page.forEach(function (s) {
-            var simplifiedHTML = s.simplified || "";
-            var pinyinHTML = s.pinyin || "";
-
-            if (settings.colored && s.simplified && s.pinyin) {
-                var colored = getColoredHanziHTML(s.pinyin, s.simplified);
-                pinyinHTML = colored[0].innerHTML;
-                simplifiedHTML = colored[1];
-            }
-
-            simplifiedHTML = simplifiedHTML.replace(
-                highlightRegex,
-                "<b>" + searchText + "</b>"
-            );
-
-            var div = document.createElement("div");
-            div.className = "sentence";
-            div.innerHTML =
-                '<div class="sen-card">' +
-                '<div class="sen-sim" style="display:' + (showSimplified ? "block" : "none") + '">' + simplifiedHTML + "</div>" +
-                '<div class="sen-pin" style="display:' + (showPinyin ? "block" : "none") + '">' + pinyinHTML + "</div>" +
-                '<div class="sen-eng" style="display:' + (showMeaning ? "block" : "none") + '">' + (s.english || "") + "</div>" +
-                "</div>";
-
-            container.appendChild(div);
-        });
-
-        offset += settings.limit;
-    }
-
-    var loadMoreBtn = document.getElementById("loadMore");
-    if (loadMoreBtn) {
-        loadMoreBtn.onclick = loadMore;
-    }
