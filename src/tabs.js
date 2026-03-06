@@ -31,7 +31,6 @@ export const linkData = [
 
   loadSimpleIcons();
 
-  // Create global hover menu if it doesn't exist
   let globalHoverMenu = document.getElementById('global-link-hover-menu');
   if (!globalHoverMenu) {
     globalHoverMenu = document.createElement('div');
@@ -43,7 +42,6 @@ export const linkData = [
     document.body.appendChild(globalHoverMenu);
   }
 
-  // Create global category hover menu if it doesn't exist
   let globalCategoryHoverMenu = document.getElementById('global-category-hover-menu');
   if (!globalCategoryHoverMenu) {
     globalCategoryHoverMenu = document.createElement('div');
@@ -55,7 +53,6 @@ export const linkData = [
     document.body.appendChild(globalCategoryHoverMenu);
   }
 
-  // Enable mousewheel horizontal scrolling for categories
   categoryList.addEventListener('wheel', (e) => {
     if (e.deltaY !== 0) {
       e.preventDefault();
@@ -64,7 +61,6 @@ export const linkData = [
   });
 
   export async function findBestIcon(url, currentIcon = null, currentColor = null) {
-    // If we already have a non-default icon, keep it
     if (currentIcon && !currentIcon.includes('default-link.svg') && currentIcon !== '') {
         return { icon: currentIcon, color: currentColor || '#cccccc' };
     }
@@ -80,7 +76,6 @@ export const linkData = [
         const hostnameWithDot = hostname.replace(/\./g, 'dot');
         const parts = hostname.split('.').filter(p => p !== 'com' && p !== 'org' && p !== 'net' && p !== 'io' && p !== 'pl');
         
-        // Exact candidates
         const exactTerms = new Set([
             hostname,
             hostnameWithDot,
@@ -130,7 +125,6 @@ export const linkData = [
             }
         }
 
-        // Try to find color based on the resolved icon
         const finalIconSlug = iconResult.split('/').pop().replace('.svg', '');
         const colorMatch = simpleIcons.find(brand => {
             const brandTitle = brand.title.toLowerCase();
@@ -312,7 +306,7 @@ export const linkData = [
             if (!category) {
                 category = {
                     category: group_title,
-                    icon: './img/icons/default-category.svg', // Default icon
+                    icon: './img/icons/default-category.svg', 
                     links: []
                 };
                 linkData.push(category);
@@ -330,7 +324,6 @@ export const linkData = [
                 });
             } else {
                 link.name = tab_title;
-                // For legacy links that don't have icon/color yet
                 if (!link.icon || link.icon.includes('default-link.svg')) {
                     const { icon, color } = await findBestIcon(tab_url);
                     link.icon = icon;
@@ -358,14 +351,12 @@ export const linkData = [
       li.innerHTML = `<img src="${category.icon}" alt="${category.category}" class="category-icon"> <span class="category-text">${category.category}</span>`;
       categoryList.appendChild(li);
 
-      // Category Hover
       li.addEventListener("mouseenter", () => {
         if (categoriesHeader.classList.contains('icons-only')) {
             const rect = li.getBoundingClientRect();
             globalCategoryHoverMenu.textContent = category.category;
             globalCategoryHoverMenu.style.display = 'block';
             
-            // Position above the category item
             const top = rect.top - globalCategoryHoverMenu.offsetHeight - 5;
             const left = rect.left + (rect.width / 2) - (globalCategoryHoverMenu.offsetWidth / 2);
             
@@ -401,7 +392,6 @@ export const linkData = [
         <span>${link.name}</span>
       `;
 
-      // Link Hover
       a.addEventListener('mouseenter', () => {
         const rect = a.getBoundingClientRect();
         globalHoverMenu.innerHTML = `
