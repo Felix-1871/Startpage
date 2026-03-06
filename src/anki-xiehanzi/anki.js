@@ -1,4 +1,4 @@
-import { openAnkiSettings, setCSSDisplay, loadSettingsForDeck, ANKI_SETTINGS } from './anki-xiehanzi.js';
+import { openAnkiSettings, setCSSDisplay, loadSettingsForDeck, ANKI_SETTINGS } from './anki-xiehanzi-helpers.js';
 import { getStorage, setStorage, showHide, invoke, b64toBlob} from './helpers.js';
 
 let activeBlobUrls = [];
