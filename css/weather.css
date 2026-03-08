@@ -1,0 +1,16 @@
+.clock-weather-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px; 
+  color: #e0def4; 
+  font-size: 0.85em;
+  text-align: right;
+}
+
+#current-weather img {
+  filter: brightness(0) invert(1); 
+  width: 30px; /* Smaller icon for top right */
+  height: 30px;
+  vertical-align: middle; 
+  margin-right: 5px; 
+}

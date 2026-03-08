@@ -1,0 +1,74 @@
+.glass-box-left {
+  width: 40%;
+  padding: 10px;
+  border-right: 1px solid #eb81cf60; 
+  display: flex; 
+  flex-direction: column; 
+  overflow-y: auto; 
+  background-color: rgba(25, 23, 36, 0.7); 
+  color: #e0def4; 
+}
+
+#todo-list-display {
+  flex-grow: 1; 
+  overflow-y: auto; 
+  padding-bottom: 10px; 
+  width: 100%; 
+}
+
+#todo-input-container {
+  display: flex;
+  align-items: center;
+  padding-top: 10px; 
+  border-top: 1px solid rgba(224, 222, 244, 0.2); 
+}
+
+#todo-input {
+  flex-grow: 1; 
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #e0def4; 
+  outline: none;
+  color: #e0def4;
+  font-size: 1em;
+  padding: 2px 0;
+}
+
+#todo-input::placeholder {
+  color: #908caa; 
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  padding: 5px 0;
+  position: relative; 
+}
+
+.todo-item-checkbox {
+  margin-right: 8px; 
+  accent-color: #eb81cf; 
+}
+
+.todo-item-text.done {
+  text-decoration: line-through;
+  color: #908caa; 
+}
+
+.todo-actions {
+  display: none; 
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.todo-item:hover .todo-actions {
+  display: flex; 
+}
+
+.todo-edit-icon, .todo-remove-icon {
+  cursor: pointer;
+  margin-left: 8px; 
+  font-size: 0.9em;
+}
