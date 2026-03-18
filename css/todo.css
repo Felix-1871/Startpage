@@ -32,10 +32,10 @@
   color: #e0def4;
   font-size: 1em;
   padding: 2px 0;
-}
 
-#todo-input::placeholder {
-  color: #908caa; 
+  &::placeholder {
+    color: #908caa; 
+  }
 }
 
 .todo-item {
@@ -43,6 +43,10 @@
   align-items: center;
   padding: 5px 0;
   position: relative; 
+
+  &:hover .todo-actions {
+    display: flex; 
+  }
 }
 
 .todo-item-checkbox {
@@ -50,9 +54,11 @@
   accent-color: #eb81cf; 
 }
 
-.todo-item-text.done {
-  text-decoration: line-through;
-  color: #908caa; 
+.todo-item-text {
+  &.done {
+    text-decoration: line-through;
+    color: #908caa; 
+  }
 }
 
 .todo-actions {
@@ -63,11 +69,8 @@
   transform: translateY(-50%);
 }
 
-.todo-item:hover .todo-actions {
-  display: flex; 
-}
-
-.todo-edit-icon, .todo-remove-icon {
+.todo-edit-icon, 
+.todo-remove-icon {
   cursor: pointer;
   margin-left: 8px; 
   font-size: 0.9em;

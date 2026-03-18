@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   width: 100%; 
-  justify-content: center; /* Center the inner container */
+  justify-content: center;
   position: relative; 
   background: transparent;
   margin-bottom: 1vh; 
@@ -20,23 +20,11 @@
 
 .top-inner-container {
   width: 100%;
-  max-width: 800px; /* Match search bar width */
+  max-width: 800px;
   display: flex; 
   justify-content: center; 
   align-items: center; 
   height: 100%; 
-}
-
-.top-right {
-  display: flex;
-  flex-direction: column; 
-  align-items: flex-end; 
-  justify-content: center;
-  padding-right: 20px; 
-  height: 100%;
-  position: absolute; 
-  right: 0;
-  top: 0;
 }
 
 .middle {
@@ -62,11 +50,20 @@
   background: transparent; 
   z-index: 10; 
   flex-shrink: 0;
-  transition: width 0.3s ease;
-}
+  transition: all 0.3s ease;
 
-.middle-left.expanded {
-  width: 30% !important;
+  /* Modified by Anki */
+  &.expanded {
+    position: absolute;
+    left: 0;
+    width: 90%;
+    height: 100%;
+    padding: 0 20px 0 40px;
+    background: rgba(25, 23, 36, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 1000;
+  }
 }
 
 .middle-center {
@@ -89,28 +86,19 @@
   z-index: 10;
   flex-shrink: 0;
   transition: all 0.3s ease;
-}
 
-.middle-lute.expanded {
-  position: absolute;
-  right: 0;
-  width: 90%;
-  height: 100%;
-  padding: 0 40px 0 20px;
-  background: rgba(25, 23, 36, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  z-index: 1000;
-}
-
-.bottom {
-  height: 10vh;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  max-width: 1200px; 
-  margin: 0 auto; 
+  /* Modified by Lute */
+  &.expanded {
+    position: absolute;
+    right: 0;
+    width: 90%;
+    height: 100%;
+    padding: 0 40px 0 20px;
+    background: rgba(25, 23, 36, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 1000;
+  }
 }
 
 .glass-box {
@@ -126,4 +114,14 @@
   min-width: 700px; 
   max-width: 800px; 
   max-height: 450px;
+}
+
+.bottom {
+  height: 10vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px; 
+  margin: 0 auto; 
 }

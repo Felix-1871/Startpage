@@ -19,91 +19,94 @@
   border-radius: 10px;
   padding: 15px;
   width: 90%;
-  max-width: 700px; /* Wider for columns */
+  max-width: 700px; 
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   color: #e0def4;
   font-size: 0.85em;
+
+  h3 {
+    margin-top: 0;
+    color: #eb81cf;
+    border-bottom: 1px solid rgba(224, 222, 244, 0.2);
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+  }
 }
 
-.modal-content h3 {
-  margin-top: 0;
-  color: #eb81cf;
-  border-bottom: 1px solid rgba(224, 222, 244, 0.2);
-  padding-bottom: 8px;
-  margin-bottom: 15px;
-  font-size: 1.1em;
-}
-
-/* Modal Form Grid */
 .modal-form {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 columns */
+  grid-template-columns: repeat(2, 1fr); 
   gap: 10px 20px;
 }
 
 .form-group {
   margin-bottom: 0;
-}
 
-.form-group label {
-  display: block;
-  margin-bottom: 3px;
-  font-weight: bold;
-}
+  label {
+    display: block;
+    margin-bottom: 3px;
+    font-weight: bold;
+  }
 
-.form-group input[type="text"],
-.form-group input[type="color"],
-.form-group input[type="number"],
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 6px 10px;
-  border: 1px solid rgba(224, 222, 244, 0.3);
-  border-radius: 5px;
-  background-color: rgba(25, 23, 36, 0.8);
-  color: #e0def4;
-  font-size: 1em;
-}
+  input[type="text"],
+  input[type="color"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid rgba(224, 222, 244, 0.3);
+    border-radius: 5px;
+    background-color: rgba(25, 23, 36, 0.8);
+    color: #e0def4;
+    font-size: 1em;
 
-.form-group textarea {
-  resize: vertical;
-  min-height: 40px;
-  grid-column: span 2; /* Spans full width */
+    &::placeholder {
+      color: #908caa;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 60px;
+    grid-column: span 2; 
+  }
 }
 
 .modal-buttons {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 15px;
+  margin-top: 20px;
   grid-column: span 2;
-}
 
-.modal-buttons button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1em;
-  font-weight: bold;
-}
+  button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+  }
 
-.modal-buttons .save-button {
-  background-color: #eb81cf;
-  color: #191724;
-}
+  .save-button {
+    background-color: #eb81cf;
+    color: #191724;
 
-.modal-buttons .save-button:hover {
-  background-color: #c4a7e7;
-}
+    &:hover {
+      background-color: #c4a7e7;
+    }
+  }
 
-.modal-buttons .cancel-button {
-  background-color: rgba(224, 222, 244, 0.2);
-  color: #e0def4;
-}
+  .cancel-button {
+    background-color: rgba(224, 222, 244, 0.2);
+    color: #e0def4;
 
-.modal-buttons .cancel-button:hover {
-  background-color: rgba(224, 222, 244, 0.3);
+    &:hover {
+      background-color: rgba(224, 222, 244, 0.3);
+    }
+  }
 }
 
 .icon-preview {

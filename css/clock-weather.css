@@ -1,3 +1,15 @@
+.top-right {
+  display: flex;
+  flex-direction: column; 
+  align-items: flex-end; 
+  justify-content: center;
+  padding-right: 20px; 
+  height: 100%;
+  position: absolute; 
+  right: 0;
+  top: 0;
+}
+
 .clock-weather-container {
   display: flex;
   flex-direction: column;
@@ -9,7 +21,7 @@
 
 #current-weather img {
   filter: brightness(0) invert(1); 
-  width: 30px; /* Smaller icon for top right */
+  width: 30px; 
   height: 30px;
   vertical-align: middle; 
   margin-right: 5px; 
