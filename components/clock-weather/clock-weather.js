@@ -1,7 +1,6 @@
+import { OPENWEATHER_API_KEY } from '../../src/config.js';
 
-import { OPENWEATHER_API_KEY } from './config.js';
-
-document.addEventListener('DOMContentLoaded', () => {
+export function init() {
     const currentTimeElement = document.getElementById('current-time');
     const currentWeatherElement = document.getElementById('current-weather');
 
@@ -52,11 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    
     setInterval(updateTime, 60000);
     updateTime(); 
 
-    
     setInterval(fetchWeather, 3600000);
     fetchWeather(); 
-});
+}

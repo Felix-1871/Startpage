@@ -1,5 +1,5 @@
 import { openAnkiSettings, setCSSDisplay, loadSettingsForDeck, ANKI_SETTINGS } from './anki-xiehanzi-helpers.js';
-import { getStorage, setStorage, showHide, invoke, b64toBlob} from './helpers.js';
+import { getStorage, setStorage, showHide, invoke, b64toBlob} from '../../src/helpers.js';
 
 let activeBlobUrls = [];
 let sentencesData = null;
@@ -26,7 +26,7 @@ async function processAnkiHtml(container, html) {
     const footers = tempDiv.querySelectorAll('.modal-footer1');
     footers.forEach(f => f.remove());
 
-    const mediaElements = tempDiv.querySelectorAll('[src], [href], link[rel="stylesheet"]');
+    const mediaElements = tempDiv.querySelectorAll('[src], [href]');
     for (const el of mediaElements) {
         const attr = el.hasAttribute('src') ? 'src' : 'href';
         let path = el.getAttribute(attr);
@@ -37,11 +37,12 @@ async function processAnkiHtml(container, html) {
         if (base64) {
             let mime = 'application/octet-stream';
             if (filename.endsWith('.js')) mime = 'application/javascript';
-            else if (filename.endsWith('.css')) mime = 'text/css';
             else if (filename.endsWith('.png')) mime = 'image/png';
             else if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) mime = 'image/jpeg';
             else if (filename.endsWith('.svg')) mime = 'image/svg+xml';
             else if (filename.endsWith('.gif')) mime = 'image/gif';
+            else if (filename.endsWith('.woff')) mime = 'font/woff';
+            else if (filename.endsWith('.woff2')) mime = 'font/woff2';
             
             const blob = b64toBlob(base64, mime);
             const blobUrl = URL.createObjectURL(blob);
@@ -193,8 +194,6 @@ function loadMoreSentences(searchText) {
         cachedResults = pool.filter(s => {
             const levelMatch = s.hsk_level === undefined || s.hsk_level <= settings.level;
             const lengthMatch = s.simplified.length <= settings.length;
-            if (!levelMatch || !lengthMatch) {
-            }
             return (
                 s.simplified &&
                 s.simplified.includes(searchText) &&
@@ -307,21 +306,16 @@ export async function updateAnkiStats() {
 
     try {
         const deckStats = await invoke('getDeckStats', 6, { decks: [selectedDeck] });
-        
         const deckIDs = await invoke('deckNamesAndIds', 6);
-        
         const selectedDeckId = deckIDs[selectedDeck];
         
-        
         if (deckStats && deckStats[selectedDeckId]) {
-            
             const stat = deckStats[selectedDeckId];
             ankiNew.textContent = stat.new_count ?? 0;
             ankiLearning.textContent = stat.learn_count ?? 0;
             ankiDue.textContent = stat.review_count ?? 0;
             
             const total = (stat.new_count || 0) + (stat.learn_count || 0) + (stat.review_count || 0);
-            
             const isStudying = ankiStudyView.style.display !== 'none' && ankiStudyView.style.display !== '';
             if (!isStudying) {
                 ankiStudyBtn.style.display = total > 0 ? 'block' : 'none';
@@ -345,7 +339,7 @@ export async function updateAnkiStats() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+export function init() {
     const ankiStatsView = document.getElementById('anki-stats-view');
     const ankiStudyView = document.getElementById('anki-study-view');
     const ankiStudyBtn = document.getElementById('anki-study-btn');
@@ -472,9 +466,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    ankiStudyBtn.addEventListener('click', startStudy);
-    ankiBackBtn.addEventListener('click', stopStudy);
-    ankiSettingsBtn.addEventListener('click', () => {
+    if (ankiStudyBtn) ankiStudyBtn.addEventListener('click', startStudy);
+    if (ankiBackBtn) ankiBackBtn.addEventListener('click', stopStudy);
+    if (ankiSettingsBtn) ankiSettingsBtn.addEventListener('click', () => {
         const selectedDeck = deckSelect.value;
         if (selectedDeck) {
             openAnkiSettings(selectedDeck, () => {
@@ -484,10 +478,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
-    ankiPlayAudioBtn.addEventListener('click', playAudio);
-    deckSelect.addEventListener('change', () => updateAnkiStats());
+    if (ankiPlayAudioBtn) ankiPlayAudioBtn.addEventListener('click', playAudio);
+    if (deckSelect) deckSelect.addEventListener('change', () => updateAnkiStats());
     
-    showAnswerBtn.addEventListener('click', async () => {
+    if (showAnswerBtn) showAnswerBtn.addEventListener('click', async () => {
         await invoke('guiShowAnswer', 6);
         cardFront.classList.add('hidden');
         cardBack.classList.remove('hidden');
@@ -506,7 +500,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-
     const ankiContainer = document.getElementById('anki-container');
     if (ankiContainer) {
         ankiContainer.addEventListener('click', (e) => {
@@ -521,8 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAnkiStats();
     setInterval(updateAnkiStats, 60 * 1000);
 
-    // --- Drawing Exercise Integration ---
-
     const switchIdList = ["text-grid", "text-pinyin", "text-meaning", "text-sim", "text-trad", "text-stroke-color", "text-outline"];
     const numberInputList = ["draw-size", "stroke-size", "hint-miss", "no-of-sentence", "level-of-sentence", "length-of-sentence"];
     const sentenceCheckboxList = ["text-sentence", "text-sentence-random", "text-sentence-colored"];
@@ -534,13 +525,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const frontBtn = document.getElementById("text-front");
         const backBtn = document.getElementById("text-back");
         if (frontBtn && backBtn) {
-        if (side === "text-front") {
-            frontBtn.classList.add("btn-active");
-            backBtn.classList.remove("btn-active");
-        } else {
-            backBtn.classList.add("btn-active");
-            frontBtn.classList.remove("btn-active");
-        }
+            if (side === "text-front") {
+                frontBtn.classList.add("btn-active");
+                backBtn.classList.remove("btn-active");
+            } else {
+                backBtn.classList.add("btn-active");
+                frontBtn.classList.remove("btn-active");
+            }
         }
         initSwitchPrefs();
     }
@@ -627,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const perIndex = getStorage(frontBack + "practice-select");
         const practiceSelect = document.getElementById("practice-select");
         if (practiceSelect) {
-        practiceSelect.selectedIndex = perIndex || 0;
+            practiceSelect.selectedIndex = perIndex || 0;
             const tradChar = document.getElementById('char_trad');
             const simChar = document.getElementById('char_sim');
             if (tradChar && simChar) {
@@ -787,4 +778,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initAll();
-});
+}

@@ -29,6 +29,6 @@ export function renderLute() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+export function init() {
     renderLute();
-});
+}

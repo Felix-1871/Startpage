@@ -1,0 +1,47 @@
+<div id="anki-container" class="anki-container">
+  <div class="anki-header">
+    <span>Anki</span>
+    <button id="anki-study-btn" class="anki-small-btn">Study</button>
+  </div>
+  
+  <div id="anki-stats-view">
+    <div id="anki-stats" class="anki-stats">
+      <div class="anki-stat-item new">New: <span id="anki-new">0</span></div>
+      <div class="anki-stat-item learning">Learn: <span id="anki-learning">0</span></div>
+      <div class="anki-stat-item due">Due: <span id="anki-due">0</span></div>
+    </div>
+    <div class="form-group" style="margin-top: 10px;">
+      <select id="anki-deck-select" class="anki-select">
+        <option value="">Loading decks...</option>
+      </select>
+    </div>
+    <div id="anki-message" class="anki-message" style="display: none;">Connect to Anki...</div>
+  </div>
+
+  <div id="anki-study-view" style="display: none;">
+    <div class="anki-study-content">
+      <div id="anki-card-container" class="anki-card-container">
+        <div id="anki-card-front" class="anki-card-side"></div>
+        <div id="anki-card-divider" style="display: none;"></div>
+        <div id="character-target" style="margin-top: 15px; display: flex; justify-content: center;"></div>
+        <div id="anki-card-back" class="anki-card-side" style="display: none;"></div>
+      </div>
+      <div id="anki-controls" class="anki-controls">
+        <button id="anki-show-answer" class="anki-btn main">Show Answer</button>
+        <div id="anki-ease-buttons" style="display: none;">
+          <button class="anki-btn again" data-ease="1">Again</button>
+          <button class="anki-btn hard" data-ease="2">Hard</button>
+          <button class="anki-btn good" data-ease="3">Good</button>
+          <button class="anki-btn easy" data-ease="4">Easy</button>
+          <div class="anki-practice-controls" style="margin-top: 10px; display: flex; gap: 5px;">
+            <button id="anki-settings-btn" class="anki-small-btn">Menu</button>
+            <button id="anki-back-btn" class="anki-small-btn ">Back</button>
+          </div>
+        </div>
+        <div id="anki-persistent-controls" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+          <button class="anki-play-audio">🔊</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

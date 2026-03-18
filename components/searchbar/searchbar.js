@@ -1,7 +1,6 @@
-import { showAlert, showPrompt } from './modals.js';
+import { showAlert, showPrompt } from '../modals/modals.js';
 
-document.addEventListener('DOMContentLoaded', () => {
-    
+export function init() {
     function setupCustomDropdown(dropdownElementId, hiddenInputId, listElementId, options) {
         const dropdownInput = document.getElementById(dropdownElementId);
         const hiddenInput = document.getElementById(hiddenInputId);
@@ -13,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        
         dropdownList.innerHTML = ''; 
         options.forEach(option => {
             const listItem = document.createElement('div');
@@ -30,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dropdownList.appendChild(listItem);
         });
 
-        
         dropdownInput.addEventListener('click', () => {
             dropdownContainer.classList.toggle('active'); 
             if (dropdownContainer.classList.contains('active')) { 
@@ -39,18 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const listHeight = dropdownList.scrollHeight;
 
                 if (spaceBelow < listHeight && spaceAbove > listHeight) {
-                    
                     dropdownList.style.top = 'auto';
                     dropdownList.style.bottom = '100%';
                 } else {
-                    
                     dropdownList.style.top = '100%';
                     dropdownList.style.bottom = 'auto';
                 }
             }
         });
 
-        
         document.addEventListener('click', (event) => {
             if (!dropdownInput.contains(event.target) && !dropdownList.contains(event.target)) {
                 dropdownContainer.classList.remove('active'); 
@@ -60,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    
     const searchEngines = [
         { value: 'discord_webhook', label: 'Discord', url: '' },
         { value: 'ecosia', label: 'Ecosia', url: 'https://www.ecosia.org/search?q=' },
@@ -69,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
         { value: 'aur', label: 'AUR', url: 'https://aur.archlinux.org/packages?O=0&K='}
     ];
 
-    
     setupCustomDropdown(
         'search-engine-select',
         'search-engine-select_hidden',
@@ -77,8 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
         searchEngines
     );
 
-    
-    
     const initialSearchEngineValue = localStorage.getItem('searchEngine.selected') || 'ecosia';
     const initialSearchEngineOption = searchEngines.find(s => s.value === initialSearchEngineValue);
     if (initialSearchEngineOption) {
@@ -86,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('search-engine-select_hidden').value = initialSearchEngineOption.value;
     }
 
-    
     const mainInput = document.getElementById('main-input');
     const searchArrow = document.querySelector('.search-arrow');
     const searchEngineHiddenInput = document.getElementById('search-engine-select_hidden');
@@ -99,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedEngineValue === 'discord_webhook') {
                 const webhookUrl = localStorage.getItem('discord_webhook_url');
                 if (!webhookUrl) {
-                    
                     const url = await showPrompt('Please enter your Discord Webhook URL:');
                     if (url) {
                         localStorage.setItem('discord_webhook_url', url);
@@ -116,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (selectedEngine && selectedEngine.url) {
                 window.location.href = selectedEngine.url + encodeURIComponent(query);
             } else {
-                
                 window.location.href = 'https://www.ecosia.org/search?q=' + encodeURIComponent(query);
             }
         }
@@ -134,20 +121,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-            
         } catch (error) {
             console.error('Error sending message to Discord:', error);
             await showAlert('Failed to send message to Discord. Check console for details.');
         }
     }
 
-    
     mainInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             performSearch();
         }
     });
 
-    
     searchArrow.addEventListener('click', performSearch);
-});
+}

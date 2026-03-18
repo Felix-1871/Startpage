@@ -9,121 +9,33 @@
   <div class="page">
 
     <section class="top">
-      <div class="top-inner-container">
-        <div class="bottom-input-container">
-          <div class="custom-dropdown browser-dropdown">
-            <input type="text" id="search-engine-select" class="custom-dropdown-input" placeholder="Search Engine" readonly>
-            <span class="dropdown-arrow"></span>
-            <input type="hidden" id="search-engine-select_hidden" data-setting-key="searchEngine.selected">
-            <div class="custom-dropdown-list" id="search-engine-select-dropdown-list"></div>
-          </div>
-          <input type="text" id="main-input" class="bottom-input" placeholder="Enter command...">
-          <span class="search-arrow">▶</span>
-        </div>
-      </div>
-      <div class="top-right">
-        <div class="clock-weather-container">
-          <span id="current-time"></span>
-          <span id="current-weather"></span>
-        </div>
-      </div>
+      <div id="searchbar-target"></div>
+      <div class="top-right" id="clock-weather-target"></div>
     </section>
 
     <section class="middle">
-      <div class="middle-left">
-        <div id="anki-container" class="anki-container">
-          <div class="anki-header">
-            <span>Anki</span>
-            <button id="anki-study-btn" class="anki-small-btn">Study</button>
-          </div>
-          
-          <div id="anki-stats-view">
-            <div id="anki-stats" class="anki-stats">
-              <div class="anki-stat-item new">New: <span id="anki-new">0</span></div>
-              <div class="anki-stat-item learning">Learn: <span id="anki-learning">0</span></div>
-              <div class="anki-stat-item due">Due: <span id="anki-due">0</span></div>
-            </div>
-            <div class="form-group" style="margin-top: 10px;">
-              <select id="anki-deck-select" class="anki-select">
-                <option value="">Loading decks...</option>
-              </select>
-            </div>
-            <div id="anki-message" class="anki-message" style="display: none;">Connect to Anki...</div>
-          </div>
-
-          <div id="anki-study-view" style="display: none;">
-            <div class="anki-study-content">
-              <div id="anki-card-container" class="anki-card-container">
-                <div id="anki-card-front" class="anki-card-side"></div>
-                <div id="anki-card-divider" style="display: none;"></div>
-                <div id="character-target" style="margin-top: 15px; display: flex; justify-content: center;"></div>
-                <div id="anki-card-back" class="anki-card-side" style="display: none;"></div>
-              </div>
-              <div id="anki-controls" class="anki-controls">
-                <button id="anki-show-answer" class="anki-btn main">Show Answer</button>
-                <div id="anki-ease-buttons" style="display: none;">
-                  <button class="anki-btn again" data-ease="1">Again</button>
-                  <button class="anki-btn hard" data-ease="2">Hard</button>
-                  <button class="anki-btn good" data-ease="3">Good</button>
-                  <button class="anki-btn easy" data-ease="4">Easy</button>
-                  <div class="anki-practice-controls" style="margin-top: 10px; display: flex; gap: 5px;">
-                    <button id="anki-settings-btn" class="anki-small-btn">Menu</button>
-                    <button id="anki-back-btn" class="anki-small-btn ">Back</button>
-                  </div>
-                </div>
-                <div id="anki-persistent-controls" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
-                  <button class="anki-play-audio">🔊</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="middle-left" id="anki-target"></div>
 
       <div class="middle-center">
         <div class="glass-box">
-          <div class="glass-box-left">
-            <div id="todo-list-display"></div>
-            <div id="todo-input-container"></div>
-          </div>
-          <div class="glass-box-right">
-            <div class="categories-header">
-              <ul id="category-list"></ul>
-            </div>
-            <div class="links-grid" id="links-grid">
-
-            </div>
-          </div>
+          <div class="glass-box-left" id="todo-target"></div>
+          <div class="glass-box-right" id="tabs-target"></div>
         </div>
       </div>
 
-      <div class="middle-lute">
-        <div id="lute-container" class="lute-container">
-            <!-- Lute app embedded here -->
-        </div>
-      </div>
+      <div class="middle-lute" id="lute-target"></div>
     </section>
 
     <section class="bottom">
-      <div class="dock-container">
-        <ul class="bookmarks-list" id="bookmarks-list">
-        </ul>
-      </div>
+      <div class="dock-container" id="bookmarks-target"></div>
     </section>
 
   </div>
 
-  <div id="context-menu" class="context-menu" style="display: none;"></div>
+  <div id="context-menu-target"></div>
+  <div id="modal-target"></div>
 
-  <script type="module" src="./src/config.js"></script>
-  <script type="module" src="./src/tabs.js"></script>
-  <script type="module" src="./src/search-bar.js"></script>
-  <script type="module" src="./src/clock-weather.js"></script>
-  <script type="module" src="./src/todo.js"></script>
-  <script type="module" src="./src/context-menu.js"></script>
-  <script type="module" src="./src/anki.js"></script>
-  <script type="module" src="./src/lute.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <script type="module" src="./src/main.js"></script>
 </body>
-<div id="modal-container" class="modal-overlay" style="display: none;"></div>
 </html>

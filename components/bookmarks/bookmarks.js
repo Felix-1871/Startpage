@@ -1,8 +1,9 @@
-import { findBestIcon } from './tabs.js';
+import { findBestIcon } from '../tabs/tabs.js';
 
 export const bookmarks = [];
 
-const bookmarksList = document.getElementById('bookmarks-list');
+let bookmarksList;
+let globalHoverMenu;
 
 function getLuminance(hex) {
     const rgb = (hex || '#cccccc').replace('#', '');
@@ -22,17 +23,6 @@ export function loadBookmarks() {
         bookmarks.length = 0;
         JSON.parse(stored).forEach(b => bookmarks.push(b));
     }
-}
-
-let globalHoverMenu = document.getElementById('global-link-hover-menu');
-if (!globalHoverMenu) {
-    globalHoverMenu = document.createElement('div');
-    globalHoverMenu.id = 'global-link-hover-menu';
-    globalHoverMenu.className = 'link-hover-menu';
-    globalHoverMenu.style.position = 'fixed';
-    globalHoverMenu.style.display = 'none';
-    globalHoverMenu.style.zIndex = '1000000';
-    document.body.appendChild(globalHoverMenu);
 }
 
 export function renderBookmarks() {
@@ -85,7 +75,18 @@ export function renderBookmarks() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+export function init() {
+    bookmarksList = document.getElementById('bookmarks-list');
+    globalHoverMenu = document.getElementById('global-link-hover-menu');
+    if (!globalHoverMenu) {
+        globalHoverMenu = document.createElement('div');
+        globalHoverMenu.id = 'global-link-hover-menu';
+        globalHoverMenu.className = 'link-hover-menu';
+        globalHoverMenu.style.position = 'fixed';
+        globalHoverMenu.style.display = 'none';
+        globalHoverMenu.style.zIndex = '1000000';
+        document.body.appendChild(globalHoverMenu);
+    }
     loadBookmarks();
     renderBookmarks();
-});
+}

@@ -1,20 +1,18 @@
-import { showAlert, showConfirm, showPrompt } from './modals.js';
+import { showAlert, showConfirm, showPrompt } from '../modals/modals.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+export function init() {
     const todoListDisplay = document.getElementById('todo-list-display');
     const GLASSBOX_LEFT = document.querySelector('.glass-box-left'); 
 
     let todos = JSON.parse(localStorage.getItem('todos')) || [];
 
-    
     function saveTodos() {
         localStorage.setItem('todos', JSON.stringify(todos));
     }
 
-    
     function renderTodos() {
+        if (!todoListDisplay) return;
         todoListDisplay.innerHTML = ''; 
-        
         
         todos.forEach((todo, index) => {
             const todoItem = document.createElement('div');
@@ -29,14 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             todoListDisplay.appendChild(todoItem);
 
-            
             todoItem.querySelector('.todo-item-checkbox').addEventListener('change', (event) => {
                 todos[index].done = event.target.checked;
                 saveTodos();
                 renderTodos(); 
             });
 
-            
             todoItem.querySelector('.todo-edit-icon').addEventListener('click', async (event) => {
                 const todoIndex = parseInt(event.target.dataset.index);
                 const newText = await showPrompt('Edit your todo:', todos[todoIndex].text);
@@ -47,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            
             todoItem.querySelector('.todo-remove-icon').addEventListener('click', async (event) => {
                 const todoIndex = parseInt(event.target.dataset.index);
                 if (await showConfirm('Are you sure you want to remove this todo?')) {
@@ -58,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         
-        
         const todoInputContainer = document.createElement('div');
         todoInputContainer.id = 'todo-input-container';
         todoInputContainer.innerHTML = `
@@ -66,16 +60,16 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         todoListDisplay.appendChild(todoInputContainer);
 
-        
-        if (todos.length === 0) {
-            GLASSBOX_LEFT.style.justifyContent = 'center';
-            GLASSBOX_LEFT.style.alignItems = 'center';
-        } else {
-            GLASSBOX_LEFT.style.justifyContent = 'flex-start';
-            GLASSBOX_LEFT.style.alignItems = 'flex-start';
+        if (GLASSBOX_LEFT) {
+            if (todos.length === 0) {
+                GLASSBOX_LEFT.style.justifyContent = 'center';
+                GLASSBOX_LEFT.style.alignItems = 'center';
+            } else {
+                GLASSBOX_LEFT.style.justifyContent = 'flex-start';
+                GLASSBOX_LEFT.style.alignItems = 'flex-start';
+            }
         }
 
-        
         const todoInput = document.getElementById('todo-input');
         if (todoInput) {
             todoInput.addEventListener('keydown', (event) => {
@@ -95,6 +89,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    
     renderTodos();
-});
+}
