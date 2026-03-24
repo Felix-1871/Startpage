@@ -1,0 +1,59 @@
+.sentence {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: var(--bg-dim);
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+}
+
+.sen-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sen-sim {
+    font-size: 1.1em;
+    color: var(--text);
+}
+
+.sen-sim b {
+    color: var(--accent);
+}
+
+.sen-pin {
+    font-size: 0.85em;
+    color: var(--foam);
+}
+
+.sen-eng {
+    font-size: 0.85em;
+    color: var(--gold);
+    opacity: 0.8;
+}
+
+#loadMore {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px;
+    background-color: var(--text-05);
+    border: 1px solid var(--text-15);
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: all 0.2s ease;
+}
+
+#loadMore:hover {
+    background-color: var(--text-15);
+    border-color: var(--accent);
+}
+
+#char_sentence.hidden {
+    display: none;
+}
+
+#loadMore.hidden {
+    display: none;
+}

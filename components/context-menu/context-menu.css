@@ -3,14 +3,14 @@
   z-index: 1000;
   min-width: 200px;
   width: fit-content;
-  background-color: rgba(31, 29, 46, 0.9); 
+  background-color: var(--surface-90); 
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(224, 222, 244, 0.2); 
+  border: 1px solid var(--border-med); 
   border-radius: 8px;
   padding: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  color: #e0def4;
+  box-shadow: 0 4px 6px var(--shadow-med);
+  color: var(--text);
 
   ul {
     list-style: none;
@@ -24,7 +24,7 @@
     transition: background-color 0.2s ease;
 
     &:hover {
-      background-color: rgba(224, 222, 244, 0.1);
+      background-color: var(--border-subtle);
     }
   }
 }
@@ -42,7 +42,7 @@
 .context-menu-title {
   font-weight: bold;
   padding-bottom: 5px;
-  border-bottom: 1px solid rgba(224, 222, 244, 0.2);
+  border-bottom: 1px solid var(--border-med);
   margin-bottom: 5px;
 }
 

@@ -1,4 +1,4 @@
-export class ModuleSwitcher {
+export class ModuleManager {
     constructor() {
         this.activeModules = new Set();
     }

@@ -1,8 +1,8 @@
 .dock-container {
-  background-color: rgba(31, 29, 46, 0.5); 
+  background-color: var(--glass-bg); 
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(224, 222, 244, 0.2); 
+  border: 1px solid var(--border-med); 
   height: 70px; 
   width: auto; 
   min-width: 200px;

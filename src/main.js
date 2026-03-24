@@ -1,21 +1,21 @@
-import { ModuleSwitcher } from './ModuleSwitcher.js';
+import { ModuleManager } from './ModuleManager.js';
 
-const switcher = new ModuleSwitcher();
+const manager = new ModuleManager();
 
 async function initApp() {
     // Load components
     // Modals first as others might depend on it (though usually they import it)
-    await switcher.loadModule('modals', 'components/modals', '#modal-target');
+    await manager.loadModule('modals', 'components/modals', '#modal-target');
     
     // Core layout modules
-    await switcher.loadModule('searchbar', 'components/searchbar', '#searchbar-target');
-    await switcher.loadModule('clock-weather', 'components/clock-weather', '#clock-weather-target');
-    await switcher.loadModule('todo', 'components/todo', '#todo-target');
-    await switcher.loadModule('tabs', 'components/tabs', '#tabs-target');
-    await switcher.loadModule('anki', 'components/anki', '#anki-target');
-    await switcher.loadModule('lute', 'components/lute', '#lute-target');
-    await switcher.loadModule('bookmarks', 'components/bookmarks', '#bookmarks-target');
-    await switcher.loadModule('context-menu', 'components/context-menu', '#context-menu-target');
+    await manager.loadModule('searchbar', 'components/searchbar', '#topmid-target');
+    await manager.loadModule('clock-weather', 'components/clock-weather', '#topright-target');
+    await manager.loadModule('todo', 'components/todo', '#midcenterleft-target');
+    await manager.loadModule('tabs', 'components/tabs', '#midcenterright-target');
+    await manager.loadModule('anki', 'components/anki', '#midleft-target');
+    await manager.loadModule('lute', 'components/lute', '#midright-target');
+    await manager.loadModule('bookmarks', 'components/bookmarks', '#bottom-target');
+    await manager.loadModule('context-menu', 'components/context-menu', '#context-menu-target');
 }
 
 initApp();

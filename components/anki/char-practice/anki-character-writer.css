@@ -1,0 +1,16 @@
+#character-target {
+  background: var(--bg-dim);
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.anki-practice-controls {
+  flex-wrap: wrap;
+}
+
+.btn-active {
+  background-color: var(--accent) !important;
+  color: var(--base) !important;
+}

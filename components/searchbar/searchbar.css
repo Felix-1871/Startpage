@@ -3,9 +3,9 @@
   align-items: center;
   max-width: 800px; 
   width: calc(100% - 5pt); 
-  border: 1px solid rgba(224, 222, 244, 0.2); 
+  border: 1px solid var(--border-med); 
   border-radius: 8px; 
-  background-color: rgba(31, 29, 46, 0.7); 
+  background-color: var(--surface-70); 
 }
 
 .browser-dropdown {
@@ -16,9 +16,9 @@
     width: 100%;
     padding: 10px 15px; 
     border: none; 
-    border-right: 1px solid rgba(224, 222, 244, 0.2); 
+    border-right: 1px solid var(--border-med); 
     background-color: transparent; 
-    color: #e0def4;
+    color: var(--text);
     font-size: 16px;
     outline: none;
     cursor: pointer;
@@ -28,7 +28,7 @@
     border-bottom-left-radius: 8px;
 
     &::placeholder {
-      color: #908caa;
+      color: var(--subtle);
     }
   }
 
@@ -36,14 +36,14 @@
     position: absolute;
     left: 0;
     right: 0;
-    background-color: rgba(31, 29, 46, 0.9); 
-    border: 1px solid rgba(224, 222, 244, 0.2);
+    background-color: var(--surface-90); 
+    border: 1px solid var(--border-med);
     border-radius: 8px;
     max-height: 200px;
     overflow-y: auto;
     z-index: 100; 
     display: none; 
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px var(--shadow-low);
 
     /* Modified by Search Bar (Active state) */
     .browser-dropdown.active & {
@@ -53,11 +53,11 @@
 
   .custom-dropdown-list-item {
     padding: 10px 15px;
-    color: #e0def4;
+    color: var(--text);
     cursor: pointer;
 
     &:hover {
-      background-color: rgba(224, 222, 244, 0.1);
+      background-color: var(--border-subtle);
     }
   }
 }
@@ -67,7 +67,7 @@
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color: #e0def4; 
+  color: var(--text); 
   transition: transform 0.2s ease;
   pointer-events: none; 
   z-index: 10; 
@@ -88,13 +88,13 @@
   padding: 10px 15px;
   border: none; 
   background-color: transparent; 
-  color: #e0def4; 
+  color: var(--text); 
   font-size: 16px;
   outline: none;
   border-right: none; 
 
   &::placeholder {
-    color: #908caa; 
+    color: var(--subtle); 
   }
 }
 
@@ -104,7 +104,7 @@
   justify-content: center;
   width: 40px; 
   padding: 10px 5px; 
-  color: #e0def4; 
+  color: var(--text); 
   font-size: 16px;
   cursor: pointer;
   background-color: transparent; 
@@ -112,6 +112,6 @@
   border-bottom-right-radius: 8px;
 
   &:hover {
-    background-color: rgba(224, 222, 244, 0.1); 
+    background-color: var(--border-subtle); 
   }
 }

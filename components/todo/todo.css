@@ -1,12 +1,12 @@
 .glass-box-left {
   width: 40%;
   padding: 10px;
-  border-right: 1px solid #eb81cf60; 
+  border-right: 1px solid var(--accent-muted); 
   display: flex; 
   flex-direction: column; 
   overflow-y: auto; 
-  background-color: rgba(25, 23, 36, 0.7); 
-  color: #e0def4; 
+  background-color: var(--base-70); 
+  color: var(--text); 
 }
 
 #todo-list-display {
@@ -20,21 +20,21 @@
   display: flex;
   align-items: center;
   padding-top: 10px; 
-  border-top: 1px solid rgba(224, 222, 244, 0.2); 
+  border-top: 1px solid var(--border-med); 
 }
 
 #todo-input {
   flex-grow: 1; 
   background: transparent;
   border: none;
-  border-bottom: 1px solid #e0def4; 
+  border-bottom: 1px solid var(--text); 
   outline: none;
-  color: #e0def4;
+  color: var(--text);
   font-size: 1em;
   padding: 2px 0;
 
   &::placeholder {
-    color: #908caa; 
+    color: var(--subtle); 
   }
 }
 
@@ -51,13 +51,13 @@
 
 .todo-item-checkbox {
   margin-right: 8px; 
-  accent-color: #eb81cf; 
+  accent-color: var(--accent); 
 }
 
 .todo-item-text {
   &.done {
     text-decoration: line-through;
-    color: #908caa; 
+    color: var(--subtle); 
   }
 }
 
