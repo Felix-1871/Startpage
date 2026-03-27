@@ -2,14 +2,15 @@
   display: flex;
   align-items: center;
   max-width: 800px; 
-  width: calc(100% - 5pt); 
+  min-width: 700px;
+  width: 100%; 
   border: 1px solid var(--border-med); 
   border-radius: 8px; 
   background-color: var(--surface-70); 
+  position: relative; /* Added to allow absolute positioning of dropdown relative to container */
 }
 
 .browser-dropdown {
-  position: relative;
   width: 120px; 
 
   .custom-dropdown-input {
@@ -35,15 +36,16 @@
   .custom-dropdown-list {
     position: absolute;
     left: 0;
-    right: 0;
+    right: 0; /* This now makes it the width of .bottom-input-container because of relative positioning there */
     background-color: var(--surface-90); 
     border: 1px solid var(--border-med);
     border-radius: 8px;
-    max-height: 200px;
+    max-height: 400px;
     overflow-y: auto;
     z-index: 100; 
     display: none; 
     box-shadow: 0 4px 6px var(--shadow-low);
+    padding: 10px;
 
     /* Modified by Search Bar (Active state) */
     .browser-dropdown.active & {
@@ -51,13 +53,49 @@
     }
   }
 
+  .dropdown-category-header {
+    padding: 10px 5px 5px 5px;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--subtle);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 5px;
+  }
+
+  .dropdown-grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    margin-bottom: 15px;
+  }
+
   .custom-dropdown-list-item {
-    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
     color: var(--text);
     cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
 
     &:hover {
       background-color: var(--border-subtle);
+    }
+
+    .engine-icon {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+      filter: brightness(0) invert(1); 
+    }
+
+    span {
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 }

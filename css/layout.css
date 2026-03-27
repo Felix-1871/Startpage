@@ -21,6 +21,7 @@
 .top-inner-container {
   width: 100%;
   max-width: 800px;
+  min-width: 700px;
   display: flex; 
   justify-content: center; 
   align-items: center; 

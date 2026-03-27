@@ -1,7 +1,7 @@
 import { showAlert, showPrompt } from '../modals/modals.js';
 
 export function init() {
-    function setupCustomDropdown(dropdownElementId, hiddenInputId, listElementId, options) {
+    function setupCustomDropdown(dropdownElementId, hiddenInputId, listElementId, categories) {
         const dropdownInput = document.getElementById(dropdownElementId);
         const hiddenInput = document.getElementById(hiddenInputId);
         const dropdownList = document.getElementById(listElementId);
@@ -13,19 +13,41 @@ export function init() {
         }
 
         dropdownList.innerHTML = ''; 
-        options.forEach(option => {
-            const listItem = document.createElement('div');
-            listItem.classList.add('custom-dropdown-list-item');
-            listItem.textContent = option.label;
-            listItem.dataset.value = option.value;
-            listItem.addEventListener('click', () => {
-                dropdownInput.value = option.label;
-                hiddenInput.value = option.value;
-                dropdownContainer.classList.remove('active'); 
-                dropdownList.style.top = '100%'; 
-                dropdownList.style.bottom = 'auto'; 
+        
+        Object.entries(categories).forEach(([categoryName, engines]) => {
+            const categoryHeader = document.createElement('div');
+            categoryHeader.classList.add('dropdown-category-header');
+            categoryHeader.textContent = categoryName;
+            dropdownList.appendChild(categoryHeader);
+
+            const gridContainer = document.createElement('div');
+            gridContainer.classList.add('dropdown-grid-container');
+
+            engines.forEach(engine => {
+                const listItem = document.createElement('div');
+                listItem.classList.add('custom-dropdown-list-item');
+                
+                const icon = document.createElement('img');
+                icon.src = `img/icons/${engine.icon}`;
+                icon.classList.add('engine-icon');
+                listItem.appendChild(icon);
+
+                const label = document.createElement('span');
+                label.textContent = engine.label;
+                listItem.appendChild(label);
+
+                listItem.dataset.value = engine.value;
+                listItem.addEventListener('click', () => {
+                    dropdownInput.value = engine.label;
+                    hiddenInput.value = engine.value;
+                    dropdownContainer.classList.remove('active'); 
+                    dropdownList.style.top = '100%'; 
+                    dropdownList.style.bottom = 'auto'; 
+                    localStorage.setItem('searchEngine.selected', engine.value);
+                });
+                gridContainer.appendChild(listItem);
             });
-            dropdownList.appendChild(listItem);
+            dropdownList.appendChild(gridContainer);
         });
 
         dropdownInput.addEventListener('click', () => {
@@ -54,13 +76,27 @@ export function init() {
         });
     }
 
-    const searchEngines = [
-        { value: 'discord_webhook', label: 'Discord', url: '' },
-        { value: 'ecosia', label: 'Ecosia', url: 'https://www.ecosia.org/search?q=' },
-        { value: 'arch_wiki', label: 'Arch', url: 'https://wiki.archlinux.org/index.php?title=Special%253ASearch&fulltext=1&search=' },
-        { value: 'yt', label: 'Youtube', url: 'https://www.youtube.com/results?search_query=' },
-        { value: 'aur', label: 'AUR', url: 'https://aur.archlinux.org/packages?O=0&K='}
-    ];
+    const searchEngines = {
+        'General': [
+            { value: 'ecosia', label: 'Ecosia', url: 'https://www.ecosia.org/search?q=', icon: 'ecosia.svg' },
+            { value: 'google', label: 'Google', url: 'https://www.google.com/search?q=', icon: 'google.svg' },
+            { value: 'duckduckgo', label: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=', icon: 'duckduckgo.svg' },
+        ],
+        'Dev': [
+            { value: 'arch_wiki', label: 'Arch', url: 'https://wiki.archlinux.org/index.php?title=Special%253ASearch&fulltext=1&search=', icon: 'archlinux.svg' },
+            { value: 'github', label: 'GitHub', url: 'https://github.com/search?q=', icon: 'github.svg' },
+            { value: 'stackoverflow', label: 'Stack Overflow', url: 'https://stackoverflow.com/search?q=', icon: 'stackoverflow.svg' },
+            { value: 'aur', label: 'AUR', url: 'https://aur.archlinux.org/packages?O=0&K=', icon: 'archlinux.svg' },
+        ],
+        'Media': [
+            { value: 'yt', label: 'Youtube', url: 'https://www.youtube.com/results?search_query=', icon: 'youtube.svg' },
+            { value: 'twitch', label: 'Twitch', url: 'https://www.twitch.tv/search?term=', icon: 'twitch.svg' },
+            { value: 'reddit', label: 'Reddit', url: 'https://www.reddit.com/search/?q=', icon: 'reddit.svg' },
+        ],
+        'Social': [
+            { value: 'discord_webhook', label: 'Discord', url: '', icon: 'discord.svg' },
+        ]
+    };
 
     setupCustomDropdown(
         'search-engine-select',
@@ -70,7 +106,12 @@ export function init() {
     );
 
     const initialSearchEngineValue = localStorage.getItem('searchEngine.selected') || 'ecosia';
-    const initialSearchEngineOption = searchEngines.find(s => s.value === initialSearchEngineValue);
+    let initialSearchEngineOption = null;
+    for (const category in searchEngines) {
+        initialSearchEngineOption = searchEngines[category].find(s => s.value === initialSearchEngineValue);
+        if (initialSearchEngineOption) break;
+    }
+
     if (initialSearchEngineOption) {
         document.getElementById('search-engine-select').value = initialSearchEngineOption.label;
         document.getElementById('search-engine-select_hidden').value = initialSearchEngineOption.value;
@@ -100,7 +141,12 @@ export function init() {
                 return;
             }
 
-            const selectedEngine = searchEngines.find(engine => engine.value === selectedEngineValue);
+            let selectedEngine = null;
+            for (const category in searchEngines) {
+                selectedEngine = searchEngines[category].find(engine => engine.value === selectedEngineValue);
+                if (selectedEngine) break;
+            }
+
             if (selectedEngine && selectedEngine.url) {
                 window.location.href = selectedEngine.url + encodeURIComponent(query);
             } else {
