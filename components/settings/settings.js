@@ -28,11 +28,14 @@ export async function openSettings() {
 }
 
 function checkTabsVisibility() {
-    const tabsActive = moduleManager.activeModules.has('tabs');
-    const tabsCategory = document.getElementById('settings-category-tabs');
-    if (tabsCategory) {
-        tabsCategory.style.display = tabsActive ? 'block' : 'none';
-    }
+    const modules = ['tabs', 'anki', 'lute', 'searchbar'];
+    modules.forEach(mod => {
+        const isActive = moduleManager.activeModules.has(mod);
+        const categoryItem = document.getElementById(`settings-category-${mod}`);
+        if (categoryItem) {
+            categoryItem.style.display = isActive ? 'block' : 'none';
+        }
+    });
 }
 
 function initElements() {

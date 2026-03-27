@@ -47,7 +47,7 @@ export function renderBookmarks() {
             globalHoverMenu.innerHTML = `
                 <p><strong>${b.name}</strong></p>
                 <p>${b.url}</p>
-                <p>${b.description || 'No description available.'}</p>
+                <p>${b.description || ''}</p>
             `;
             globalHoverMenu.style.display = 'block';
             
