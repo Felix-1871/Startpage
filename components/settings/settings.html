@@ -1,7 +1,8 @@
 <div id="settings-modal-inner" class="settings-modal-inner">
     <div class="settings-sidebar">
         <ul class="settings-categories">
-            <li class="settings-category-item active" data-category="modules">Modules</li>
+            <li class="settings-category-item active" data-category="general">General</li>
+            <li class="settings-category-item" data-category="modules">Modules</li>
             <li class="settings-category-item" data-category="theming">Theming</li>
             <li class="settings-category-item" data-category="tabs" id="settings-category-tabs">Tabs</li>
             <li class="settings-category-item" data-category="anki" id="settings-category-anki">Anki</li>
@@ -10,7 +11,19 @@
         </ul>
     </div>
     <div class="settings-content">
-        <div id="settings-content-modules" class="settings-section active">
+        <div id="settings-content-general" class="settings-section active">
+            <div class="settings-header">
+                <h3>General Settings</h3>
+                <p>Global application settings.</p>
+            </div>
+            <div class="settings-group">
+                <h4>Icon Management</h4>
+                <p class="settings-description">The application uses a pre-generated list of icons for faster discovery. If you added new icons to <code>img/icons/</code>, refresh the list.</p>
+                <button id="refresh-icon-list-btn" class="settings-btn">Refresh Icon List</button>
+                <p id="refresh-icon-status" class="status-msg"></p>
+            </div>
+        </div>
+        <div id="settings-content-modules" class="settings-section">
             <div class="settings-header">
                 <h3>Modules Layout</h3>
                 <p>Click on a rectangle to assign a module to that space.</p>

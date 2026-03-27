@@ -48,6 +48,16 @@ function initElements() {
     selectedSlotName = document.getElementById('selected-slot-name');
     closeModuleSelector = document.getElementById('close-module-selector');
 
+    const refreshIconBtn = document.getElementById('refresh-icon-list-btn');
+    const refreshStatus = document.getElementById('refresh-icon-status');
+
+    if (refreshIconBtn) {
+        refreshIconBtn.addEventListener('click', () => {
+            refreshStatus.textContent = 'Please run updateIconList.sh manually in your terminal to update the icons.json file.';
+            refreshStatus.style.color = 'var(--gold)';
+        });
+    }
+
     categories.forEach(cat => {
         cat.addEventListener('click', () => {
             const target = cat.dataset.category;

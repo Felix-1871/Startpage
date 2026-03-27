@@ -1,4 +1,6 @@
-import { linkData, renderCategories, renderLinks, syncLinksFromJson, syncLinksOverwrite, getSyncChanges, applyChange, findBestIcon } from '../tabs/tabs.js';
+import { linkData, renderCategories, renderLinks, syncLinksFromJson, syncLinksOverwrite, getSyncChanges, applyChange } from '../tabs/tabs.js';
+import { findBestIcon } from '../../src/icon-manager.js';
+import { openLinkModal } from '../../src/link-manager.js';
 import { bookmarks, renderBookmarks, saveBookmarks } from '../bookmarks/bookmarks.js';
 import { openModal, showAlert, showConfirm, showPrompt } from '../modals/modals.js';
 import { updateAnkiStats } from '../anki/anki.js';
@@ -142,14 +144,8 @@ function renderContextMenu(type = null, index = null, subIndex = null) {
                     label: 'Edit Link', 
                     action: () => {
                         const linkItem = linkData[index].links[subIndex];
-                        openModal('Edit Link', [
-                            { name: 'name', label: 'Link Name', type: 'text' },
-                            { name: 'url', label: 'URL', type: 'text' },
-                            { name: 'icon', label: 'Icon', type: 'select-icon' },
-                            { name: 'color', label: 'Brand Color', type: 'color' },
-                            { name: 'description', label: 'Description', type: 'textarea' },
-                        ], { name: linkItem.name, url: linkItem.url, icon: linkItem.icon, color: linkItem.color || '#cccccc', description: linkItem.description }, (data) => {
-                            linkData[index].links[subIndex] = { ...linkData[index].links[subIndex], ...data, icon: data.icon || './img/icons/default-link.svg' };
+                        openLinkModal('Edit Link', { ...linkItem, type: 'tab' }, (data) => {
+                            linkData[index].links[subIndex] = { ...linkData[index].links[subIndex], ...data };
                             saveAndRefresh();
                             contextMenu.style.display = 'none';
                         });
@@ -175,14 +171,8 @@ function renderContextMenu(type = null, index = null, subIndex = null) {
                     label: 'Edit Bookmark',
                     action: () => {
                         const b = bookmarks[index];
-                        openModal('Edit Bookmark', [
-                            { name: 'name', label: 'Name', type: 'text' },
-                            { name: 'url', label: 'URL', type: 'text' },
-                            { name: 'icon', label: 'Icon', type: 'select-icon' },
-                            { name: 'color', label: 'Brand Color', type: 'color' },
-                            { name: 'description', label: 'Description', type: 'textarea' },
-                        ], { name: b.name, url: b.url, icon: b.icon, color: b.color || '#c4a7e7', description: b.description }, (data) => {
-                            bookmarks[index] = { ...bookmarks[index], ...data, icon: data.icon || './img/icons/default-link.svg' };
+                        openLinkModal('Edit Bookmark', { ...b, type: 'bookmark' }, (data) => {
+                            bookmarks[index] = { ...bookmarks[index], ...data };
                             saveBookmarks();
                             renderBookmarks();
                             contextMenu.style.display = 'none';
@@ -229,15 +219,8 @@ function renderContextMenu(type = null, index = null, subIndex = null) {
                     label: 'Add New Link', 
                     action: () => {
                         const activeIdx = document.querySelector('.category-item.active')?.dataset.index || 0;
-                        openModal('Add Link', [{ name: 'name', label: 'Name', type: 'text' }, { name: 'url', label: 'URL', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }, { name: 'color', label: 'Brand Color', type: 'color' }, { name: 'description', label: 'Description', type: 'textarea' }], { color: '#cccccc' }, async (data) => { 
-                            let finalIcon = data.icon;
-                            let finalColor = data.color;
-                            if (!finalIcon) {
-                                const best = await findBestIcon(data.url);
-                                finalIcon = best.icon;
-                                if (finalColor === '#cccccc') finalColor = best.color;
-                            }
-                            linkData[activeIdx].links.push({ ...data, icon: finalIcon, color: finalColor }); 
+                        openLinkModal('Add Link', { type: 'tab' }, (data) => { 
+                            linkData[activeIdx].links.push(data); 
                             saveAndRefresh(); 
                             contextMenu.style.display = 'none';
                         });
@@ -246,21 +229,8 @@ function renderContextMenu(type = null, index = null, subIndex = null) {
                 {
                     label: 'Add New Bookmark',
                     action: () => {
-                        openModal('Add Bookmark', [
-                            { name: 'name', label: 'Name', type: 'text' },
-                            { name: 'url', label: 'URL', type: 'text' },
-                            { name: 'icon', label: 'Icon', type: 'select-icon' },
-                            { name: 'color', label: 'Brand Color', type: 'color' },
-                            { name: 'description', label: 'Description', type: 'textarea' },
-                        ], { color: '#c4a7e7' }, async (data) => {
-                            let finalIcon = data.icon;
-                            let finalColor = data.color;
-                            if (!finalIcon) {
-                                const best = await findBestIcon(data.url);
-                                finalIcon = best.icon;
-                                if (finalColor === '#c4a7e7') finalColor = best.color;
-                            }
-                            bookmarks.push({ ...data, icon: finalIcon, color: finalColor });
+                        openLinkModal('Add Bookmark', { type: 'bookmark' }, (data) => {
+                            bookmarks.push(data);
                             saveBookmarks();
                             renderBookmarks();
                             contextMenu.style.display = 'none';

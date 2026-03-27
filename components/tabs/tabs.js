@@ -1,121 +1,10 @@
-import { iconList } from '../../src/iconList.js';
-import { showSelectionModal } from '../modals/modals.js';
+import { findBestIcon } from '../../src/icon-manager.js';
+import { createLinkElement, setupHoverMenu } from '../../src/link-manager.js';
 
 export const linkData = [];
 
 let categoryList, linksGrid, categoriesHeader;
 let globalHoverMenu, globalCategoryHoverMenu;
-let simpleIcons = [];
-let simpleIconsPromise = null;
-
-async function loadSimpleIcons() {
-    if (simpleIconsPromise) return simpleIconsPromise;
-    
-    simpleIconsPromise = (async () => {
-        try {
-            const response = await fetch('./img/simple-icons.json');
-            if (response.ok) {
-                simpleIcons = await response.json();
-            }
-        } catch (e) {
-            console.error('Failed to load simple-icons.json', e);
-        }
-    })();
-    return simpleIconsPromise;
-}
-
-const iconCache = {};
-
-export async function findBestIcon(url, currentIcon = null, currentColor = null) {
-    if (currentIcon && !currentIcon.includes('default-link.svg') && currentIcon !== '') {
-        return { icon: currentIcon, color: currentColor || '#cccccc' };
-    }
-
-    await loadSimpleIcons();
-
-    try {
-        const urlObj = new URL(url);
-        const hostname = urlObj.hostname.toLowerCase().replace(/^www\./, '');
-        
-        if (iconCache[hostname]) return iconCache[hostname];
-
-        const hostnameWithDot = hostname.replace(/\./g, 'dot');
-        const parts = hostname.split('.').filter(p => p !== 'com' && p !== 'org' && p !== 'net' && p !== 'io' && p !== 'pl');
-        
-        const exactTerms = new Set([
-            hostname,
-            hostnameWithDot,
-            ...parts,
-            hostname.replace(/\.[^.]+$/, '').replace(/\./g, 'dot'),
-            hostname.replace(/\.[^.]+$/, '')
-        ]);
-
-        if (hostname.includes('mail.google')) exactTerms.add('gmail');
-        if (hostname.includes('store.ubi')) exactTerms.add('ubisoft');
-        if (hostname.includes('blizzard')) exactTerms.add('battledotnet');
-        const exactMatches = [];
-        const partialMatches = [];
-
-        iconList.forEach(iconFile => {
-            const iconName = iconFile.toLowerCase().replace('.svg', '');
-            if (exactTerms.has(iconName)) {
-                exactMatches.push(iconFile);
-                return;
-            }
-            const matchingParts = parts.filter(p => p.length > 2 && iconName.includes(p));
-            if (matchingParts.length >= 2) {
-                exactMatches.push(iconFile);
-                return;
-            }
-            if (iconName.length > 3 && (hostname.includes(iconName) || hostnameWithDot.includes(iconName))) {
-                partialMatches.push(iconFile);
-            }
-        });
-
-        let iconResult = './img/icons/default-link.svg';
-        let colorResult = '#cccccc';
-
-        if (exactMatches.length === 1 && partialMatches.length === 0) {
-            iconResult = `./img/icons/${exactMatches[0]}`;
-        } else {
-            const allMatches = [...new Set([...exactMatches, ...partialMatches])];
-            if (allMatches.length === 1) {
-                iconResult = `./img/icons/${allMatches[0]}`;
-            } else if (allMatches.length > 1) {
-                const message = exactMatches.length > 0
-                    ? `Found multiple relevant icons for "${hostname}". Please select one:`
-                    : `No exact match for "${hostname}", but found similar icons. Select one:`;
-                
-                const selected = await showSelectionModal(message, allMatches);
-                iconResult = selected ? `./img/icons/${selected}` : './img/icons/default-link.svg';
-            }
-        }
-
-        const finalIconSlug = iconResult.split('/').pop().replace('.svg', '');
-        const colorMatch = simpleIcons.find(brand => {
-            const brandTitle = brand.title.toLowerCase();
-            const brandSlug = brandTitle.replace(/[^a-z0-9]/g, '');
-            return brandSlug === finalIconSlug || brandTitle.replace(/\s+/g, '') === finalIconSlug;
-        });
-        
-        if (colorMatch) colorResult = `#${colorMatch.hex}`;
-
-        const result = { icon: iconResult, color: colorResult };
-        iconCache[hostname] = result;
-        return result;
-    } catch (e) {
-        console.error('Error finding best icon:', e);
-    }
-    return { icon: './img/icons/default-link.svg', color: '#cccccc' };
-}
-
-function getLuminance(hex) {
-    const rgb = (hex || '#cccccc').replace('#', '');
-    const r = parseInt(rgb.substr(0, 2), 16);
-    const g = parseInt(rgb.substr(2, 2), 16);
-    const b = parseInt(rgb.substr(4, 2), 16);
-    return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-}
 
 export async function fetchExternalLinks() {
     const response = await fetch('tabs.json');
@@ -344,49 +233,7 @@ export function renderLinks(categoryIndex) {
     linksGrid.innerHTML = "";
     if (!category) return;
     category.links.forEach((link, subIndex) => {
-        const a = document.createElement("a");
-        a.href = link.url;
-        a.className = "glass-link";
-        a.dataset.subindex = subIndex;
-        a.target = "_blank";
-        
-        const brandColor = link.color || '#cccccc';
-        const isDark = getLuminance(brandColor) < 0.5;
-        
-        a.innerHTML = `
-            <div class="icon-container" style="background-color: ${brandColor};">
-                <img src="${link.icon || './img/icons/default-link.svg'}" alt="${link.name}" class="link-icon ${isDark ? 'inverted-icon' : ''}">
-            </div>
-            <span>${link.name}</span>
-        `;
-
-        a.addEventListener('mouseenter', () => {
-            const rect = a.getBoundingClientRect();
-            globalHoverMenu.innerHTML = `
-                <p><strong>${link.name}</strong></p>
-                <p>${link.url}</p>
-                <p>${link.description || 'No description available.'}</p>
-            `;
-            globalHoverMenu.style.display = 'block';
-            
-            let top = rect.bottom + 5;
-            let left = rect.left;
-            
-            if (top + globalHoverMenu.offsetHeight > window.innerHeight) {
-                top = rect.top - globalHoverMenu.offsetHeight - 5;
-            }
-            if (left + globalHoverMenu.offsetWidth > window.innerWidth) {
-                left = window.innerWidth - globalHoverMenu.offsetWidth - 10;
-            }
-
-            globalHoverMenu.style.top = `${top}px`;
-            globalHoverMenu.style.left = `${left}px`;
-        });
-
-        a.addEventListener('mouseleave', () => {
-            globalHoverMenu.style.display = 'none';
-        });
-
+        const a = createLinkElement(link, subIndex, 'tab', globalHoverMenu);
         linksGrid.appendChild(a);
     });
 }
@@ -408,18 +255,7 @@ export function init() {
     linksGrid = document.getElementById("links-grid");
     categoriesHeader = document.querySelector('.categories-header');
 
-    loadSimpleIcons();
-
-    globalHoverMenu = document.getElementById('global-link-hover-menu');
-    if (!globalHoverMenu) {
-        globalHoverMenu = document.createElement('div');
-        globalHoverMenu.id = 'global-link-hover-menu';
-        globalHoverMenu.className = 'link-hover-menu';
-        globalHoverMenu.style.position = 'fixed';
-        globalHoverMenu.style.display = 'none';
-        globalHoverMenu.style.zIndex = '1000000';
-        document.body.appendChild(globalHoverMenu);
-    }
+    globalHoverMenu = setupHoverMenu();
 
     globalCategoryHoverMenu = document.getElementById('global-category-hover-menu');
     if (!globalCategoryHoverMenu) {

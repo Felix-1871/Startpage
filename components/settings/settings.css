@@ -243,3 +243,44 @@
     background-color: var(--highlight-high);
     color: var(--pine);
 }
+
+.settings-group {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: var(--highlight-low);
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+}
+
+.settings-group h4 {
+    margin: 0 0 10px 0;
+    color: var(--text);
+    font-size: 1.1em;
+}
+
+.settings-description {
+    font-size: 0.85em;
+    color: var(--subtle);
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.settings-btn {
+    background-color: var(--iris);
+    color: var(--base);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.settings-btn:hover {
+    background-color: var(--rose);
+}
+
+.status-msg {
+    margin-top: 10px;
+    font-size: 0.85em;
+}
