@@ -204,8 +204,12 @@ function renderContextMenu(type = null, index = null, subIndex = null) {
         });
     } else {
         sections.push({
-            title: 'Connection Actions',
+            title: 'System Actions',
             items: [
+                { label: 'Settings', action: () => { 
+                    import('../settings/settings.js').then(m => m.openSettings());
+                    contextMenu.style.display = 'none'; 
+                }},
                 { label: 'Update Anki', action: () => { updateAnkiStats(); contextMenu.style.display = 'none'; } },
                 { label: 'Update Lute', action: () => { renderLute(); contextMenu.style.display = 'none'; } }
             ]

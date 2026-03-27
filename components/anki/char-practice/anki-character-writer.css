@@ -14,3 +14,7 @@
   background-color: var(--accent) !important;
   color: var(--base) !important;
 }
+
+#character-target div svg > g > g:first-child {
+  display: none;
+}

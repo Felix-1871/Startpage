@@ -1,0 +1,51 @@
+<div id="settings-modal-inner" class="settings-modal-inner">
+    <div class="settings-sidebar">
+        <ul class="settings-categories">
+            <li class="settings-category-item active" data-category="modules">Modules</li>
+            <li class="settings-category-item" data-category="theming">Theming</li>
+            <li class="settings-category-item" data-category="tabs" id="settings-category-tabs">Tabs</li>
+        </ul>
+    </div>
+    <div class="settings-content">
+        <div id="settings-content-modules" class="settings-section active">
+            <div class="settings-header">
+                <h3>Modules Layout</h3>
+                <p>Click on a rectangle to assign a module to that space.</p>
+            </div>
+            <div class="wireframe-container">
+                <div class="wireframe-top">
+                    <div class="wireframe-slot" data-slot="topmid-target" title="Top Mid"></div>
+                    <div class="wireframe-slot" data-slot="topright-target" title="Top Right"></div>
+                </div>
+                <div class="wireframe-middle">
+                    <div class="wireframe-slot wireframe-side" data-slot="midleft-target" title="Mid Left"></div>
+                    <div class="wireframe-center">
+                        <div class="wireframe-glass">
+                            <div class="wireframe-slot" data-slot="midcenterleft-target" title="Mid Center Left"></div>
+                            <div class="wireframe-slot" data-slot="midcenterright-target" title="Mid Center Right"></div>
+                        </div>
+                    </div>
+                    <div class="wireframe-slot wireframe-side" data-slot="midright-target" title="Mid Right"></div>
+                </div>
+                <div class="wireframe-bottom">
+                    <div class="wireframe-slot" data-slot="bottom-target" title="Bottom"></div>
+                </div>
+            </div>
+            <div id="module-selector-panel" class="module-selector-panel hidden">
+                <div class="module-selector-header">
+                    <h4 id="selected-slot-name">Selected Slot</h4>
+                    <button id="close-module-selector" class="close-btn">&times;</button>
+                </div>
+                <ul id="available-modules-list" class="available-modules-list"></ul>
+            </div>
+        </div>
+        <div id="settings-content-theming" class="settings-section">
+            <h3>Theming</h3>
+            <p>Theme configuration options will appear here.</p>
+        </div>
+        <div id="settings-content-tabs" class="settings-section">
+            <h3>Tabs Sync</h3>
+            <p>Sync settings for the Tabs module.</p>
+        </div>
+    </div>
+</div>
