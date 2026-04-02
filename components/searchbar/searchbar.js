@@ -1,6 +1,31 @@
 import { showAlert, showPrompt } from '../modals/modals.js';
 
+const defaultSearchEngines = {
+    'General': [
+        { value: 'ecosia', label: 'Ecosia', url: 'https://www.ecosia.org/search?q=', icon: 'ecosia.svg' },
+        { value: 'google', label: 'Google', url: 'https://www.google.com/search?q=', icon: 'google.svg' },
+        { value: 'duckduckgo', label: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=', icon: 'duckduckgo.svg' },
+    ],
+    'Dev': [
+        { value: 'arch_wiki', label: 'Arch', url: 'https://wiki.archlinux.org/index.php?title=Special%253ASearch&fulltext=1&search=', icon: 'archlinux.svg' },
+        { value: 'github', label: 'GitHub', url: 'https://github.com/search?q=', icon: 'github.svg' },
+        { value: 'stackoverflow', label: 'Stack Overflow', url: 'https://stackoverflow.com/search?q=', icon: 'stackoverflow.svg' },
+        { value: 'aur', label: 'AUR', url: 'https://aur.archlinux.org/packages?O=0&K=', icon: 'archlinux.svg' },
+    ],
+    'Media': [
+        { value: 'yt', label: 'Youtube', url: 'https://www.youtube.com/results?search_query=', icon: 'youtube.svg' },
+        { value: 'twitch', label: 'Twitch', url: 'https://www.twitch.tv/search?term=', icon: 'twitch.svg' },
+        { value: 'reddit', label: 'Reddit', url: 'https://www.reddit.com/search/?q=', icon: 'reddit.svg' },
+    ],
+    'Social': [
+        { value: 'discord_webhook', label: 'Discord', url: '', icon: 'discord.svg' },
+    ]
+};
+
 export function init() {
+    const savedEngines = localStorage.getItem('searchEngines');
+    const searchEngines = savedEngines ? JSON.parse(savedEngines) : defaultSearchEngines;
+
     function setupCustomDropdown(dropdownElementId, hiddenInputId, listElementId, categories) {
         const dropdownInput = document.getElementById(dropdownElementId);
         const hiddenInput = document.getElementById(hiddenInputId);
@@ -75,28 +100,6 @@ export function init() {
             }
         });
     }
-
-    const searchEngines = {
-        'General': [
-            { value: 'ecosia', label: 'Ecosia', url: 'https://www.ecosia.org/search?q=', icon: 'ecosia.svg' },
-            { value: 'google', label: 'Google', url: 'https://www.google.com/search?q=', icon: 'google.svg' },
-            { value: 'duckduckgo', label: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=', icon: 'duckduckgo.svg' },
-        ],
-        'Dev': [
-            { value: 'arch_wiki', label: 'Arch', url: 'https://wiki.archlinux.org/index.php?title=Special%253ASearch&fulltext=1&search=', icon: 'archlinux.svg' },
-            { value: 'github', label: 'GitHub', url: 'https://github.com/search?q=', icon: 'github.svg' },
-            { value: 'stackoverflow', label: 'Stack Overflow', url: 'https://stackoverflow.com/search?q=', icon: 'stackoverflow.svg' },
-            { value: 'aur', label: 'AUR', url: 'https://aur.archlinux.org/packages?O=0&K=', icon: 'archlinux.svg' },
-        ],
-        'Media': [
-            { value: 'yt', label: 'Youtube', url: 'https://www.youtube.com/results?search_query=', icon: 'youtube.svg' },
-            { value: 'twitch', label: 'Twitch', url: 'https://www.twitch.tv/search?term=', icon: 'twitch.svg' },
-            { value: 'reddit', label: 'Reddit', url: 'https://www.reddit.com/search/?q=', icon: 'reddit.svg' },
-        ],
-        'Social': [
-            { value: 'discord_webhook', label: 'Discord', url: '', icon: 'discord.svg' },
-        ]
-    };
 
     setupCustomDropdown(
         'search-engine-select',

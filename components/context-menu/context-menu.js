@@ -100,163 +100,159 @@ async function showSyncModalQueue(changes) {
     await showNext();
 }
 
-function renderContextMenu(type = null, index = null, subIndex = null) {
-    if (!contextMenu) return;
-    contextMenu.innerHTML = '';
-    const sections = [];
-
-    if (type === 'category') {
-        sections.push({
-            title: 'Category Actions',
-            items: [
-                { 
-                    label: 'Edit Category', 
-                    action: () => {
-                        const categoryItem = linkData[index];
-                        openModal('Edit Category', [
-                            { name: 'category', label: 'Category Name', type: 'text' },
-                            { name: 'icon', label: 'Icon', type: 'select-icon' },
-                        ], { category: categoryItem.category, icon: categoryItem.icon }, (data) => {
-                            linkData[index].category = data.category;
-                            linkData[index].icon = data.icon || './img/icons/default-category.svg';
-                            saveAndRefresh();
-                            contextMenu.style.display = 'none';
-                        });
-                    }
-                },
-                { 
-                    label: 'Remove Category', 
-                    action: async () => {
-                        if (await showConfirm(`Remove category "${linkData[index].category}"?`)) {
-                            linkData.splice(index, 1);
-                            saveAndRefresh();
-                            contextMenu.style.display = 'none';
-                        }
-                    }
-                }
-            ]
+const ACTION_MAP = {
+    'edit-category': (index) => {
+        const categoryItem = linkData[index];
+        openModal('Edit Category', [
+            { name: 'category', label: 'Category Name', type: 'text' },
+            { name: 'icon', label: 'Icon', type: 'select-icon' },
+        ], { category: categoryItem.category, icon: categoryItem.icon }, (data) => {
+            linkData[index].category = data.category;
+            linkData[index].icon = data.icon || './img/icons/default-category.svg';
+            saveAndRefresh();
+            contextMenu.style.display = 'none';
         });
-    } else if (type === 'link') {
-        sections.push({
-            title: 'Link Actions',
-            items: [
-                { 
-                    label: 'Edit Link', 
-                    action: () => {
-                        const linkItem = linkData[index].links[subIndex];
-                        openLinkModal('Edit Link', { ...linkItem, type: 'tab' }, (data) => {
-                            linkData[index].links[subIndex] = { ...linkData[index].links[subIndex], ...data };
-                            saveAndRefresh();
-                            contextMenu.style.display = 'none';
-                        });
-                    }
-                },
-                { 
-                    label: 'Remove Link', 
-                    action: async () => {
-                        if (await showConfirm(`Remove link "${linkData[index].links[subIndex].name}"?`)) {
-                            linkData[index].links.splice(subIndex, 1);
-                            saveAndRefresh();
-                            contextMenu.style.display = 'none';
-                        }
-                    }
-                }
-            ]
+    },
+    'remove-category': async (index) => {
+        if (await showConfirm(`Remove category "${linkData[index].category}"?`)) {
+            linkData.splice(index, 1);
+            saveAndRefresh();
+            contextMenu.style.display = 'none';
+        }
+    },
+    'edit-link': (index, subIndex) => {
+        const linkItem = linkData[index].links[subIndex];
+        openLinkModal('Edit Link', { ...linkItem, type: 'tab' }, (data) => {
+            linkData[index].links[subIndex] = { ...linkData[index].links[subIndex], ...data };
+            saveAndRefresh();
+            contextMenu.style.display = 'none';
         });
-    } else if (type === 'bookmark') {
-        sections.push({
-            title: 'Bookmark Actions',
-            items: [
-                {
-                    label: 'Edit Bookmark',
-                    action: () => {
-                        const b = bookmarks[index];
-                        openLinkModal('Edit Bookmark', { ...b, type: 'bookmark' }, (data) => {
-                            bookmarks[index] = { ...bookmarks[index], ...data };
-                            saveBookmarks();
-                            renderBookmarks();
-                            contextMenu.style.display = 'none';
-                        });
-                    }
-                },
-                {
-                    label: 'Remove Bookmark',
-                    action: async () => {
-                        if (await showConfirm(`Remove bookmark "${bookmarks[index].name}"?`)) {
-                            bookmarks.splice(index, 1);
-                            saveBookmarks();
-                            renderBookmarks();
-                            contextMenu.style.display = 'none';
-                        }
-                    }
-                }
-            ]
+    },
+    'remove-link': async (index, subIndex) => {
+        if (await showConfirm(`Remove link "${linkData[index].links[subIndex].name}"?`)) {
+            linkData[index].links.splice(subIndex, 1);
+            saveAndRefresh();
+            contextMenu.style.display = 'none';
+        }
+    },
+    'edit-bookmark': (index) => {
+        const b = bookmarks[index];
+        openLinkModal('Edit Bookmark', { ...b, type: 'bookmark' }, (data) => {
+            bookmarks[index] = { ...bookmarks[index], ...data };
+            saveBookmarks();
+            renderBookmarks();
+            contextMenu.style.display = 'none';
         });
-    } else {
-        sections.push({
-            title: 'System Actions',
-            items: [
-                { label: 'Settings', action: () => { 
-                    import('../settings/settings.js').then(m => m.openSettings());
-                    contextMenu.style.display = 'none'; 
-                }},
-                { label: 'Update Anki', action: () => { updateAnkiStats(); contextMenu.style.display = 'none'; } },
-                { label: 'Update Lute', action: () => { renderLute(); contextMenu.style.display = 'none'; } }
-            ]
+    },
+    'remove-bookmark': async (index) => {
+        if (await showConfirm(`Remove bookmark "${bookmarks[index].name}"?`)) {
+            bookmarks.splice(index, 1);
+            saveBookmarks();
+            renderBookmarks();
+            contextMenu.style.display = 'none';
+        }
+    },
+    'settings': () => {
+        import('../settings/settings.js').then(m => m.openSettings());
+        contextMenu.style.display = 'none';
+    },
+    'update-anki': () => { updateAnkiStats(); contextMenu.style.display = 'none'; },
+    'update-lute': () => { renderLute(); contextMenu.style.display = 'none'; },
+    'full-sync': async () => { if(await showConfirm('Overwrite ALL links with JSON data?')) { await syncLinksOverwrite(); saveAndRefresh(); contextMenu.style.display = 'none'; } },
+    'interactive-sync': async () => { const changes = await getSyncChanges(); showSyncModalQueue(changes); contextMenu.style.display = 'none'; },
+    'add-category': () => openModal('Add Category', [{ name: 'category', label: 'Name', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }], {}, (data) => { linkData.push({ category: data.category, icon: data.icon || './img/icons/default-category.svg', links: [] }); saveAndRefresh(); contextMenu.style.display = 'none'; }),
+    'add-link': () => {
+        const activeIdx = document.querySelector('.category-item.active')?.dataset.index || 0;
+        openLinkModal('Add Link', { type: 'tab' }, (data) => { 
+            linkData[activeIdx].links.push(data); 
+            saveAndRefresh(); 
+            contextMenu.style.display = 'none';
         });
-        sections.push({ 
-            title: 'Sync Actions', 
-            items: [
-                { label: 'Full Sync', action: async () => { if(await showConfirm('Overwrite ALL links with JSON data?')) { await syncLinksOverwrite(); saveAndRefresh(); contextMenu.style.display = 'none'; } } },
-                { label: 'Interactive Sync', action: async () => { const changes = await getSyncChanges(); showSyncModalQueue(changes); contextMenu.style.display = 'none'; } }
-            ] 
-        });
-        sections.push({
-            title: 'Add Actions',
-            items: [
-                { label: 'Add New Category', action: () => openModal('Add Category', [{ name: 'category', label: 'Name', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }], {}, (data) => { linkData.push({ category: data.category, icon: data.icon || './img/icons/default-category.svg', links: [] }); saveAndRefresh(); contextMenu.style.display = 'none'; }) },
-                { 
-                    label: 'Add New Link', 
-                    action: () => {
-                        const activeIdx = document.querySelector('.category-item.active')?.dataset.index || 0;
-                        openLinkModal('Add Link', { type: 'tab' }, (data) => { 
-                            linkData[activeIdx].links.push(data); 
-                            saveAndRefresh(); 
-                            contextMenu.style.display = 'none';
-                        });
-                    }
-                },
-                {
-                    label: 'Add New Bookmark',
-                    action: () => {
-                        openLinkModal('Add Bookmark', { type: 'bookmark' }, (data) => {
-                            bookmarks.push(data);
-                            saveBookmarks();
-                            renderBookmarks();
-                            contextMenu.style.display = 'none';
-                        });
-                    }
-                }
-            ]
+    },
+    'add-bookmark': () => {
+        openLinkModal('Add Bookmark', { type: 'bookmark' }, (data) => {
+            bookmarks.push(data);
+            saveBookmarks();
+            renderBookmarks();
+            contextMenu.style.display = 'none';
         });
     }
+};
+
+function renderContextMenu(type = 'global', index = null, subIndex = null) {
+    if (!contextMenu) return;
+    contextMenu.innerHTML = '';
+    
+    const configStr = localStorage.getItem('contextMenuConfig');
+    let config;
+    if (configStr) {
+        config = JSON.parse(configStr);
+    } else {
+        config = {
+            'global': [
+                { title: 'System Actions', items: [
+                    { id: 'settings', label: 'Settings', enabled: true },
+                    { id: 'update-anki', label: 'Update Anki', enabled: true },
+                    { id: 'update-lute', label: 'Update Lute', enabled: true }
+                ]},
+                { title: 'Sync Actions', items: [
+                    { id: 'full-sync', label: 'Full Sync', enabled: true },
+                    { id: 'interactive-sync', label: 'Interactive Sync', enabled: true }
+                ]},
+                { title: 'Add Actions', items: [
+                    { id: 'add-category', label: 'Add New Category', enabled: true },
+                    { id: 'add-link', label: 'Add New Link', enabled: true },
+                    { id: 'add-bookmark', label: 'Add New Bookmark', enabled: true }
+                ]}
+            ],
+            'category': [
+                { title: 'Category Actions', items: [
+                    { id: 'edit-category', label: 'Edit Category', enabled: true },
+                    { id: 'remove-category', label: 'Remove Category', enabled: true }
+                ]}
+            ],
+            'link': [
+                { title: 'Link Actions', items: [
+                    { id: 'edit-link', label: 'Edit Link', enabled: true },
+                    { id: 'remove-link', label: 'Remove Link', enabled: true }
+                ]}
+            ],
+            'bookmark': [
+                { title: 'Bookmark Actions', items: [
+                    { id: 'edit-bookmark', label: 'Edit Bookmark', enabled: true },
+                    { id: 'remove-bookmark', label: 'Remove Bookmark', enabled: true }
+                ]}
+            ]
+        };
+    }
+
+    const sections = config[type] || config['global'];
 
     sections.forEach(sec => {
+        const enabledItems = sec.items.filter(item => item.enabled);
+        if (enabledItems.length === 0) return;
+
         const div = document.createElement('div');
         div.className = 'context-menu-section';
         div.innerHTML = `<div class="context-menu-title">${sec.title}</div>`;
         const ul = document.createElement('ul');
-        sec.items.forEach(item => {
+        enabledItems.forEach(item => {
             const li = document.createElement('li');
             li.textContent = item.label;
             li.className = 'context-menu-action-item';
-            li.onclick = (e) => { e.stopPropagation(); item.action(); };
+            li.onclick = (e) => { 
+                e.stopPropagation(); 
+                if (ACTION_MAP[item.id]) {
+                    ACTION_MAP[item.id](index, subIndex);
+                }
+            };
             ul.appendChild(li);
         });
         div.appendChild(ul);
         contextMenu.appendChild(div);
     });
 }
+
 
 export function init() {
     contextMenu = document.getElementById('context-menu');

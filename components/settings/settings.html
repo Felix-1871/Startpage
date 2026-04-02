@@ -8,6 +8,7 @@
             <li class="settings-category-item" data-category="anki" id="settings-category-anki">Anki</li>
             <li class="settings-category-item" data-category="lute" id="settings-category-lute">Lute</li>
             <li class="settings-category-item" data-category="searchbar" id="settings-category-searchbar">Search Bar</li>
+            <li class="settings-category-item" data-category="context-menu" id="settings-category-context-menu">Context Menu</li>
         </ul>
     </div>
     <div class="settings-content">
@@ -72,8 +73,71 @@
             <p>Configure your Lute reading integration.</p>
         </div>
         <div id="settings-content-searchbar" class="settings-section">
-            <h3>Search Bar Settings</h3>
-            <p>Configure search engines and default behaviors.</p>
+            <div class="settings-header">
+                <h3>Search Bar Settings</h3>
+                <p>Configure search engines and default behaviors.</p>
+            </div>
+
+            <div class="search-engine-settings-container">
+                <div class="searchbar-wireframe-preview">
+                    <h4>Preview</h4>
+                    <div id="search-bar-preview" class="search-bar-preview">
+                        <div class="preview-search-container">
+                            <div class="preview-dropdown">
+                                <span id="preview-engine-name">Google</span>
+                                <span class="preview-arrow">▾</span>
+                            </div>
+                            <div class="preview-input">Search query...</div>
+                            <div class="preview-search-btn">▶</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="search-engine-editor">
+                    <div class="editor-header">
+                        <h4>Categories & Engines</h4>
+                        <button id="add-search-category-btn" class="settings-btn small-btn">+</button>
+                    </div>
+                    <div id="search-engines-list" class="search-engines-list">
+                        <!-- Categories and engines will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="settings-content-context-menu" class="settings-section">
+            <div class="settings-header">
+                <h3>Context Menu Configuration</h3>
+                <p>Customize the items and order of the context menu.</p>
+            </div>
+            
+            <div class="settings-group">
+                <label for="context-menu-type-selector">Context Menu Type:</label>
+                <select id="context-menu-type-selector" class="anki-select">
+                    <option value="global">Global (Background)</option>
+                    <option value="category">Category</option>
+                    <option value="link">Link</option>
+                    <option value="bookmark">Bookmark</option>
+                </select>
+            </div>
+
+            <div class="context-menu-settings-container">
+                <div class="context-menu-wireframe-preview">
+                    <h4>Preview</h4>
+                    <div id="context-menu-preview" class="context-menu-preview">
+                        <!-- Preview will be rendered here -->
+                    </div>
+                </div>
+
+                <div class="context-menu-editor">
+                    <div class="editor-header">
+                        <h4>Categories & Items</h4>
+                        <button id="add-context-category-btn" class="settings-btn small-btn">+</button>
+                    </div>
+                    <div id="context-menu-categories-list" class="context-menu-categories-list">
+                        <!-- Categories and items will be rendered here -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -312,16 +312,6 @@ export function init() {
 
     if (ankiStudyBtn) ankiStudyBtn.addEventListener('click', startStudy);
     if (ankiBackBtn) ankiBackBtn.addEventListener('click', stopStudy);
-    if (ankiSettingsBtn) ankiSettingsBtn.addEventListener('click', () => {
-        const selectedDeck = deckSelect.value;
-        if (selectedDeck) {
-            openAnkiSettings(selectedDeck, () => {
-                setCSSDisplay();
-                const char = getCardCharacter();
-                if (char) loadSentences(char);
-            });
-        }
-    });
     if (ankiPlayAudioBtn) ankiPlayAudioBtn.addEventListener('click', playAudio);
     if (deckSelect) deckSelect.addEventListener('change', () => updateAnkiStats());
     
