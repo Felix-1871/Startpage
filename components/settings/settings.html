@@ -78,21 +78,13 @@
                 <p>Configure search engines and default behaviors.</p>
             </div>
 
-            <div class="search-engine-settings-container">
-                <div class="searchbar-wireframe-preview">
-                    <h4>Preview</h4>
-                    <div id="search-bar-preview" class="search-bar-preview">
-                        <div class="preview-search-container">
-                            <div class="preview-dropdown">
-                                <span id="preview-engine-name">Google</span>
-                                <span class="preview-arrow">▾</span>
-                            </div>
-                            <div class="preview-input">Search query...</div>
-                            <div class="preview-search-btn">▶</div>
-                        </div>
-                    </div>
-                </div>
+            <div class="settings-group">
+                <label for="default-search-engine-selector">Default Search Engine:</label>
+                <select id="default-search-engine-selector" class="anki-select"></select>
+                <p class="settings-description" style="margin-top: 10px;">This engine will be selected automatically when you load the page.</p>
+            </div>
 
+            <div class="search-engine-settings-container">
                 <div class="search-engine-editor">
                     <div class="editor-header">
                         <h4>Categories & Engines</h4>
@@ -121,13 +113,6 @@
             </div>
 
             <div class="context-menu-settings-container">
-                <div class="context-menu-wireframe-preview">
-                    <h4>Preview</h4>
-                    <div id="context-menu-preview" class="context-menu-preview">
-                        <!-- Preview will be rendered here -->
-                    </div>
-                </div>
-
                 <div class="context-menu-editor">
                     <div class="editor-header">
                         <h4>Categories & Items</h4>

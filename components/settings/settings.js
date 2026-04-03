@@ -313,12 +313,10 @@ function renderAnkiSettings() {
 
 function renderContextMenuEditor() {
     const listContainer = document.getElementById('context-menu-categories-list');
-    const previewContainer = document.getElementById('context-menu-preview');
     const typeSelector = document.getElementById('context-menu-type-selector');
-    if (!listContainer || !previewContainer) return;
+    if (!listContainer) return;
 
     listContainer.innerHTML = '';
-    previewContainer.innerHTML = '';
 
     const currentType = typeSelector ? typeSelector.value : 'global';
     const sections = contextMenuConfig[currentType];
@@ -434,33 +432,41 @@ function renderContextMenuEditor() {
         };
 
         listContainer.appendChild(secEl);
-
-        // Render Preview
-        const previewSec = document.createElement('div');
-        previewSec.className = 'context-menu-section';
-        previewSec.style.width = '150px';
-        previewSec.innerHTML = `<div class="context-menu-title">${section.title}</div>`;
-        const previewUl = document.createElement('ul');
-        section.items.forEach(item => {
-            if (item.enabled) {
-                const li = document.createElement('li');
-                li.textContent = item.label;
-                li.className = 'context-menu-action-item';
-                previewUl.appendChild(li);
-            }
-        });
-        previewSec.appendChild(previewUl);
-        previewContainer.appendChild(previewSec);
     });
 }
+
 
 
 function renderSearchEngineEditor() {
     const listContainer = document.getElementById('search-engines-list');
     const previewEngineName = document.getElementById('preview-engine-name');
+    const defaultSelector = document.getElementById('default-search-engine-selector');
+    
     if (!listContainer) return;
 
     listContainer.innerHTML = '';
+
+    // Update Default Selector
+    if (defaultSelector) {
+        const savedDefault = localStorage.getItem('searchEngine.default') || 'ecosia';
+        defaultSelector.innerHTML = '';
+        Object.entries(searchEngines).forEach(([category, engines]) => {
+            const group = document.createElement('optgroup');
+            group.label = category;
+            engines.forEach(engine => {
+                const opt = document.createElement('option');
+                opt.value = engine.value;
+                opt.textContent = engine.label;
+                opt.selected = engine.value === savedDefault;
+                group.appendChild(opt);
+            });
+            defaultSelector.appendChild(group);
+        });
+
+        defaultSelector.onchange = (e) => {
+            localStorage.setItem('searchEngine.default', e.target.value);
+        };
+    }
 
     // Update Preview
     const selectedValue = localStorage.getItem('searchEngine.selected') || 'ecosia';
@@ -484,6 +490,7 @@ function renderSearchEngineEditor() {
                 <input type="text" value="${category}" data-old-name="${category}">
                 <div class="category-actions">
                     <button class="add-engine-btn settings-btn small-btn" style="padding: 2px 8px; font-size: 0.8em; margin-right: 5px;">+ Engine</button>
+                    <button class="add-webhook-btn settings-btn small-btn" style="padding: 2px 8px; font-size: 0.8em; margin-right: 5px; background-color: var(--iris);">+ Webhook</button>
                     <button class="remove-btn" data-category="${category}">&times;</button>
                 </div>
             </div>
@@ -516,6 +523,11 @@ function renderSearchEngineEditor() {
             showEngineModal(category);
         };
 
+        const addWebhookBtn = catEl.querySelector('.add-webhook-btn');
+        addWebhookBtn.onclick = () => {
+            showWebhookModal(category);
+        };
+
         const enginesList = catEl.querySelector('.category-engines-list');
         engines.forEach((engine, eIdx) => {
             const engineEl = document.createElement('div');
@@ -529,6 +541,7 @@ function renderSearchEngineEditor() {
                     <span class="engine-drag-handle">::</span>
                     <img src="img/icons/${engine.icon}" style="width: 16px; height: 16px; filter: brightness(0) invert(1);">
                     <span>${engine.label}</span>
+                    ${engine.isWebhook ? '<span class="status-badge" style="margin-left: 5px; font-size: 0.6em; padding: 1px 4px;">Webhook</span>' : ''}
                 </div>
                 <div class="engine-editor-actions">
                     <button class="edit-btn" data-category="${category}" data-index="${eIdx}">✎</button>
@@ -538,7 +551,11 @@ function renderSearchEngineEditor() {
 
             const editBtn = engineEl.querySelector('.edit-btn');
             editBtn.onclick = () => {
-                showEngineModal(category, eIdx);
+                if (engine.isWebhook) {
+                    showWebhookModal(category, eIdx);
+                } else {
+                    showEngineModal(category, eIdx);
+                }
             };
 
             const removeBtn = engineEl.querySelector('.remove-btn');
@@ -671,6 +688,77 @@ function showEngineModal(category, index = null) {
                 searchEngines[category][index] = newEngine;
             } else {
                 searchEngines[category].push(newEngine);
+            }
+            saveSearchEngines();
+            renderSearchEngineEditor();
+            closeModal();
+        }
+    };
+}
+
+
+function showWebhookModal(category, index = null) {
+    const isEdit = index !== null;
+    const engine = isEdit ? searchEngines[category][index] : { label: '', value: '', url: '', icon: 'webhook.svg', isWebhook: true };
+
+    const modal = document.createElement('div');
+    modal.className = 'engine-modal';
+    modal.innerHTML = `
+        <h4>${isEdit ? 'Edit' : 'Add'} Webhook</h4>
+        <div class="engine-modal-fields">
+            <div class="engine-field">
+                <label>Label</label>
+                <input type="text" id="webhook-label" value="${engine.label}" placeholder="e.g. Discord">
+            </div>
+            <div class="engine-field">
+                <label>Value (ID)</label>
+                <input type="text" id="webhook-value" value="${engine.value}" placeholder="e.g. discord_webhook">
+            </div>
+            <div class="engine-field">
+                <label>Webhook URL</label>
+                <input type="text" id="webhook-url" value="${engine.url}" placeholder="https://discord.com/api/webhooks/...">
+            </div>
+            <div class="engine-field">
+                <label>Icon File</label>
+                <input type="text" id="webhook-icon" value="${engine.icon}" placeholder="e.g. discord.svg">
+            </div>
+        </div>
+        <div class="engine-modal-actions">
+            <button id="cancel-webhook-btn" class="settings-btn" style="background-color: var(--highlight-high); color: var(--text);">Cancel</button>
+            <button id="save-webhook-btn" class="settings-btn">Save</button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.right = '0';
+    overlay.style.bottom = '0';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    overlay.style.zIndex = '999';
+    document.body.appendChild(overlay);
+
+    const closeModal = () => {
+        document.body.removeChild(modal);
+        if (overlay.parentNode) document.body.removeChild(overlay);
+    };
+
+    document.getElementById('cancel-webhook-btn').onclick = closeModal;
+    document.getElementById('save-webhook-btn').onclick = () => {
+        const label = document.getElementById('webhook-label').value;
+        const value = document.getElementById('webhook-value').value;
+        const url = document.getElementById('webhook-url').value;
+        const icon = document.getElementById('webhook-icon').value;
+
+        if (label && value) {
+            const newWebhook = { label, value, url, icon, isWebhook: true };
+            if (isEdit) {
+                searchEngines[category][index] = newWebhook;
+            } else {
+                searchEngines[category].push(newWebhook);
             }
             saveSearchEngines();
             renderSearchEngineEditor();

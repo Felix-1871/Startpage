@@ -20,11 +20,10 @@
  ## Setup
  1. Create and add an [OpenWeather](https://openweathermap.org/) API key to src/config.js
  2. Adjust config to your liking in src/clock-weather.js
- 3. Adapt (if needed) search engines in src/searchBar.js
- 4. Download simple-icons set and add icons directory to /img
- 5. For Anki, download Anki client and install Anki Connect plugin
- 6. For Lute, download and run
- 7. Both Anki and Lute must run in background for the respective modules to work!
+ 3. Download simple-icons set and add icons directory to /img
+ 4. For Anki, download Anki client and install Anki Connect plugin
+ 5. For Lute, download and run
+ 6. Both Anki and Lute must run in background for the respective modules to work!
 
     ### How to set up the Safari sync
     I'm using Safari's tab groups a lot, so I can have many tabs open without clutter, however it doesn't offer syncing outside the Apple's ecosystem and I don't like using 3rd party tools out of privacy concerns (yeah AI and privacy doesn't seem too close but at least there I have some resemblance of control over it).

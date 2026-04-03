@@ -18,13 +18,13 @@ const defaultSearchEngines = {
         { value: 'reddit', label: 'Reddit', url: 'https://www.reddit.com/search/?q=', icon: 'reddit.svg' },
     ],
     'Social': [
-        { value: 'discord_webhook', label: 'Discord', url: '', icon: 'discord.svg' },
+        { value: 'discord_webhook', label: 'Discord', url: '', icon: 'discord.svg', isWebhook: true },
     ]
 };
 
 export function init() {
     const savedEngines = localStorage.getItem('searchEngines');
-    const searchEngines = savedEngines ? JSON.parse(savedEngines) : defaultSearchEngines;
+    let searchEngines = savedEngines ? JSON.parse(savedEngines) : defaultSearchEngines;
 
     function setupCustomDropdown(dropdownElementId, hiddenInputId, listElementId, categories) {
         const dropdownInput = document.getElementById(dropdownElementId);
@@ -108,7 +108,7 @@ export function init() {
         searchEngines
     );
 
-    const initialSearchEngineValue = localStorage.getItem('searchEngine.selected') || 'ecosia';
+    const initialSearchEngineValue = localStorage.getItem('searchEngine.default') || 'ecosia';
     let initialSearchEngineOption = null;
     for (const category in searchEngines) {
         initialSearchEngineOption = searchEngines[category].find(s => s.value === initialSearchEngineValue);
@@ -129,25 +129,28 @@ export function init() {
         const selectedEngineValue = searchEngineHiddenInput.value;
 
         if (query) {
-            if (selectedEngineValue === 'discord_webhook') {
-                const webhookUrl = localStorage.getItem('discord_webhook_url');
-                if (!webhookUrl) {
-                    const url = await showPrompt('Please enter your Discord Webhook URL:');
-                    if (url) {
-                        localStorage.setItem('discord_webhook_url', url);
-                        sendToDiscord(url, query);
-                    }
-                } else {
-                    sendToDiscord(webhookUrl, query);
-                }
-                mainInput.value = ''; 
-                return;
-            }
-
             let selectedEngine = null;
             for (const category in searchEngines) {
                 selectedEngine = searchEngines[category].find(engine => engine.value === selectedEngineValue);
                 if (selectedEngine) break;
+            }
+
+            if (selectedEngine && selectedEngine.isWebhook) {
+                let webhookUrl = selectedEngine.url;
+                if (!webhookUrl) {
+                    webhookUrl = await showPrompt(`Please enter the Webhook URL for ${selectedEngine.label}:`);
+                    if (webhookUrl) {
+                        // Update the engine URL and save
+                        selectedEngine.url = webhookUrl;
+                        localStorage.setItem('searchEngines', JSON.stringify(searchEngines));
+                    }
+                }
+
+                if (webhookUrl) {
+                    await sendToWebhook(webhookUrl, query);
+                }
+                mainInput.value = ''; 
+                return;
             }
 
             if (selectedEngine && selectedEngine.url) {
@@ -158,7 +161,7 @@ export function init() {
         }
     }
 
-    async function sendToDiscord(url, message) {
+    async function sendToWebhook(url, message) {
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -171,8 +174,8 @@ export function init() {
                 throw new Error('Network response was not ok');
             }
         } catch (error) {
-            console.error('Error sending message to Discord:', error);
-            await showAlert('Failed to send message to Discord. Check console for details.');
+            console.error('Error sending message to webhook:', error);
+            await showAlert('Failed to send message to webhook. Check console for details.');
         }
     }
 

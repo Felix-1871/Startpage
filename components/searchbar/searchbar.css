@@ -11,11 +11,13 @@
 }
 
 .browser-dropdown {
-  width: 120px; 
+  width: 150px; 
+  min-width: 150px;
+  position: relative;
 
   .custom-dropdown-input {
     width: 100%;
-    padding: 10px 15px; 
+    padding: 10px 30px 10px 15px; 
     border: none; 
     border-right: 1px solid var(--border-med); 
     background-color: transparent; 
@@ -23,6 +25,9 @@
     font-size: 16px;
     outline: none;
     cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     
     caret-color: transparent; 
     border-top-left-radius: 8px;
@@ -36,7 +41,7 @@
   .custom-dropdown-list {
     position: absolute;
     left: 0;
-    right: 0; /* This now makes it the width of .bottom-input-container because of relative positioning there */
+    width: 450px;
     background-color: var(--surface-90); 
     border: 1px solid var(--border-med);
     border-radius: 8px;
@@ -44,7 +49,7 @@
     overflow-y: auto;
     z-index: 100; 
     display: none; 
-    box-shadow: 0 4px 6px var(--shadow-low);
+    box-shadow: 0 4px 15px var(--shadow-high);
     padding: 10px;
 
     /* Modified by Search Bar (Active state) */
