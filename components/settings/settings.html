@@ -8,6 +8,7 @@
             <li class="settings-category-item" data-category="anki" id="settings-category-anki">Anki</li>
             <li class="settings-category-item" data-category="lute" id="settings-category-lute">Lute</li>
             <li class="settings-category-item" data-category="searchbar" id="settings-category-searchbar">Search Bar</li>
+            <li class="settings-category-item" data-category="clock-weather" id="settings-category-clock-weather">Clock & Weather</li>
             <li class="settings-category-item" data-category="context-menu" id="settings-category-context-menu">Context Menu</li>
         </ul>
     </div>
@@ -94,6 +95,60 @@
                         <!-- Categories and engines will be rendered here -->
                     </div>
                 </div>
+            </div>
+        </div>
+        <div id="settings-content-clock-weather" class="settings-section">
+            <div class="settings-header">
+                <h3>Clock & Weather Settings</h3>
+                <p>Configure time formats and weather location.</p>
+            </div>
+
+            <div class="settings-group">
+                <h4>Weather Settings</h4>
+                <div class="settings-field">
+                    <label for="weather-city-input">City Name:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="weather-city-input" class="anki-input" placeholder="e.g. Berlin">
+                        <button id="save-weather-city-btn" class="settings-btn">Save</button>
+                    </div>
+                    <p id="weather-city-status" class="status-msg"></p>
+                </div>
+                <div class="settings-field" style="margin-top: 15px;">
+                    <label>Units:</label>
+                    <select id="weather-units-selector" class="anki-select">
+                        <option value="metric">Metric (°C, m/s)</option>
+                        <option value="imperial">Imperial (°F, mph)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h4>Clock Settings</h4>
+                <div class="settings-field">
+                    <label for="clock-format-selector">Time Format:</label>
+                    <select id="clock-format-selector" class="anki-select">
+                        <option value="HH:mm">24-hour (HH:mm)</option>
+                        <option value="hh:mm A">12-hour (hh:mm AM/PM)</option>
+                        <option value="HH:mm:ss">24-hour with seconds (HH:mm:ss)</option>
+                        <option value="hh:mm:ss A">12-hour with seconds (hh:mm:ss AM/PM)</option>
+                    </select>
+                </div>
+                <div class="settings-field" style="margin-top: 15px;">
+                    <label for="date-format-selector">Date Format:</label>
+                    <select id="date-format-selector" class="anki-select">
+                        <option value="DD/MM/YY">DD/MM/YY</option>
+                        <option value="MM/DD/YY">MM/DD/YY</option>
+                        <option value="YY-MM-DD">YY-MM-DD</option>
+                        <option value="DD.MM.YYYY">DD.MM.YYYY</option>
+                        <option value="MMM D, YYYY">MMM D, YYYY</option>
+                    </select>
+                </div>
+                <div class="settings-field" style="margin-top: 15px;">
+                    <label for="clock-timezone-input">Timezone:</label>
+                    <input type="text" id="clock-timezone-input" class="anki-input" placeholder="e.g. Europe/Berlin">
+                    <p class="settings-description">Leave empty for browser default. Use IANA timezone names (e.g., America/New_York).</p>
+                </div>
+                <button id="save-clock-settings-btn" class="settings-btn" style="margin-top: 10px;">Save Clock Settings</button>
             </div>
         </div>
         <div id="settings-content-context-menu" class="settings-section">

@@ -285,6 +285,52 @@
     font-size: 0.85em;
 }
 
+.settings-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.settings-field label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: var(--subtle);
+}
+
+.anki-input {
+    width: 100%;
+    padding: 8px 12px;
+    background-color: rgba(25, 23, 36, 0.5);
+    border: 1px solid var(--border-med);
+    color: var(--text);
+    border-radius: 6px;
+    font-size: 0.9em;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.anki-input:focus {
+    border-color: var(--iris);
+}
+
+.anki-select {
+    width: 100%;
+    padding: 8px 12px;
+    background-color: rgba(25, 23, 36, 0.5);
+    border: 1px solid var(--border-med);
+    color: var(--text);
+    border-radius: 6px;
+    font-size: 0.9em;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.anki-select:focus {
+    border-color: var(--iris);
+}
+
 /* Context Menu Settings & Search Bar Settings */
 .context-menu-settings-container, .search-engine-settings-container {
     display: flex;

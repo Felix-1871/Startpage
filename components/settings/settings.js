@@ -117,13 +117,14 @@ export async function openSettings() {
         renderAnkiSettings();
         renderContextMenuEditor();
         renderSearchEngineEditor();
+        renderClockWeatherSettings();
     } catch (error) {
         console.error('Failed to open settings:', error);
     }
 }
 
 function checkTabsVisibility() {
-    const modules = ['tabs', 'anki', 'lute', 'searchbar'];
+    const modules = ['tabs', 'anki', 'lute', 'searchbar', 'clock-weather'];
     modules.forEach(mod => {
         const isActive = moduleManager.activeModules.has(mod);
         const categoryItem = document.getElementById(`settings-category-${mod}`);
@@ -131,6 +132,90 @@ function checkTabsVisibility() {
             categoryItem.style.display = isActive ? 'block' : 'none';
         }
     });
+}
+
+async function renderClockWeatherSettings() {
+    const cityInput = document.getElementById('weather-city-input');
+    const cityStatus = document.getElementById('weather-city-status');
+    const citySaveBtn = document.getElementById('save-weather-city-btn');
+    const unitsSelector = document.getElementById('weather-units-selector');
+    
+    const clockFormatSelector = document.getElementById('clock-format-selector');
+    const dateFormatSelector = document.getElementById('date-format-selector');
+    const clockTimezoneInput = document.getElementById('clock-timezone-input');
+    const clockSaveBtn = document.getElementById('save-clock-settings-btn');
+
+    if (!cityInput) return;
+
+    // Load saved settings
+    const savedCity = localStorage.getItem('weather.city') || 'Berlin';
+    const savedUnits = localStorage.getItem('weather.units') || 'metric';
+    const savedClockFormat = localStorage.getItem('clock.format') || 'HH:mm';
+    const savedDateFormat = localStorage.getItem('date.format') || 'DD/MM/YY';
+    const savedClockTimezone = localStorage.getItem('clock.timezone') || '';
+
+    cityInput.value = savedCity;
+    unitsSelector.value = savedUnits;
+    clockFormatSelector.value = savedClockFormat;
+    dateFormatSelector.value = savedDateFormat;
+    clockTimezoneInput.value = savedClockTimezone;
+
+    citySaveBtn.onclick = async () => {
+        const city = cityInput.value.trim();
+        if (!city) return;
+
+        cityStatus.textContent = 'Searching...';
+        cityStatus.style.color = 'var(--iris)';
+
+        try {
+            const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+            const geoData = await geoRes.json();
+
+            if (geoData.results && geoData.results.length > 0) {
+                const result = geoData.results[0];
+                localStorage.setItem('weather.city', result.name);
+                localStorage.setItem('weather.lat', result.latitude);
+                localStorage.setItem('weather.lon', result.longitude);
+                localStorage.setItem('weather.timezone', result.timezone);
+                
+                cityStatus.textContent = `Saved: ${result.name} (${result.latitude.toFixed(2)}, ${result.longitude.toFixed(2)})`;
+                cityStatus.style.color = 'var(--foam)';
+                
+                // Update weather module if active
+                const weatherMod = moduleManager.activeModules.get('clock-weather');
+                if (weatherMod) {
+                    import('../clock-weather/clock-weather.js').then(m => m.init());
+                }
+            } else {
+                cityStatus.textContent = 'City not found.';
+                cityStatus.style.color = 'var(--love)';
+            }
+        } catch (error) {
+            console.error('Geocoding error:', error);
+            cityStatus.textContent = 'Error searching city.';
+            cityStatus.style.color = 'var(--love)';
+        }
+    };
+
+    unitsSelector.onchange = () => {
+        localStorage.setItem('weather.units', unitsSelector.value);
+        const weatherMod = moduleManager.activeModules.get('clock-weather');
+        if (weatherMod) {
+            import('../clock-weather/clock-weather.js').then(m => m.init());
+        }
+    };
+
+    clockSaveBtn.onclick = () => {
+        localStorage.setItem('clock.format', clockFormatSelector.value);
+        localStorage.setItem('date.format', dateFormatSelector.value);
+        localStorage.setItem('clock.timezone', clockTimezoneInput.value.trim());
+        
+        // Update clock module if active
+        const weatherMod = moduleManager.activeModules.get('clock-weather');
+        if (weatherMod) {
+            import('../clock-weather/clock-weather.js').then(m => m.init());
+        }
+    };
 }
 
 function initElements() {
