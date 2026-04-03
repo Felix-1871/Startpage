@@ -207,7 +207,7 @@ export function init() {
                 easeButtons.classList.add('hidden');
                 return;
             } else {
-                // If guiCurrentCard is null but we have cards due, just wait a bit longer without restarting review
+                
                 setTimeout(loadCurrentCard, 500);
                 return;
             }

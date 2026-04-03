@@ -297,7 +297,7 @@ export function init() {
         }
     });
 
-    // Initial render if data is already loaded (though usually it's loaded in context-menu.js)
+    
     if (linkData.length > 0) {
         renderCategories();
         renderLinks(0);

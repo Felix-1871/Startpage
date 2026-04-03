@@ -52,7 +52,7 @@ export function init() {
                     const partLong = (type) => dLong.find(p => p.type === type).value;
                     formattedDate = `${partLong('day')}.${partLong('month')}.${partLong('year')}`;
                 } else {
-                    // Default DD/MM/YY
+                    
                     formattedDate = `${part('day')}/${part('month')}/${part('year')}`;
                 }
             }

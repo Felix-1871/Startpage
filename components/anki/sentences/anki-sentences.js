@@ -1,7 +1,7 @@
 import { ANKI_SETTINGS } from '../anki-xiehanzi-helpers.js';
 import { invoke, getStorage } from '../../../src/helpers.js';
 
-// Load CSS
+
 const link = document.createElement('link');
 link.rel = 'stylesheet';
 link.href = 'components/anki/sentences/anki-sentences.css';
@@ -87,19 +87,19 @@ export async function loadSentences(searchText, prefix = "front") {
 export function loadMoreSentences(searchText, prefix = "front") {
     if (!sentencesData || !indexByChar || !searchText) return;
 
-    // Helper to get prefixed key
+    
     const getKey = (keyName) => {
-        // e.g. "front" + "no-of-sentence" if keyName is "backtext-no-of-sentence"
-        // Wait, ANKI_SETTINGS keys are like 'backtext-no-of-sentence'
-        // But anki.js saves as frontBack + 'no-of-sentence' (the ID).
-        // The ID in anki.js maps to numberInputList entries.
-        // We need to map ANKI_SETTINGS key to the ID used in anki.js or just use the ID if we know it.
-        // Let's assume the calling code passes the prefix used for storage (e.g. "front")
-        // and we construct the key by appending the settings ID.
-        // ANKI_SETTINGS is: { noOfSentence: { key: 'backtext-no-of-sentence', ... } }
-        // We need to know which ID corresponds to which setting.
-        // IDs: no-of-sentence, level-of-sentence, length-of-sentence
-        // char_sentence, char_sentence-random
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         return prefix + keyName;
     };
 

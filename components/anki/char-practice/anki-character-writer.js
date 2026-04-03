@@ -1,7 +1,7 @@
 
 import { getStorage, setStorage, showHide } from '../../../src/helpers.js';
 
-// Load CSS
+
 const link = document.createElement('link');
 link.rel = 'stylesheet';
 link.href = 'components/anki/char-practice/anki-character-writer.css';

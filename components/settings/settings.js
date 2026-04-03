@@ -147,7 +147,7 @@ async function renderClockWeatherSettings() {
 
     if (!cityInput) return;
 
-    // Load saved settings
+    
     const savedCity = localStorage.getItem('weather.city') || 'Berlin';
     const savedUnits = localStorage.getItem('weather.units') || 'metric';
     const savedClockFormat = localStorage.getItem('clock.format') || 'HH:mm';
@@ -181,7 +181,7 @@ async function renderClockWeatherSettings() {
                 cityStatus.textContent = `Saved: ${result.name} (${result.latitude.toFixed(2)}, ${result.longitude.toFixed(2)})`;
                 cityStatus.style.color = 'var(--foam)';
                 
-                // Update weather module if active
+                
                 const weatherMod = moduleManager.activeModules.get('clock-weather');
                 if (weatherMod) {
                     import('../clock-weather/clock-weather.js').then(m => m.init());
@@ -210,7 +210,7 @@ async function renderClockWeatherSettings() {
         localStorage.setItem('date.format', dateFormatSelector.value);
         localStorage.setItem('clock.timezone', clockTimezoneInput.value.trim());
         
-        // Update clock module if active
+        
         const weatherMod = moduleManager.activeModules.get('clock-weather');
         if (weatherMod) {
             import('../clock-weather/clock-weather.js').then(m => m.init());
@@ -296,7 +296,7 @@ function initElements() {
         });
     }
 
-    // Close on click outside modal
+    
     const modalContainer = document.getElementById('modal-container');
     modalContainer.addEventListener('click', (e) => {
         if (e.target === modalContainer) {
@@ -462,7 +462,7 @@ function renderContextMenuEditor() {
                 renderContextMenuEditor();
             };
 
-            // Drag events for items
+            
             itemEl.ondragstart = (e) => {
                 e.stopPropagation();
                 e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'item', sIdx, iIdx }));
@@ -488,7 +488,7 @@ function renderContextMenuEditor() {
             itemsList.appendChild(itemEl);
         });
 
-        // Drag events for sections
+        
         secEl.ondragstart = (e) => {
             if (e.target === secEl) {
                 e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'section', sIdx }));
@@ -508,7 +508,7 @@ function renderContextMenuEditor() {
                 saveContextMenuConfig();
                 renderContextMenuEditor();
             } else if (data.type === 'item') {
-                // Drop item into section (at the end)
+                
                 const sourceItem = contextMenuConfig[currentType][data.sIdx].items.splice(data.iIdx, 1)[0];
                 contextMenuConfig[currentType][sIdx].items.push(sourceItem);
                 saveContextMenuConfig();
@@ -531,7 +531,7 @@ function renderSearchEngineEditor() {
 
     listContainer.innerHTML = '';
 
-    // Update Default Selector
+    
     if (defaultSelector) {
         const savedDefault = localStorage.getItem('searchEngine.default') || 'ecosia';
         defaultSelector.innerHTML = '';
@@ -553,7 +553,7 @@ function renderSearchEngineEditor() {
         };
     }
 
-    // Update Preview
+    
     const selectedValue = localStorage.getItem('searchEngine.selected') || 'ecosia';
     let selectedEngine = null;
     for (const cat in searchEngines) {
@@ -650,7 +650,7 @@ function renderSearchEngineEditor() {
                 renderSearchEngineEditor();
             };
 
-            // Drag & Drop for Engines
+            
             engineEl.ondragstart = (e) => {
                 e.stopPropagation();
                 e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'engine', category, index: eIdx }));
@@ -676,7 +676,7 @@ function renderSearchEngineEditor() {
             enginesList.appendChild(engineEl);
         });
 
-        // Drag & Drop for Categories
+        
         catEl.ondragstart = (e) => {
             if (e.target === catEl) {
                 e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'search-category', category }));
@@ -875,7 +875,7 @@ function showModuleSelector(slotId) {
     const available = moduleManager.getModulesForSlot(slotId);
     const activeInSlot = moduleManager.getActiveModuleInSlot(slotId);
 
-    // Add "None" option
+    
     const noneItem = document.createElement('li');
     noneItem.className = `module-item ${!activeInSlot ? 'active' : ''}`;
     noneItem.innerHTML = `

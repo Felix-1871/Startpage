@@ -22,7 +22,7 @@ export function handleLinkHover(e, link, hoverMenu, position = 'bottom') {
             top = rect.top - hoverMenu.offsetHeight - 5;
         }
     } else {
-        // Position 'top' for bookmarks dock
+        
         top = rect.top - hoverMenu.offsetHeight - 10;
         left = rect.left + (rect.width / 2) - (hoverMenu.offsetWidth / 2);
 

@@ -1,7 +1,7 @@
 export class ModuleManager {
     constructor() {
-        this.activeModules = new Map(); // name -> { path, targetSelector }
-        this.registry = []; // Array of { name, path, description, slots }
+        this.activeModules = new Map(); 
+        this.registry = []; 
     }
 
     registerModule(name, path, description, slots) {
@@ -19,20 +19,20 @@ export class ModuleManager {
 
     async loadModule(name, path, targetSelector) {
         if (this.activeModules.has(name)) {
-            // If already loaded but in a different slot, we might want to move it?
-            // For now, just return if already active.
+            
+            
             return;
         }
 
         try {
-            // Load CSS
+            
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = `${path}/${name}.css`;
             link.id = `style-${name}`;
             document.head.appendChild(link);
 
-            // Load HTML
+            
             const response = await fetch(`${path}/${name}.html`);
             const html = await response.text();
             
@@ -43,7 +43,7 @@ export class ModuleManager {
                 console.warn(`Target container ${targetSelector} not found for module ${name}`);
             }
 
-            // Load JS
+            
             const module = await import(`../${path}/${name}.js`);
             if (module.init) {
                 module.init();
@@ -59,11 +59,11 @@ export class ModuleManager {
         const info = this.activeModules.get(name);
         if (!info) return;
 
-        // Remove CSS
+        
         const link = document.getElementById(`style-${name}`);
         if (link) link.remove();
 
-        // Clear HTML
+        
         const target = document.querySelector(info.targetSelector);
         if (target) target.innerHTML = '';
 

@@ -140,7 +140,7 @@ export function init() {
                 if (!webhookUrl) {
                     webhookUrl = await showPrompt(`Please enter the Webhook URL for ${selectedEngine.label}:`);
                     if (webhookUrl) {
-                        // Update the engine URL and save
+                        
                         selectedEngine.url = webhookUrl;
                         localStorage.setItem('searchEngines', JSON.stringify(searchEngines));
                     }
