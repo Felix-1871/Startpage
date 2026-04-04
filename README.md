@@ -2,7 +2,7 @@
  The first project i tried vibecoding. It's meant to function as a browser homepage and a new tab.
 
  ## Features
- - Current weather based on OpenWeather API 
+ - Current weather
  - Todo list
  - Bookmarks
  - Ability to sync with MacOS's Safari (needs to be set up by user) 
@@ -18,12 +18,10 @@
  It will try to automatically choose an icon and adapt the colour from simple-icons
 
  ## Setup
- 1. Create and add an [OpenWeather](https://openweathermap.org/) API key to src/config.js
- 2. Adjust config to your liking in src/clock-weather.js
- 3. Download simple-icons set and add icons directory to /img
- 4. For Anki, download Anki client and install Anki Connect plugin
- 5. For Lute, download and run
- 6. Both Anki and Lute must run in background for the respective modules to work!
+ 1. Download simple-icons set and add icons directory to /img
+ 2. For Anki, download Anki client and install Anki Connect plugin
+ 3. For Lute, download and run
+ 4. Both Anki and Lute must run in background for the respective modules to work!
 
     ### How to set up the Safari sync
     I'm using Safari's tab groups a lot, so I can have many tabs open without clutter, however it doesn't offer syncing outside the Apple's ecosystem and I don't like using 3rd party tools out of privacy concerns (yeah AI and privacy doesn't seem too close but at least there I have some resemblance of control over it).

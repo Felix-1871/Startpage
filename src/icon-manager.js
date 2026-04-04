@@ -77,42 +77,63 @@ export async function findBestIcon(url, currentIcon = null, currentColor = null)
         if (hostname.includes('mail.google')) exactTerms.add('gmail');
         if (hostname.includes('store.ubi')) exactTerms.add('ubisoft');
         if (hostname.includes('blizzard')) exactTerms.add('battledotnet');
+
+        // Handle google-like sites (e.g. calendar.google -> googlecalendar)
+        if (parts.includes('google')) {
+            parts.forEach(p => {
+                if (p !== 'google') {
+                    exactTerms.add(`google${p}`);
+                    exactTerms.add(`${p}google`);
+                }
+            });
+        }
+
         const exactMatches = [];
         const partialMatches = [];
 
+        // Priority 1: Very exact matches (hostname or hostnamewithdot)
         currentIconList.forEach(iconFile => {
             const iconName = iconFile.toLowerCase().replace('.svg', '');
-            if (exactTerms.has(iconName)) {
+            if (iconName === hostname || iconName === hostnameWithDot) {
                 exactMatches.push(iconFile);
-                return;
-            }
-            const matchingParts = parts.filter(p => p.length > 2 && iconName.includes(p));
-            if (matchingParts.length >= 2) {
-                exactMatches.push(iconFile);
-                return;
-            }
-            if (iconName.length > 3 && (hostname.includes(iconName) || hostnameWithDot.includes(iconName))) {
-                partialMatches.push(iconFile);
             }
         });
+
+        // Only if no very exact matches, check exactTerms and parts
+        if (exactMatches.length === 0) {
+            currentIconList.forEach(iconFile => {
+                const iconName = iconFile.toLowerCase().replace('.svg', '');
+                
+                if (exactTerms.has(iconName)) {
+                    exactMatches.push(iconFile);
+                    return;
+                }
+                const matchingParts = parts.filter(p => p.length > 2 && iconName.includes(p));
+                if (matchingParts.length >= 2) {
+                    exactMatches.push(iconFile);
+                    return;
+                }
+                if (iconName.length > 3 && hostname.includes(iconName)) {
+                    partialMatches.push(iconFile);
+                }
+            });
+        }
 
         let iconResult = './img/icons/default-link.svg';
         let colorResult = '#cccccc';
 
-        if (exactMatches.length === 1 && partialMatches.length === 0) {
-            iconResult = `./img/icons/${exactMatches[0]}`;
-        } else {
-            const allMatches = [...new Set([...exactMatches, ...partialMatches])];
-            if (allMatches.length === 1) {
-                iconResult = `./img/icons/${allMatches[0]}`;
-            } else if (allMatches.length > 1) {
-                const message = exactMatches.length > 0
-                    ? `Found multiple relevant icons for "${hostname}". Please select one:`
-                    : `No exact match for "${hostname}", but found similar icons. Select one:`;
-                
-                const selected = await showSelectionModal(message, allMatches);
-                iconResult = selected ? `./img/icons/${selected}` : './img/icons/default-link.svg';
-            }
+        // Use exact matches if they exist, otherwise fallback to partial
+        const matchesToConsider = exactMatches.length > 0 ? exactMatches : partialMatches;
+
+        if (matchesToConsider.length === 1) {
+            iconResult = `./img/icons/${matchesToConsider[0]}`;
+        } else if (matchesToConsider.length > 1) {
+            const message = exactMatches.length > 0
+                ? `Found multiple relevant icons for "${hostname}". Please select one:`
+                : `No exact match for "${hostname}", but found similar icons. Select one:`;
+            
+            const selected = await showSelectionModal(message, matchesToConsider);
+            iconResult = selected ? `./img/icons/${selected}` : './img/icons/default-link.svg';
         }
 
         const finalIconSlug = iconResult.split('/').pop().replace('.svg', '');

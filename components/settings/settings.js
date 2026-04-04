@@ -1,4 +1,4 @@
-import { ANKI_SETTINGS, loadSettingsForDeck, saveSettingsForDeck, setCSSDisplay } from '../anki/anki-xiehanzi-helpers.js';
+import { ANKI_SETTINGS, loadSettingsForDeck, saveSettingsForDeck, setCSSDisplay } from '../anki-xiehanzi/anki-xiehanzi-helpers.js';
 
 let moduleManager;
 let settingsModal;
@@ -124,7 +124,7 @@ export async function openSettings() {
 }
 
 function checkTabsVisibility() {
-    const modules = ['tabs', 'anki', 'lute', 'searchbar', 'clock-weather'];
+    const modules = ['tabs', 'anki', 'anki-xiehanzi', 'lute', 'searchbar', 'clock-weather'];
     modules.forEach(mod => {
         const isActive = moduleManager.activeModules.has(mod);
         const categoryItem = document.getElementById(`settings-category-${mod}`);
@@ -311,7 +311,7 @@ function renderAnkiSettings() {
 
     ankiSection.innerHTML = `
         <div class="settings-header">
-            <h3>Anki Settings</h3>
+            <h3>Anki Xiehanzi Settings</h3>
             <p>Configure your Anki integration and Chinese practice preferences.</p>
         </div>
         <div class="settings-group">
@@ -326,7 +326,7 @@ function renderAnkiSettings() {
     const deckSelect = document.getElementById('anki-deck-selector-settings');
     const fieldsContainer = document.getElementById('anki-fields-container');
 
-    import('../anki/anki.js').then(async (m) => {
+    import('../anki-xiehanzi/anki-xiehanzi.js').then(async (m) => {
         const deckNames = await (await import('../../src/helpers.js')).invoke('deckNames', 6);
         if (deckNames) {
             deckNames.forEach(name => {

@@ -6,7 +6,8 @@ async function initApp() {
     
     manager.registerModule('searchbar', 'components/searchbar', 'A search bar with multiple engines support.', ['topmid-target']);
     manager.registerModule('clock-weather', 'components/clock-weather', 'Displays current time and local weather.', ['topright-target']);
-    manager.registerModule('anki', 'components/anki', 'Chinese character practice and review using Anki.', ['midleft-target']);
+    manager.registerModule('anki', 'components/anki', 'Basic Anki review using AnkiConnect.', ['midleft-target']);
+    manager.registerModule('anki-xiehanzi', 'components/anki-xiehanzi', 'Chinese character practice and review using Anki.', ['midleft-target']);
     manager.registerModule('todo', 'components/todo', 'Simple todo list manager.', ['midcenterleft-target']);
     manager.registerModule('tabs', 'components/tabs', 'Categorized bookmarks with JSON sync.', ['midcenterright-target']);
     manager.registerModule('lute', 'components/lute', 'Lute reading integration.', ['midright-target']);

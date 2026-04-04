@@ -4,7 +4,7 @@ import { invoke, getStorage } from '../../../src/helpers.js';
 
 const link = document.createElement('link');
 link.rel = 'stylesheet';
-link.href = 'components/anki/sentences/anki-sentences.css';
+link.href = 'components/anki-xiehanzi/sentences/anki-sentences.css';
 document.head.appendChild(link);
 
 let sentencesData = null;

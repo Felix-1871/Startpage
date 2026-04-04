@@ -4,7 +4,7 @@ import { getStorage, setStorage, showHide } from '../../../src/helpers.js';
 
 const link = document.createElement('link');
 link.rel = 'stylesheet';
-link.href = 'components/anki/char-practice/anki-character-writer.css';
+link.href = 'components/anki-xiehanzi/char-practice/anki-character-writer.css';
 document.head.appendChild(link);
 
 let characters = "";
