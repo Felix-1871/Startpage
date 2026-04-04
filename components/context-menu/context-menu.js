@@ -158,8 +158,7 @@ const ACTION_MAP = {
     },
     'update-anki': () => { updateAnkiStats(); contextMenu.style.display = 'none'; },
     'update-lute': () => { renderLute(); contextMenu.style.display = 'none'; },
-    'full-sync': async () => { if(await showConfirm('Overwrite ALL links with JSON data?')) { await syncLinksOverwrite(); saveAndRefresh(); contextMenu.style.display = 'none'; } },
-    'interactive-sync': async () => { const changes = await getSyncChanges(); showSyncModalQueue(changes); contextMenu.style.display = 'none'; },
+    'sync': async () => { const changes = await getSyncChanges(); showSyncModalQueue(changes); contextMenu.style.display = 'none'; },
     'add-category': () => openModal('Add Category', [{ name: 'category', label: 'Name', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }], {}, (data) => { linkData.push({ category: data.category, icon: data.icon || './img/icons/default-category.svg', links: [] }); saveAndRefresh(); contextMenu.style.display = 'none'; }),
     'add-link': () => {
         const activeIdx = document.querySelector('.category-item.active')?.dataset.index || 0;
@@ -196,8 +195,7 @@ function renderContextMenu(type = 'global', index = null, subIndex = null) {
                     { id: 'update-lute', label: 'Update Lute', enabled: true }
                 ]},
                 { title: 'Sync Actions', items: [
-                    { id: 'full-sync', label: 'Full Sync', enabled: true },
-                    { id: 'interactive-sync', label: 'Interactive Sync', enabled: true }
+                    { id: 'sync', label: 'Sync', enabled: true }
                 ]},
                 { title: 'Add Actions', items: [
                     { id: 'add-category', label: 'Add New Category', enabled: true },
@@ -254,16 +252,37 @@ function renderContextMenu(type = 'global', index = null, subIndex = null) {
 }
 
 
+let syncIntervalId = null;
+
+export function updateSyncTimer() {
+    if (syncIntervalId) {
+        clearInterval(syncIntervalId);
+        syncIntervalId = null;
+    }
+
+    const autoEnabled = localStorage.getItem('sync.autoEnabled') !== 'false';
+    const interval = parseInt(localStorage.getItem('sync.interval') || '3600000');
+
+    if (autoEnabled) {
+        syncIntervalId = setInterval(performAutoSync, interval);
+    }
+}
+
 export function init() {
     contextMenu = document.getElementById('context-menu');
     modalContainer = document.getElementById('modal-container');
 
     loadLinkData();
-    performAutoSync(); 
+    
+    const autoEnabled = localStorage.getItem('sync.autoEnabled') !== 'false';
+    if (autoEnabled) {
+        performAutoSync(); 
+    }
+    
     renderCategories();
     renderLinks(0);
 
-    setInterval(performAutoSync, 3600000);
+    updateSyncTimer();
 
     document.addEventListener('contextmenu', (e) => {
         e.preventDefault();

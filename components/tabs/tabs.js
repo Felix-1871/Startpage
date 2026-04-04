@@ -167,7 +167,13 @@ export async function syncLinksFromJson() {
                 linkData.push(category);
             }
 
-            let link = category.links.find(l => l.url === tab_url);
+            
+            let link = null;
+            for (const cat of linkData) {
+                link = cat.links.find(l => l.url === tab_url);
+                if (link) break;
+            }
+
             if (!link) {
                 const { icon, color } = await findBestIcon(tab_url);
                 category.links.push({
@@ -178,11 +184,10 @@ export async function syncLinksFromJson() {
                     description: ''
                 });
             } else {
-                link.name = tab_title;
-                if (!link.icon || link.icon.includes('default-link.svg')) {
-                    const { icon, color } = await findBestIcon(tab_url);
-                    link.icon = icon;
-                    if (!link.color || link.color === '#cccccc') link.color = color;
+                
+                
+                if (link.name !== tab_title) {
+                    
                 }
             }
         }

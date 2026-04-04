@@ -30,6 +30,7 @@ async function initApp() {
     
     await manager.loadCSS('settings', 'components/settings');
     const settingsModule = await import('../components/settings/settings.js');
+    if (settingsModule.applyTheme) settingsModule.applyTheme();
     if (settingsModule.init) {
         settingsModule.init(manager);
     }

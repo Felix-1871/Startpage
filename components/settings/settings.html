@@ -58,12 +58,68 @@
             </div>
         </div>
         <div id="settings-content-theming" class="settings-section">
-            <h3>Theming</h3>
-            <p>Theme configuration options will appear here.</p>
+            <div class="settings-header">
+                <h3>Theming Settings</h3>
+                <p>Customize the appearance of your startpage.</p>
+            </div>
+            
+            <div class="settings-group">
+                <h4>Background</h4>
+                <div class="settings-field">
+                    <label for="bg-image-input">Background Image URL:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="bg-image-input" class="anki-input" placeholder="e.g. ./img/river.jpg">
+                        <button id="save-bg-btn" class="settings-btn">Apply</button>
+                    </div>
+                    <p class="settings-description">Enter a URL or local path to an image. Use <code>none</code> for no background image.</p>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h4>Colors</h4>
+                <div id="theme-colors-container">
+                    <!-- Color inputs will be rendered here -->
+                </div>
+                <button id="reset-colors-btn" class="settings-btn" style="margin-top: 10px; background-color: var(--highlight-high);">Reset to Default</button>
+            </div>
         </div>
         <div id="settings-content-tabs" class="settings-section">
-            <h3>Tabs Sync</h3>
-            <p>Sync settings for the Tabs module.</p>
+            <div class="settings-header">
+                <h3>Tabs Sync Settings</h3>
+                <p>Configure how your bookmarks are synchronized with <code>tabs.json</code>.</p>
+            </div>
+
+            <div class="settings-group">
+                <h4>Auto Sync</h4>
+                <div class="settings-field" style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="sync-enabled-toggle">Enable Auto Sync:</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="sync-enabled-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p class="settings-description">Automatically pull new links from <code>tabs.json</code> on startup and periodically. <strong>Note:</strong> Auto sync will NOT overwrite your manual changes.</p>
+                
+                <div class="settings-field" style="margin-top: 20px;">
+                    <label for="sync-interval-selector">Sync Interval:</label>
+                    <select id="sync-interval-selector" class="anki-select">
+                        <option value="600000">Every 10 minutes</option>
+                        <option value="1800000">Every 30 minutes</option>
+                        <option value="3600000">Every hour</option>
+                        <option value="21600000">Every 6 hours</option>
+                        <option value="86400000">Every 24 hours</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h4>Manual Actions</h4>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button id="manual-sync-btn" class="settings-btn">Interactive Sync</button>
+                    <button id="hard-sync-btn" class="settings-btn" style="background-color: var(--love);">Hard Sync (Overwrite All)</button>
+                </div>
+                <p class="settings-description" style="margin-top: 10px; color: var(--love);">Warning: Hard Sync will delete all your local changes and strictly follow <code>tabs.json</code>.</p>
+            </div>
         </div>
         <div id="settings-content-anki" class="settings-section">
             <h3>Anki Xiehanzi Settings</h3>

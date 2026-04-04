@@ -13,12 +13,18 @@
     ### 1.1 Changelog
     - Added Anki with support for [Anki-xiehanzi deck](https://github.com/krmanik/Anki-xiehanzi) and [Learning using Texts (Lute)](https://github.com/Felix-1871/lute-v3) to facilitate language learning
     - Changed a bit of styling
+    ### 1.2 Changelog
+    - Added a modular layout
+    - Added theming options
+    - Streamlined code and added gui setup
+    - Improved upon already existing elements
+  
 ## Sync
- The site will refresh links every hour, but you can refresh anytime you want using right click context menu. There are two types of syncing, full sync (will overwrite everything), or interactive sync where you will be prompted each time there's a conflict.
+ The site will refresh links every hour (configurable), but you can refresh anytime you want using right click context menu. There are two types of syncing, full sync (will overwrite everything), or interactive sync where you will be prompted each time there's a conflict.
  It will try to automatically choose an icon and adapt the colour from simple-icons
 
  ## Setup
- 1. Download simple-icons set and add icons directory to /img
+ 1. Download an icon set (ie simple-icons) and add icons directory to /img
  2. For Anki, download Anki client and install Anki Connect plugin
  3. For Lute, download and run
  4. Both Anki and Lute must run in background for the respective modules to work!

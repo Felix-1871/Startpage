@@ -78,7 +78,7 @@ export async function findBestIcon(url, currentIcon = null, currentColor = null)
         if (hostname.includes('store.ubi')) exactTerms.add('ubisoft');
         if (hostname.includes('blizzard')) exactTerms.add('battledotnet');
 
-        // Handle google-like sites (e.g. calendar.google -> googlecalendar)
+        
         if (parts.includes('google')) {
             parts.forEach(p => {
                 if (p !== 'google') {
@@ -91,7 +91,7 @@ export async function findBestIcon(url, currentIcon = null, currentColor = null)
         const exactMatches = [];
         const partialMatches = [];
 
-        // Priority 1: Very exact matches (hostname or hostnamewithdot)
+        
         currentIconList.forEach(iconFile => {
             const iconName = iconFile.toLowerCase().replace('.svg', '');
             if (iconName === hostname || iconName === hostnameWithDot) {
@@ -99,7 +99,7 @@ export async function findBestIcon(url, currentIcon = null, currentColor = null)
             }
         });
 
-        // Only if no very exact matches, check exactTerms and parts
+        
         if (exactMatches.length === 0) {
             currentIconList.forEach(iconFile => {
                 const iconName = iconFile.toLowerCase().replace('.svg', '');
@@ -122,7 +122,7 @@ export async function findBestIcon(url, currentIcon = null, currentColor = null)
         let iconResult = './img/icons/default-link.svg';
         let colorResult = '#cccccc';
 
-        // Use exact matches if they exist, otherwise fallback to partial
+        
         const matchesToConsider = exactMatches.length > 0 ? exactMatches : partialMatches;
 
         if (matchesToConsider.length === 1) {
