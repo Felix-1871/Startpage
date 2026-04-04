@@ -1,5 +1,5 @@
-import { openModal } from './modals.js';
-import { getStorage, setStorage, showHide, invoke } from './helpers.js';
+import { openModal } from '../modals/modals.js';
+import { getStorage, setStorage, showHide, invoke } from '../../src/helpers.js';
 
 export const ANKI_SETTINGS = {
     "char_zhuyin": { label: 'Show Zhuyin', key: 'backtext-zhuyin', default: 'false', type: 'select' },

@@ -1,4 +1,4 @@
-// Wrapper for AnkiConnect API calls
+
 export async function invoke(action, version, params = {}) {
     const ANKI_CONNECT_URL = 'http://127.0.0.1:8765';
     try {
@@ -17,7 +17,7 @@ export async function invoke(action, version, params = {}) {
     }
 }
 
-// Converts base64 string to Blob
+
 export function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
     const byteCharacters = atob(b64Data);
     const byteArrays = [];
@@ -33,7 +33,7 @@ export function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
     return new Blob(byteArrays, { type: contentType });
 }
 
-// Randomizes array order
+
 export function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -42,7 +42,7 @@ export function shuffle(array) {
     return array;
 }
 
-// Toggles display of elements matching a selector
+
 export function showHide(type, isShow, style = "inline") {
     const elements = typeof type === 'string' ? document.querySelectorAll(type) : [type];
     elements.forEach(function (val) {
@@ -50,13 +50,13 @@ export function showHide(type, isShow, style = "inline") {
     });
 }
 
-// Helper to get value from localStorage with a default
+
 export function getStorage(key, defaultValue = null, storageType = localStorage) {
     const stored = storageType.getItem(key);
     return stored !== null ? stored : defaultValue;
 }
 
-// Helper to set value to localStorage
+
 export function setStorage(key, value, storageType = localStorage) {
     storageType.setItem(key, value);
 }

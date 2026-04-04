@@ -1,0 +1,239 @@
+<div id="settings-modal-inner" class="settings-modal-inner">
+    <div class="settings-sidebar">
+        <ul class="settings-categories">
+            <li class="settings-category-item active" data-category="general">General</li>
+            <li class="settings-category-item" data-category="modules">Modules</li>
+            <li class="settings-category-item" data-category="theming">Theming</li>
+            <li class="settings-category-item" data-category="tabs" id="settings-category-tabs">Tabs</li>
+            <li class="settings-category-item" data-category="anki" id="settings-category-anki-xiehanzi">Anki Xiehanzi</li>
+            <li class="settings-category-item" data-category="lute" id="settings-category-lute">Lute</li>
+            <li class="settings-category-item" data-category="searchbar" id="settings-category-searchbar">Search Bar</li>
+            <li class="settings-category-item" data-category="clock-weather" id="settings-category-clock-weather">Clock & Weather</li>
+            <li class="settings-category-item" data-category="context-menu" id="settings-category-context-menu">Context Menu</li>
+        </ul>
+    </div>
+    <div class="settings-content">
+        <div id="settings-content-general" class="settings-section active">
+            <div class="settings-header">
+                <h3>General Settings</h3>
+                <p>Global application settings.</p>
+            </div>
+            <div class="settings-group">
+                <h4>Icon Management</h4>
+                <p class="settings-description">The application uses a pre-generated list of icons for faster discovery. If you added new icons to <code>img/icons/</code>, refresh the list.</p>
+                <button id="refresh-icon-list-btn" class="settings-btn">Refresh Icon List</button>
+                <p id="refresh-icon-status" class="status-msg"></p>
+            </div>
+        </div>
+        <div id="settings-content-modules" class="settings-section">
+            <div class="settings-header">
+                <h3>Modules Layout</h3>
+                <p>Click on a rectangle to assign a module to that space.</p>
+            </div>
+            <div class="wireframe-container">
+                <div class="wireframe-top">
+                    <div class="wireframe-slot" data-slot="topmid-target" title="Top Mid"></div>
+                    <div class="wireframe-slot" data-slot="topright-target" title="Top Right"></div>
+                </div>
+                <div class="wireframe-middle">
+                    <div class="wireframe-slot wireframe-side" data-slot="midleft-target" title="Mid Left"></div>
+                    <div class="wireframe-center">
+                        <div class="wireframe-glass">
+                            <div class="wireframe-slot" data-slot="midcenterleft-target" title="Mid Center Left"></div>
+                            <div class="wireframe-slot" data-slot="midcenterright-target" title="Mid Center Right"></div>
+                        </div>
+                    </div>
+                    <div class="wireframe-slot wireframe-side" data-slot="midright-target" title="Mid Right"></div>
+                </div>
+                <div class="wireframe-bottom">
+                    <div class="wireframe-slot" data-slot="bottom-target" title="Bottom"></div>
+                </div>
+            </div>
+            <div id="module-selector-panel" class="module-selector-panel hidden">
+                <div class="module-selector-header">
+                    <h4 id="selected-slot-name">Selected Slot</h4>
+                    <button id="close-module-selector" class="close-btn">&times;</button>
+                </div>
+                <ul id="available-modules-list" class="available-modules-list"></ul>
+            </div>
+        </div>
+        <div id="settings-content-theming" class="settings-section">
+            <div class="settings-header">
+                <h3>Theming Settings</h3>
+                <p>Customize the appearance of your startpage.</p>
+            </div>
+            
+            <div class="settings-group">
+                <h4>Background</h4>
+                <div class="settings-field">
+                    <label for="bg-image-input">Background Image URL:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="bg-image-input" class="anki-input" placeholder="e.g. ./img/river.jpg">
+                        <button id="save-bg-btn" class="settings-btn">Apply</button>
+                    </div>
+                    <p class="settings-description">Enter a URL or local path to an image. Use <code>none</code> for no background image.</p>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h4>Colors</h4>
+                <div id="theme-colors-container">
+                    <!-- Color inputs will be rendered here -->
+                </div>
+                <button id="reset-colors-btn" class="settings-btn" style="margin-top: 10px; background-color: var(--highlight-high);">Reset to Default</button>
+            </div>
+        </div>
+        <div id="settings-content-tabs" class="settings-section">
+            <div class="settings-header">
+                <h3>Tabs Sync Settings</h3>
+                <p>Configure how your bookmarks are synchronized with <code>tabs.json</code>.</p>
+            </div>
+
+            <div class="settings-group">
+                <h4>Auto Sync</h4>
+                <div class="settings-field" style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="sync-enabled-toggle">Enable Auto Sync:</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="sync-enabled-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p class="settings-description">Automatically pull new links from <code>tabs.json</code> on startup and periodically. <strong>Note:</strong> Auto sync will NOT overwrite your manual changes.</p>
+                
+                <div class="settings-field" style="margin-top: 20px;">
+                    <label for="sync-interval-selector">Sync Interval:</label>
+                    <select id="sync-interval-selector" class="anki-select">
+                        <option value="600000">Every 10 minutes</option>
+                        <option value="1800000">Every 30 minutes</option>
+                        <option value="3600000">Every hour</option>
+                        <option value="21600000">Every 6 hours</option>
+                        <option value="86400000">Every 24 hours</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h4>Manual Actions</h4>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button id="manual-sync-btn" class="settings-btn">Interactive Sync</button>
+                    <button id="hard-sync-btn" class="settings-btn" style="background-color: var(--love);">Hard Sync (Overwrite All)</button>
+                </div>
+                <p class="settings-description" style="margin-top: 10px; color: var(--love);">Warning: Hard Sync will delete all your local changes and strictly follow <code>tabs.json</code>.</p>
+            </div>
+        </div>
+        <div id="settings-content-anki" class="settings-section">
+            <h3>Anki Xiehanzi Settings</h3>
+            <p>Configure your Anki integration and Chinese practice preferences.</p>
+        </div>
+        <div id="settings-content-lute" class="settings-section">
+            <h3>Lute Settings</h3>
+            <p>Configure your Lute reading integration.</p>
+        </div>
+        <div id="settings-content-searchbar" class="settings-section">
+            <div class="settings-header">
+                <h3>Search Bar Settings</h3>
+                <p>Configure search engines and default behaviors.</p>
+            </div>
+
+            <div class="settings-group">
+                <label for="default-search-engine-selector">Default Search Engine:</label>
+                <select id="default-search-engine-selector" class="anki-select"></select>
+                <p class="settings-description" style="margin-top: 10px;">This engine will be selected automatically when you load the page.</p>
+            </div>
+
+            <div class="search-engine-settings-container">
+                <div class="search-engine-editor">
+                    <div class="editor-header">
+                        <h4>Categories & Engines</h4>
+                        <button id="add-search-category-btn" class="settings-btn small-btn">+</button>
+                    </div>
+                    <div id="search-engines-list" class="search-engines-list">
+                        <!-- Categories and engines will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="settings-content-clock-weather" class="settings-section">
+            <div class="settings-header">
+                <h3>Clock & Weather Settings</h3>
+                <p>Configure time formats and weather location.</p>
+            </div>
+
+            <div class="settings-group">
+                <h4>Weather Settings</h4>
+                <div class="settings-field">
+                    <label for="weather-city-input">City Name:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="weather-city-input" class="anki-input" placeholder="e.g. Berlin">
+                        <button id="save-weather-city-btn" class="settings-btn">Save</button>
+                    </div>
+                    <p id="weather-city-status" class="status-msg"></p>
+                </div>
+                <div class="settings-field" style="margin-top: 15px;">
+                    <label>Units:</label>
+                    <select id="weather-units-selector" class="anki-select">
+                        <option value="metric">Metric (°C, m/s)</option>
+                        <option value="imperial">Imperial (°F, mph)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h4>Clock Settings</h4>
+                <div class="settings-field">
+                    <label for="clock-format-selector">Time Format:</label>
+                    <select id="clock-format-selector" class="anki-select">
+                        <option value="HH:mm">24-hour (HH:mm)</option>
+                        <option value="hh:mm A">12-hour (hh:mm AM/PM)</option>
+                        <option value="HH:mm:ss">24-hour with seconds (HH:mm:ss)</option>
+                        <option value="hh:mm:ss A">12-hour with seconds (hh:mm:ss AM/PM)</option>
+                    </select>
+                </div>
+                <div class="settings-field" style="margin-top: 15px;">
+                    <label for="date-format-selector">Date Format:</label>
+                    <select id="date-format-selector" class="anki-select">
+                        <option value="DD/MM/YY">DD/MM/YY</option>
+                        <option value="MM/DD/YY">MM/DD/YY</option>
+                        <option value="YY-MM-DD">YY-MM-DD</option>
+                        <option value="DD.MM.YYYY">DD.MM.YYYY</option>
+                        <option value="MMM D, YYYY">MMM D, YYYY</option>
+                    </select>
+                </div>
+                <div class="settings-field" style="margin-top: 15px;">
+                    <label for="clock-timezone-input">Timezone:</label>
+                    <input type="text" id="clock-timezone-input" class="anki-input" placeholder="e.g. Europe/Berlin">
+                    <p class="settings-description">Leave empty for browser default. Use IANA timezone names (e.g., America/New_York).</p>
+                </div>
+                <button id="save-clock-settings-btn" class="settings-btn" style="margin-top: 10px;">Save Clock Settings</button>
+            </div>
+        </div>
+        <div id="settings-content-context-menu" class="settings-section">
+            <div class="settings-header">
+                <h3>Context Menu Configuration</h3>
+                <p>Customize the items and order of the context menu.</p>
+            </div>
+            
+            <div class="settings-group">
+                <label for="context-menu-type-selector">Context Menu Type:</label>
+                <select id="context-menu-type-selector" class="anki-select">
+                    <option value="global">Global (Background)</option>
+                    <option value="category">Category</option>
+                    <option value="link">Link</option>
+                    <option value="bookmark">Bookmark</option>
+                </select>
+            </div>
+
+            <div class="context-menu-settings-container">
+                <div class="context-menu-editor">
+                    <div class="editor-header">
+                        <h4>Categories & Items</h4>
+                        <button id="add-context-category-btn" class="settings-btn small-btn">+</button>
+                    </div>
+                    <div id="context-menu-categories-list" class="context-menu-categories-list">
+                        <!-- Categories and items will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

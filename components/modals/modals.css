@@ -1,0 +1,128 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--overlay-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000; 
+}
+
+.modal-content {
+  background-color: var(--surface-modal);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-med);
+  border-radius: 10px;
+  padding: 15px;
+  width: 90%;
+  max-width: 700px; 
+  box-shadow: 0 5px 15px var(--shadow-high);
+  color: var(--text);
+  font-size: 0.85em;
+
+  h3 {
+    margin-top: 0;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border-med);
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+  }
+}
+
+.modal-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 10px 20px;
+}
+
+.form-group {
+  margin-bottom: 0;
+
+  label {
+    display: block;
+    margin-bottom: 3px;
+    font-weight: bold;
+  }
+
+  input[type="text"],
+  input[type="color"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    background-color: var(--base-80);
+    color: var(--text);
+    font-size: 1em;
+
+    &::placeholder {
+      color: var(--subtle);
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 60px;
+    grid-column: span 2; 
+  }
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  grid-column: span 2;
+
+  button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+  }
+
+  .save-button {
+    background-color: var(--accent);
+    color: var(--base);
+
+    &:hover {
+      background-color: var(--iris);
+    }
+  }
+
+  .cancel-button {
+    background-color: var(--border-med);
+    color: var(--text);
+
+    &:hover {
+      background-color: var(--border-strong);
+    }
+  }
+}
+
+.icon-preview {
+  width: 30px;
+  height: 30px;
+  vertical-align: middle;
+  margin-left: 10px;
+  filter: invert(1);
+}
+
+.modal-prompt-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  background-color: var(--base-80);
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  color: var(--text);
+}

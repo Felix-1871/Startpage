@@ -1,13 +1,9 @@
 import { openAnkiSettings, setCSSDisplay, loadSettingsForDeck, ANKI_SETTINGS } from './anki-xiehanzi-helpers.js';
-import { getStorage, setStorage, showHide, invoke, b64toBlob} from './helpers.js';
+import { getStorage, setStorage, showHide, invoke, b64toBlob} from '../../src/helpers.js';
+import { initCharacterWriter, doPractice, handleWriterPrefChange, saveCharacterToList } from './char-practice/anki-character-writer.js';
+import { loadSentences, loadMoreSentences, updateSentenceVisibility } from './sentences/anki-sentences.js';
 
 let activeBlobUrls = [];
-let sentencesData = null;
-let indexByChar = null;
-let cachedResults = [];
-let lastQueryKey = "";
-let sentenceOffset = 0;
-let isSentenceLoading = false;
 
 function clearBlobUrls() {
     activeBlobUrls.forEach(url => URL.revokeObjectURL(url));
@@ -26,7 +22,7 @@ async function processAnkiHtml(container, html) {
     const footers = tempDiv.querySelectorAll('.modal-footer1');
     footers.forEach(f => f.remove());
 
-    const mediaElements = tempDiv.querySelectorAll('[src], [href], link[rel="stylesheet"]');
+    const mediaElements = tempDiv.querySelectorAll('[src], [href]');
     for (const el of mediaElements) {
         const attr = el.hasAttribute('src') ? 'src' : 'href';
         let path = el.getAttribute(attr);
@@ -37,11 +33,12 @@ async function processAnkiHtml(container, html) {
         if (base64) {
             let mime = 'application/octet-stream';
             if (filename.endsWith('.js')) mime = 'application/javascript';
-            else if (filename.endsWith('.css')) mime = 'text/css';
             else if (filename.endsWith('.png')) mime = 'image/png';
             else if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) mime = 'image/jpeg';
             else if (filename.endsWith('.svg')) mime = 'image/svg+xml';
             else if (filename.endsWith('.gif')) mime = 'image/gif';
+            else if (filename.endsWith('.woff')) mime = 'font/woff';
+            else if (filename.endsWith('.woff2')) mime = 'font/woff2';
             
             const blob = b64toBlob(base64, mime);
             const blobUrl = URL.createObjectURL(blob);
@@ -93,169 +90,6 @@ async function processAnkiHtml(container, html) {
     }
 }
 
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-function buildCharIndex(data) {
-    const index = Object.create(null);
-    for (let i = 0; i < data.length; i++) {
-        const sentence = data[i];
-        if (!sentence.simplified) continue;
-           
-        const chars = [...sentence.simplified];
-        const uniqueChars = new Set(chars);
-
-        uniqueChars.forEach(ch => {
-            if (/[\u4e00-\u9fa5]/.test(ch)) {
-                if (!index[ch]) index[ch] = [];
-                index[ch].push(sentence);
-            }
-        });
-    }
-    return index;
-}
-
-function makeQueryKey(char, settings) {
-    return `${char}|${settings.level}|${settings.length}|${settings.limit}|${settings.random ? 1 : 0}`;
-}
-
-async function loadSentences(searchText) {
-    if (!searchText) return;
-    
-    if (sentencesData && indexByChar) {
-        loadMoreSentences(searchText);
-        return;
-    }
-
-    if (isSentenceLoading) return;
-    isSentenceLoading = true;
-
-    try {
-        const response = await invoke('retrieveMediaFile', 6, { filename: '_chinese_sentences.json' });
-        if (!response) throw new Error("No sentence data returned from Anki");
-        
-        const binaryString = atob(response);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-        const decoded = new TextDecoder('utf-8').decode(bytes);
-        
-        sentencesData = JSON.parse(decoded);
-        indexByChar = buildCharIndex(sentencesData);
-
-        cachedResults = [];
-        lastQueryKey = "";
-        sentenceOffset = 0;
-
-        loadMoreSentences(searchText);
-    } catch (error) {
-        console.error("Failed to load sentences:", error);
-        const container = document.getElementById("char_sentence");
-        if (container) container.classList.add("hidden");
-    } finally {
-        isSentenceLoading = false;
-    }
-}
-
-function loadMoreSentences(searchText) {
-    if (!sentencesData || !indexByChar || !searchText) return;
-
-    const settings = {
-        limit: parseInt(sessionStorage.getItem(ANKI_SETTINGS.noOfSentence.key)) || 5,
-        level: parseInt(sessionStorage.getItem(ANKI_SETTINGS.levelOfSentence.key)) || 9,
-        length: parseInt(sessionStorage.getItem(ANKI_SETTINGS.lengthOfSentence.key)) || 10,
-        random: sessionStorage.getItem(ANKI_SETTINGS["char_sentence-random"].key) === '"true"',
-        show: sessionStorage.getItem(ANKI_SETTINGS.char_sentence.key) === '"true"',
-    };
-
-    const container = document.getElementById("char_sentence");
-    if (!settings.show) {
-        if (container) container.classList.add("hidden");
-        return;
-    } else {
-        if (container) container.classList.remove("hidden");
-    }
-
-    const queryKey = makeQueryKey(searchText, settings);
-
-    if (queryKey !== lastQueryKey) {
-        lastQueryKey = queryKey;
-        sentenceOffset = 0;
-
-        let pool = searchText.length === 1 ? (indexByChar[searchText] || []) : sentencesData;
-
-        cachedResults = pool.filter(s => {
-            const levelMatch = s.hsk_level === undefined || s.hsk_level <= settings.level;
-            const lengthMatch = s.simplified.length <= settings.length;
-            if (!levelMatch || !lengthMatch) {
-            }
-            return (
-                s.simplified &&
-                s.simplified.includes(searchText) &&
-                levelMatch &&
-                lengthMatch
-            );
-        });
-
-        if (settings.random) {
-            shuffle(cachedResults);
-        } else {
-            cachedResults.sort((a, b) => a.id - b.id);
-        }
-    }
-
-    const sentencesGrid = document.getElementById("sentences");
-    if (!sentencesGrid) return;
-
-    if (sentenceOffset === 0) sentencesGrid.innerHTML = '';
-
-    const page = cachedResults.slice(sentenceOffset, sentenceOffset + settings.limit);
-    
-    if (page.length === 0 && sentenceOffset === 0) {
-        sentencesGrid.innerHTML = '<div style="text-align:center; padding:10px; opacity:0.6;">No example sentences found.</div>';
-        return;
-    }
-
-    const showSim = sessionStorage.getItem(ANKI_SETTINGS.char_sim.key) !== '"false"';
-    const showPin = sessionStorage.getItem(ANKI_SETTINGS.char_pinyin.key) !== '"false"';
-    const showMean = sessionStorage.getItem(ANKI_SETTINGS.char_meaning.key) !== '"false"';
-
-    page.forEach(s => {
-        const div = document.createElement("div");
-        div.className = "sentence";
-        
-        let simplifiedHTML = s.simplified;
-        const regex = new RegExp(searchText, "g");
-        simplifiedHTML = simplifiedHTML.replace(regex, `<b>${searchText}</b>`);
-
-        div.innerHTML = `
-            <div class="sen-card">
-                <div class="sen-sim" style="display:${showSim ? 'block' : 'none'}">${simplifiedHTML}</div>
-                <div class="sen-pin" style="display:${showPin ? 'block' : 'none'}">${s.pinyin}</div>
-                <div class="sen-eng" style="display:${showMean ? 'block' : 'none'}">${s.english || ""}</div>
-            </div>
-        `;
-        sentencesGrid.appendChild(div);
-    });
-
-    sentenceOffset += settings.limit;
-    
-    const loadMoreBtn = document.getElementById("loadMore");
-    if (loadMoreBtn) {
-        if (sentenceOffset >= cachedResults.length) {
-            loadMoreBtn.classList.add("hidden");
-        } else {
-            loadMoreBtn.classList.remove("hidden");
-        }
-    }
-}
-
 export async function updateAnkiStats() {
     const ankiStats = document.getElementById('anki-stats');
     const ankiMessage = document.getElementById('anki-message');
@@ -291,7 +125,7 @@ export async function updateAnkiStats() {
             deckSelect.appendChild(option);
         });
         
-        const savedDeck = localStorage.getItem('anki.selectedDeck');
+        const savedDeck = localStorage.getItem('anki-xiehanzi.selectedDeck');
         if (savedDeck && deckNames.includes(savedDeck)) {
             deckSelect.value = savedDeck;
         } else if (currentVal && deckNames.includes(currentVal)) {
@@ -302,27 +136,22 @@ export async function updateAnkiStats() {
     const selectedDeck = deckSelect.value;
     if (!selectedDeck) return;
 
-    localStorage.setItem('anki.selectedDeck', selectedDeck);
+    localStorage.setItem('anki-xiehanzi.selectedDeck', selectedDeck);
     loadSettingsForDeck(selectedDeck);
 
     try {
         const deckStats = await invoke('getDeckStats', 6, { decks: [selectedDeck] });
-        
         const deckIDs = await invoke('deckNamesAndIds', 6);
-        
         const selectedDeckId = deckIDs[selectedDeck];
         
-        
         if (deckStats && deckStats[selectedDeckId]) {
-            
             const stat = deckStats[selectedDeckId];
             ankiNew.textContent = stat.new_count ?? 0;
             ankiLearning.textContent = stat.learn_count ?? 0;
             ankiDue.textContent = stat.review_count ?? 0;
             
             const total = (stat.new_count || 0) + (stat.learn_count || 0) + (stat.review_count || 0);
-            
-            const isStudying = ankiStudyView.style.display !== 'none' && ankiStudyView.style.display !== '';
+            const isStudying = !ankiStudyView.classList.contains('hidden');
             if (!isStudying) {
                 ankiStudyBtn.style.display = total > 0 ? 'block' : 'none';
             } else {
@@ -345,7 +174,7 @@ export async function updateAnkiStats() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+export function init() {
     const ankiStatsView = document.getElementById('anki-stats-view');
     const ankiStudyView = document.getElementById('anki-study-view');
     const ankiStudyBtn = document.getElementById('anki-study-btn');
@@ -378,9 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 easeButtons.classList.add('hidden');
                 return;
             } else {
-                const selectedDeck = deckSelect.value;
-                await invoke('guiDeckReview', 6, { name: selectedDeck });
-                setTimeout(loadCurrentCard, 300);
+                
+                setTimeout(loadCurrentCard, 500);
                 return;
             }
         }
@@ -403,11 +231,25 @@ document.addEventListener('DOMContentLoaded', () => {
         await processAnkiHtml(cardFront, card.question);
         await processAnkiHtml(cardBack, card.answer);
         
-        cardFront.classList.remove('hidden');
-        cardBack.classList.add('hidden');
-        cardDivider.classList.add('hidden');
-        showAnswerBtn.classList.remove('hidden');
-        easeButtons.classList.add('hidden');
+        const isWriteDeck = card && card.deckName && card.deckName.toLowerCase().includes('write');
+        const writerContainer = document.getElementById('character-target');
+
+        if (isWriteDeck) {
+            writerContainer.style.display = 'block';
+            await invoke('guiShowAnswer', 6);
+            cardFront.classList.add('hidden');
+            cardBack.classList.remove('hidden');
+            cardDivider.classList.remove('hidden');
+            showAnswerBtn.classList.add('hidden');
+            easeButtons.classList.remove('hidden');
+        } else {
+            writerContainer.style.display = 'none';
+            cardFront.classList.remove('hidden');
+            cardBack.classList.add('hidden');
+            cardDivider.classList.add('hidden');
+            showAnswerBtn.classList.remove('hidden');
+            easeButtons.classList.add('hidden');
+        }
         
         cardFront.style.display = '';
         cardBack.style.display = '';
@@ -415,20 +257,16 @@ document.addEventListener('DOMContentLoaded', () => {
         easeButtons.style.display = '';
 
         setCSSDisplay();
-        const currentCard = await invoke('guiCurrentCard', 6);
-        const writerContainer = document.getElementById('character-target');
-        if (currentCard.deckName.includes('Audio')) writerContainer.style.display = 'none';
-        else writerContainer.style.display = 'block';
-        
 
         const char = getCardCharacter();
         if (char) {
-            loadSentences(char);
+            const currentPrefix = isWriteDeck ? "back" : frontBack;
+            loadSentences(char, currentPrefix);
 
-            const perIndex = getStorage(frontBack + "practice-select");
+            const perIndex = getStorage(currentPrefix + "practice-select");
             const tradChar = document.getElementById('char_trad')?.innerText || "";
             const simChar = document.getElementById('char_sim')?.innerText || char;
-            characters = perIndex == 1 ? tradChar : simChar;
+            window.characters = perIndex == 1 ? tradChar : simChar;
             doPractice();
         }
 
@@ -440,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!selectedDeck) return;
         await invoke('guiDeckReview', 6, { name: selectedDeck });
         ankiStatsView.style.display = 'none';
-        ankiStudyView.style.display = 'block';
+        ankiStudyView.classList.remove('hidden');
         ankiStudyBtn.style.display = 'none';
         middleLeft.classList.add('expanded');
         loadCurrentCard();
@@ -448,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function stopStudy() {
         ankiStatsView.style.display = 'block';
-        ankiStudyView.style.display = 'none';
+        ankiStudyView.classList.add('hidden');
         ankiStudyBtn.style.display = 'block';
         middleLeft.classList.remove('expanded');
         updateAnkiStats();
@@ -472,22 +310,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    ankiStudyBtn.addEventListener('click', startStudy);
-    ankiBackBtn.addEventListener('click', stopStudy);
-    ankiSettingsBtn.addEventListener('click', () => {
-        const selectedDeck = deckSelect.value;
-        if (selectedDeck) {
-            openAnkiSettings(selectedDeck, () => {
-                setCSSDisplay();
-                const char = getCardCharacter();
-                if (char) loadSentences(char);
-            });
-        }
-    });
-    ankiPlayAudioBtn.addEventListener('click', playAudio);
-    deckSelect.addEventListener('change', () => updateAnkiStats());
+    if (ankiStudyBtn) ankiStudyBtn.addEventListener('click', startStudy);
+    if (ankiBackBtn) ankiBackBtn.addEventListener('click', stopStudy);
+    if (ankiPlayAudioBtn) ankiPlayAudioBtn.addEventListener('click', playAudio);
+    if (deckSelect) deckSelect.addEventListener('change', () => updateAnkiStats());
     
-    showAnswerBtn.addEventListener('click', async () => {
+    if (showAnswerBtn) showAnswerBtn.addEventListener('click', async () => {
         await invoke('guiShowAnswer', 6);
         cardFront.classList.add('hidden');
         cardBack.classList.remove('hidden');
@@ -500,12 +328,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('#anki-ease-buttons .anki-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const ease = parseInt(btn.dataset.ease);
+            if (ease < 4) {
+                 const char = getCardCharacter();
+                 saveCharacterToList(char);
+            }
             await invoke('guiAnswerCard', 6, { ease });
             updateAnkiStats();
             setTimeout(loadCurrentCard, 300);
         });
     });
-
 
     const ankiContainer = document.getElementById('anki-container');
     if (ankiContainer) {
@@ -513,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const target = e.target.closest('#loadMore');
             if (target) {
                 const char = getCardCharacter();
-                if (char) loadMoreSentences(char);
+                if (char) loadMoreSentences(char, frontBack);
             }
         });
     }
@@ -521,41 +352,30 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAnkiStats();
     setInterval(updateAnkiStats, 60 * 1000);
 
-    // --- Drawing Exercise Integration ---
-
-    const switchIdList = ["text-grid", "text-pinyin", "text-meaning", "text-sim", "text-trad", "text-stroke-color", "text-outline"];
-    const numberInputList = ["draw-size", "stroke-size", "hint-miss", "no-of-sentence", "level-of-sentence", "length-of-sentence"];
+    const switchIdList = ["text-pinyin", "text-meaning", "text-sim", "text-trad"];
+    const numberInputList = ["no-of-sentence", "level-of-sentence", "length-of-sentence"];
     const sentenceCheckboxList = ["text-sentence", "text-sentence-random", "text-sentence-colored"];
     let frontBack = "front";
-    let characters = "";
 
     function setActive(side) {
         frontBack = side === "text-front" ? "front" : "back";
         const frontBtn = document.getElementById("text-front");
         const backBtn = document.getElementById("text-back");
         if (frontBtn && backBtn) {
-        if (side === "text-front") {
-            frontBtn.classList.add("btn-active");
-            backBtn.classList.remove("btn-active");
-        } else {
-            backBtn.classList.add("btn-active");
-            frontBtn.classList.remove("btn-active");
-        }
+            if (side === "text-front") {
+                frontBtn.classList.add("btn-active");
+                backBtn.classList.remove("btn-active");
+            } else {
+                backBtn.classList.add("btn-active");
+                frontBtn.classList.remove("btn-active");
+            }
         }
         initSwitchPrefs();
-    }
-
-    function initPractice() {
-        const elem = document.getElementById("practice-select");
-        if (!elem) return;
-        const stored = getStorage(frontBack + "practice-select");
-        elem.selectedIndex = (stored !== null && stored !== undefined) ? parseInt(stored) : 0;
-        setStorage(frontBack + "practice-select", elem.selectedIndex);
+        updateSentenceVisibility(frontBack);
+        initCharacterWriter(side);
     }
 
     function initSwitchPrefs() {
-        const drawIds = ["text-grid", "text-stroke-color", "text-outline"];
-
         switchIdList.forEach(_id => {
             const perId = frontBack + _id;
             const elem = document.getElementById(_id);
@@ -567,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elem.checked = stored !== "false";
             setStorage(perId, elem.checked.toString());
 
-            if (divElem && !drawIds.includes(_id)) {
+            if (divElem) {
                 showHide(divElem, elem.checked, "block");
             }
 
@@ -612,51 +432,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function initDrawPrefs() {
-        const defaults = { "draw-size": 400, "stroke-size": 64, "hint-miss": 5, "no-of-sentence": 5, "level-of-sentence": 3 };
-
-        numberInputList.forEach(_id => {
-            const elem = document.getElementById(_id);
-            if (elem) {
-                const stored = getStorage(frontBack + _id);
-                elem.value = stored || defaults[_id] || elem.value;
-                setStorage(frontBack + _id, elem.value);
-            }
-        });
-
-        const perIndex = getStorage(frontBack + "practice-select");
-        const practiceSelect = document.getElementById("practice-select");
-        if (practiceSelect) {
-        practiceSelect.selectedIndex = perIndex || 0;
-            const tradChar = document.getElementById('char_trad');
-            const simChar = document.getElementById('char_sim');
-            if (tradChar && simChar) {
-                characters = perIndex == 1 ? tradChar.innerHTML : simChar.innerHTML;
-            }
-        }
-    }
-
     function setPrefs(e) {
         if (!e || !e.id) return;
         const perId = frontBack + e.id;
         setStorage(perId, e.type === "checkbox" ? e.checked.toString() : e.type === "number" ? e.value : e.selectedIndex);
 
-        if (e.id === "practice-select") {
-            const tradChar = document.getElementById('char_trad');
-            const simChar = document.getElementById('char_sim');
-            if (tradChar && simChar) {
-                characters = e.selectedIndex === 1
-                    ? tradChar.innerHTML
-                    : simChar.innerHTML;
-            doPractice();
-            }
-            return;
-        }
-
         if (e.type === "checkbox") {
-            const drawIds = ["text-stroke-color", "text-outline"];
-            if (drawIds.includes(e.id)) return;
-
             const divId = e.id.replace("text-", "char_");
             const divElem = document.getElementById(divId);
             if (divElem) {
@@ -665,21 +446,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (["text-sim", "text-trad", "text-pinyin", "text-meaning"].includes(e.id)) {
-                updateSentenceVisibility();
+                updateSentenceVisibility(frontBack);
             }
         }
-    }
-
-    function updateSentenceVisibility() {
-        const showSim = getStorage(frontBack + "text-sim") !== "false";
-        const showTrad = getStorage(frontBack + "text-trad") !== "false";
-        const showPinyin = getStorage(frontBack + "text-pinyin") !== "false";
-        const showMeaning = getStorage(frontBack + "text-meaning") !== "false";
-
-        showHide(document.querySelectorAll(".sen-sim"), showSim, 'block');
-        showHide(document.querySelectorAll(".sen-trad"), showTrad, 'block');
-        showHide(document.querySelectorAll(".sen-pin"), showPinyin, 'block');
-        showHide(document.querySelectorAll(".sen-eng"), showMeaning, 'block');
     }
 
     function openSidebar(id) {
@@ -691,49 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.style.width = "0";
     }
 
-    function doPractice() {
-        const target = document.getElementById('character-target');
-        if (!target) return;
-        target.innerHTML = '';
-        if (!characters) return;
-
-        const drawSize = parseInt(document.getElementById('draw-size')?.value) || 200;
-        const strokeSize = parseInt(document.getElementById('stroke-size')?.value) || 20;
-        const hintMiss = parseInt(document.getElementById('hint-miss')?.value) || 3;
-        const showOutline = document.getElementById('text-outline')?.checked;
-        const customColor = document.getElementById('text-stroke-color')?.checked;
-        const showGrid = document.getElementById('text-grid')?.checked;
-
-        const chars = characters.split('').filter(c => /[\u4e00-\u9fa5]/.test(c));
-        
-        chars.forEach(char => {
-            const charDiv = document.createElement('div');
-            charDiv.style.display = 'inline-block';
-            charDiv.style.margin = '5px';
-            if (showGrid) {
-                charDiv.style.border = '1px solid rgba(224, 222, 244, 0.1)';
-                charDiv.style.background = 'repeating-linear-gradient(0deg, transparent, transparent 49%, rgba(224, 222, 244, 0.05) 50%, transparent 51%), repeating-linear-gradient(90deg, transparent, transparent 49%, rgba(224, 222, 244, 0.05) 50%, transparent 51%)';
-            }
-            target.appendChild(charDiv);
-
-            const writer = HanziWriter.create(charDiv, char, {
-                width: drawSize,
-                height: drawSize,
-                padding: 5,
-                showOutline: showOutline !== false,
-                showCharacter: false,
-                strokeAnimationSpeed: 1,
-                delayBetweenStrokes: 200,
-                strokeColor: customColor ? '#eb81cf' : '#e0def4',
-                outlineColor: '#403d52',
-                drawingColor: '#9ccfd8',
-                drawingThickness: strokeSize / 5,
-                showHintAfterMisses: hintMiss
-            });
-            writer.quiz();
-        });
-    }
-
     [...switchIdList, ...numberInputList, ...sentenceCheckboxList].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -741,18 +467,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 setPrefs(el);
                 if (id.startsWith('text-sentence') || ['no-of-sentence', 'level-of-sentence', 'length-of-sentence'].includes(id)) {
                     const char = getCardCharacter();
-                    if (char) loadMoreSentences(char);
-                } else {
-                    doPractice();
+                    if (char) loadMoreSentences(char, frontBack);
                 }
             });
         }
     });
-
-    const practiceSelect = document.getElementById('practice-select');
-    if (practiceSelect) {
-        practiceSelect.addEventListener('change', () => setPrefs(practiceSelect));
-    }
 
     const btnMenu = document.getElementById("btnShowMenu");
     const btnMore = document.getElementById("btnMoreOptions");
@@ -781,10 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initAll() {
         setActive(document.getElementById("back") ? "text-back" : "text-front");
-        initPractice();
-        initSwitchPrefs();
-        initDrawPrefs();
     }
 
     initAll();
-});
+}

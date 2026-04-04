@@ -1,0 +1,47 @@
+:root {
+  /* Rose Pine Moon Palette */
+  --base: #191724;
+  --surface: #1f1d2e;
+  --overlay: #26233a;
+  --muted: #6e6a86;
+  --subtle: #908caa;
+  --text: #e0def4;
+  --love: #eb6f92;
+  --gold: #f6c177;
+  --rose: #ebbcba;
+  --pine: #31748f;
+  --foam: #9ccfd8;
+  --iris: #c4a7e7;
+  --highlight-low: #21202e;
+  --highlight-med: #403d52;
+  --highlight-high: #524f67;
+  
+  /* Custom Accent */
+  --accent: #eb81cf;
+  
+  /* Rose Pine Moon Palette Variations */
+  --base-70: rgba(25, 23, 36, 0.7);
+  --base-80: rgba(25, 23, 36, 0.8);
+  --surface-70: rgba(31, 29, 46, 0.7);
+  --surface-90: rgba(31, 29, 46, 0.9);
+  --surface-overlay: rgba(31, 29, 46, 0.95);
+  --surface-modal: rgba(31, 29, 46, 0.98);
+  
+  /* Semantic Colors */
+  --bg-dim: rgba(25, 23, 36, 0.3);
+  --bg-overlay: rgba(25, 23, 36, 0.9);
+  --glass-bg: rgba(31, 29, 46, 0.5);
+  --glass-bg-alt: rgba(31, 29, 46, 0.4);
+  --border-subtle: rgba(224, 222, 244, 0.1);
+  --border-med: rgba(224, 222, 244, 0.2);
+  --border-strong: rgba(224, 222, 244, 0.3);
+  --text-05: rgba(224, 222, 244, 0.05);
+  --text-15: rgba(224, 222, 244, 0.15);
+  --accent-muted: rgba(235, 129, 207, 0.4);
+  
+  /* Utility Colors */
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+  --shadow-low: rgba(0, 0, 0, 0.1);
+  --shadow-med: rgba(0, 0, 0, 0.3);
+  --shadow-high: rgba(0, 0, 0, 0.5);
+}

@@ -1,9 +1,16 @@
 
-const modalContainer = document.getElementById('modal-container');
+let modalContainer;
+
+function getModalContainer() {
+    if (!modalContainer) modalContainer = document.getElementById('modal-container');
+    return modalContainer;
+}
 
 export function openModal(title, fields, currentValues = {}, onSubmit) {
-    modalContainer.innerHTML = ''; 
-    modalContainer.style.display = 'flex'; 
+    const container = getModalContainer();
+    if (!container) return;
+    container.innerHTML = ''; 
+    container.style.display = 'flex'; 
 
     const modalContent = document.createElement('div');
     modalContent.className = 'modal-content';
@@ -21,7 +28,7 @@ export function openModal(title, fields, currentValues = {}, onSubmit) {
             data[field.name] = inputElements[field.name].value;
         });
         onSubmit(data);
-        modalContainer.style.display = 'none';
+        container.style.display = 'none';
     }); 
 
     const inputElements = {}; 
@@ -49,8 +56,8 @@ export function openModal(title, fields, currentValues = {}, onSubmit) {
             });
             input.value = currentValues[field.name] || '';
         } else if (field.type === 'select-icon') {
-            const container = document.createElement('div');
-            container.className = 'icon-selector-container';
+            const container_inner = document.createElement('div');
+            container_inner.className = 'icon-selector-container';
 
             input = document.createElement('input');
             input.type = 'text';
@@ -75,9 +82,9 @@ export function openModal(title, fields, currentValues = {}, onSubmit) {
                 }
             });
 
-            container.appendChild(input);
-            container.appendChild(iconPreview);
-            formGroup.appendChild(container);
+            container_inner.appendChild(input);
+            container_inner.appendChild(iconPreview);
+            formGroup.appendChild(container_inner);
             inputElements[field.name] = input;
         } else {
             input = document.createElement('input');
@@ -110,13 +117,13 @@ export function openModal(title, fields, currentValues = {}, onSubmit) {
     cancelButton.className = 'cancel-button';
     cancelButton.textContent = 'Cancel';
     cancelButton.addEventListener('click', () => {
-        modalContainer.style.display = 'none';
+        container.style.display = 'none';
     });
     modalButtons.appendChild(cancelButton);
 
     form.appendChild(modalButtons);
     modalContent.appendChild(form);
-    modalContainer.appendChild(modalContent);
+    container.appendChild(modalContent);
 
     const firstInput = modalContent.querySelector('input, textarea');
     if (firstInput) firstInput.focus();
@@ -124,8 +131,10 @@ export function openModal(title, fields, currentValues = {}, onSubmit) {
 
 export function showAlert(message) {
     return new Promise((resolve) => {
-        modalContainer.innerHTML = '';
-        modalContainer.style.display = 'flex';
+        const container = getModalContainer();
+        if (!container) return resolve();
+        container.innerHTML = '';
+        container.style.display = 'flex';
 
         const modalContent = document.createElement('div');
         modalContent.className = 'modal-content';
@@ -142,21 +151,23 @@ export function showAlert(message) {
         okButton.className = 'save-button';
         okButton.textContent = 'OK';
         okButton.addEventListener('click', () => {
-            modalContainer.style.display = 'none';
+            container.style.display = 'none';
             resolve();
         });
         modalButtons.appendChild(okButton);
 
         modalContent.appendChild(modalButtons);
-        modalContainer.appendChild(modalContent);
+        container.appendChild(modalContent);
         okButton.focus();
     });
 }
 
 export function showConfirm(message) {
     return new Promise((resolve) => {
-        modalContainer.innerHTML = '';
-        modalContainer.style.display = 'flex';
+        const container = getModalContainer();
+        if (!container) return resolve(false);
+        container.innerHTML = '';
+        container.style.display = 'flex';
 
         const modalContent = document.createElement('div');
         modalContent.className = 'modal-content';
@@ -173,7 +184,7 @@ export function showConfirm(message) {
         okButton.className = 'save-button';
         okButton.textContent = 'Confirm';
         okButton.addEventListener('click', () => {
-            modalContainer.style.display = 'none';
+            container.style.display = 'none';
             resolve(true);
         });
 
@@ -181,7 +192,7 @@ export function showConfirm(message) {
         cancelButton.className = 'cancel-button';
         cancelButton.textContent = 'Cancel';
         cancelButton.addEventListener('click', () => {
-            modalContainer.style.display = 'none';
+            container.style.display = 'none';
             resolve(false);
         });
 
@@ -189,15 +200,17 @@ export function showConfirm(message) {
         modalButtons.appendChild(okButton);
 
         modalContent.appendChild(modalButtons);
-        modalContainer.appendChild(modalContent);
+        container.appendChild(modalContent);
         okButton.focus();
     });
 }
 
 export function showPrompt(message, defaultValue = '') {
     return new Promise((resolve) => {
-        modalContainer.innerHTML = '';
-        modalContainer.style.display = 'flex';
+        const container = getModalContainer();
+        if (!container) return resolve(null);
+        container.innerHTML = '';
+        container.style.display = 'flex';
 
         const modalContent = document.createElement('div');
         modalContent.className = 'modal-content';
@@ -221,7 +234,7 @@ export function showPrompt(message, defaultValue = '') {
         okButton.textContent = 'OK';
         
         const submit = () => {
-            modalContainer.style.display = 'none';
+            container.style.display = 'none';
             resolve(input.value);
         };
 
@@ -234,7 +247,7 @@ export function showPrompt(message, defaultValue = '') {
         cancelButton.className = 'cancel-button';
         cancelButton.textContent = 'Cancel';
         cancelButton.addEventListener('click', () => {
-            modalContainer.style.display = 'none';
+            container.style.display = 'none';
             resolve(null);
         });
 
@@ -242,7 +255,7 @@ export function showPrompt(message, defaultValue = '') {
         modalButtons.appendChild(okButton);
 
         modalContent.appendChild(modalButtons);
-        modalContainer.appendChild(modalContent);
+        container.appendChild(modalContent);
         input.focus();
         input.select();
     });
@@ -250,8 +263,10 @@ export function showPrompt(message, defaultValue = '') {
 
 export function showSelectionModal(message, options) {
     return new Promise((resolve) => {
-        modalContainer.innerHTML = '';
-        modalContainer.style.display = 'flex';
+        const container = getModalContainer();
+        if (!container) return resolve(null);
+        container.innerHTML = '';
+        container.style.display = 'flex';
 
         const modalContent = document.createElement('div');
         modalContent.className = 'modal-content';
@@ -291,7 +306,7 @@ export function showSelectionModal(message, options) {
                 <span style="font-size: 0.7em; text-align: center; word-break: break-all;">${opt.replace('.svg', '')}</span>
             `;
             item.onclick = () => {
-                modalContainer.style.display = 'none';
+                container.style.display = 'none';
                 resolve(opt);
             };
             item.onmouseenter = () => item.style.background = 'rgba(224, 222, 244, 0.1)';
@@ -308,12 +323,16 @@ export function showSelectionModal(message, options) {
         skipBtn.className = 'cancel-button';
         skipBtn.textContent = 'Use Default';
         skipBtn.onclick = () => {
-            modalContainer.style.display = 'none';
+            container.style.display = 'none';
             resolve(null);
         };
         modalButtons.appendChild(skipBtn);
 
         modalContent.appendChild(modalButtons);
-        modalContainer.appendChild(modalContent);
+        container.appendChild(modalContent);
     });
+}
+
+export function init() {
+    modalContainer = document.getElementById('modal-container');
 }
