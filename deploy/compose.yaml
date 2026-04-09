@@ -1,0 +1,35 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "80:8080"
+  lute:
+    image: ghcr.io/felix-1871/lute:latest
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./lute_data:/lute_data
+      - ./lute_backup:/lute_backup:ro
+  anki-desktop:
+    image: chrislongros/anki-desktop:latest
+    container_name: anki-desktop
+    ports:
+      - "3000:3000"    # HTTP
+      - "3001:3001"    # HTTPS (optional)
+    volumes:
+      - anki_data:/config
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+      # Optional: Custom sync server
+      # - ANKI_SYNC_SERVER=http://your-sync-server:8080
+    security_opt:
+      - seccomp=unconfined
+    shm_size: 1gb
+    restart: unless-stopped
+
+volumes:
+  anki_data:
