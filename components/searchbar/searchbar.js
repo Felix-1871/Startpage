@@ -1,44 +1,28 @@
+import { defaultSearchEngines } from '../../src/config/defaults.js';
+import { parseStorage } from '../../src/helpers.js';
 import { showAlert, showPrompt } from '../modals/modals.js';
 
-const defaultSearchEngines = {
-    'General': [
-        { value: 'ecosia', label: 'Ecosia', url: 'https://www.ecosia.org/search?q=', icon: 'ecosia.svg' },
-        { value: 'google', label: 'Google', url: 'https://www.google.com/search?q=', icon: 'google.svg' },
-        { value: 'duckduckgo', label: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=', icon: 'duckduckgo.svg' },
-    ],
-    'Dev': [
-        { value: 'arch_wiki', label: 'Arch', url: 'https://wiki.archlinux.org/index.php?title=Special%253ASearch&fulltext=1&search=', icon: 'archlinux.svg' },
-        { value: 'github', label: 'GitHub', url: 'https://github.com/search?q=', icon: 'github.svg' },
-        { value: 'stackoverflow', label: 'Stack Overflow', url: 'https://stackoverflow.com/search?q=', icon: 'stackoverflow.svg' },
-        { value: 'aur', label: 'AUR', url: 'https://aur.archlinux.org/packages?O=0&K=', icon: 'archlinux.svg' },
-    ],
-    'Media': [
-        { value: 'yt', label: 'Youtube', url: 'https://www.youtube.com/results?search_query=', icon: 'youtube.svg' },
-        { value: 'twitch', label: 'Twitch', url: 'https://www.twitch.tv/search?term=', icon: 'twitch.svg' },
-        { value: 'reddit', label: 'Reddit', url: 'https://www.reddit.com/search/?q=', icon: 'reddit.svg' },
-    ],
-    'Social': [
-        { value: 'discord_webhook', label: 'Discord', url: '', icon: 'discord.svg', isWebhook: true },
-    ]
-};
-
 export function init() {
-    const savedEngines = localStorage.getItem('searchEngines');
-    let searchEngines = savedEngines ? JSON.parse(savedEngines) : defaultSearchEngines;
+    const searchEngines = parseStorage('searchEngines', JSON.parse(JSON.stringify(defaultSearchEngines)));
 
     function setupCustomDropdown(dropdownElementId, hiddenInputId, listElementId, categories) {
         const dropdownInput = document.getElementById(dropdownElementId);
         const hiddenInput = document.getElementById(hiddenInputId);
         const dropdownList = document.getElementById(listElementId);
-        const dropdownContainer = dropdownInput.parentElement; 
 
-        if (!dropdownInput || !hiddenInput || !dropdownList || !dropdownContainer) {
+        if (!dropdownInput || !hiddenInput || !dropdownList) {
             console.error('Dropdown elements not found for:', dropdownElementId);
             return;
         }
 
-        dropdownList.innerHTML = ''; 
-        
+        const dropdownContainer = dropdownInput.parentElement;
+        if (!dropdownContainer) {
+            console.error('Dropdown container not found for:', dropdownElementId);
+            return;
+        }
+
+        dropdownList.innerHTML = '';
+
         Object.entries(categories).forEach(([categoryName, engines]) => {
             const categoryHeader = document.createElement('div');
             categoryHeader.classList.add('dropdown-category-header');
@@ -51,7 +35,7 @@ export function init() {
             engines.forEach(engine => {
                 const listItem = document.createElement('div');
                 listItem.classList.add('custom-dropdown-list-item');
-                
+
                 const icon = document.createElement('img');
                 icon.src = `img/icons/${engine.icon}`;
                 icon.classList.add('engine-icon');
@@ -65,9 +49,9 @@ export function init() {
                 listItem.addEventListener('click', () => {
                     dropdownInput.value = engine.label;
                     hiddenInput.value = engine.value;
-                    dropdownContainer.classList.remove('active'); 
-                    dropdownList.style.top = '100%'; 
-                    dropdownList.style.bottom = 'auto'; 
+                    dropdownContainer.classList.remove('active');
+                    dropdownList.style.top = '100%';
+                    dropdownList.style.bottom = 'auto';
                     localStorage.setItem('searchEngine.selected', engine.value);
                 });
                 gridContainer.appendChild(listItem);
@@ -76,8 +60,8 @@ export function init() {
         });
 
         dropdownInput.addEventListener('click', () => {
-            dropdownContainer.classList.toggle('active'); 
-            if (dropdownContainer.classList.contains('active')) { 
+            dropdownContainer.classList.toggle('active');
+            if (dropdownContainer.classList.contains('active')) {
                 const spaceBelow = window.innerHeight - dropdownContainer.getBoundingClientRect().bottom;
                 const spaceAbove = dropdownContainer.getBoundingClientRect().top;
                 const listHeight = dropdownList.scrollHeight;
@@ -92,16 +76,19 @@ export function init() {
             }
         });
 
-        document.addEventListener('click', (event) => {
+        const onDocumentClick = (event) => {
             if (!dropdownInput.contains(event.target) && !dropdownList.contains(event.target)) {
-                dropdownContainer.classList.remove('active'); 
-                dropdownList.style.top = '100%'; 
-                dropdownList.style.bottom = 'auto'; 
+                dropdownContainer.classList.remove('active');
+                dropdownList.style.top = '100%';
+                dropdownList.style.bottom = 'auto';
             }
-        });
+        };
+
+        document.addEventListener('click', onDocumentClick);
+        return () => document.removeEventListener('click', onDocumentClick);
     }
 
-    setupCustomDropdown(
+    const cleanupDropdown = setupCustomDropdown(
         'search-engine-select',
         'search-engine-select_hidden',
         'search-engine-select-dropdown-list',
@@ -140,7 +127,6 @@ export function init() {
                 if (!webhookUrl) {
                     webhookUrl = await showPrompt(`Please enter the Webhook URL for ${selectedEngine.label}:`);
                     if (webhookUrl) {
-                        
                         selectedEngine.url = webhookUrl;
                         localStorage.setItem('searchEngines', JSON.stringify(searchEngines));
                     }
@@ -149,7 +135,7 @@ export function init() {
                 if (webhookUrl) {
                     await sendToWebhook(webhookUrl, query);
                 }
-                mainInput.value = ''; 
+                mainInput.value = '';
                 return;
             }
 
@@ -179,11 +165,18 @@ export function init() {
         }
     }
 
-    mainInput.addEventListener('keydown', (event) => {
+    const onKeydown = (event) => {
         if (event.key === 'Enter') {
             performSearch();
         }
-    });
+    };
 
+    mainInput.addEventListener('keydown', onKeydown);
     searchArrow.addEventListener('click', performSearch);
+
+    return () => {
+        if (cleanupDropdown) cleanupDropdown();
+        mainInput.removeEventListener('keydown', onKeydown);
+        searchArrow.removeEventListener('click', performSearch);
+    };
 }

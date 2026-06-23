@@ -1,11 +1,5 @@
-import { ANKI_SETTINGS } from '../anki-xiehanzi-helpers.js';
-import { invoke, getStorage } from '../../../src/helpers.js';
-
-
-const link = document.createElement('link');
-link.rel = 'stylesheet';
-link.href = 'components/anki-xiehanzi/sentences/anki-sentences.css';
-document.head.appendChild(link);
+import { invoke, getStorage, shuffle } from '../../../src/helpers.js';
+import { escapeHtml } from '../../../src/dom-utils.js';
 
 let sentencesData = null;
 let indexByChar = null;
@@ -13,14 +7,6 @@ let cachedResults = [];
 let lastQueryKey = "";
 let sentenceOffset = 0;
 let isSentenceLoading = false;
-
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
 
 function buildCharIndex(data) {
     const index = Object.create(null);
@@ -87,21 +73,6 @@ export async function loadSentences(searchText, prefix = "front") {
 export function loadMoreSentences(searchText, prefix = "front") {
     if (!sentencesData || !indexByChar || !searchText) return;
 
-    
-    const getKey = (keyName) => {
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        return prefix + keyName;
-    };
 
     const settings = {
         limit: parseInt(getStorage(prefix + "no-of-sentence")) || 5,
@@ -162,18 +133,21 @@ export function loadMoreSentences(searchText, prefix = "front") {
     const showMean = getStorage(prefix + "text-meaning") !== "false";
 
     page.forEach(s => {
-        const div = document.createElement("div");
-        div.className = "sentence";
-        
-        let simplifiedHTML = s.simplified;
-        const regex = new RegExp(searchText, "g");
-        simplifiedHTML = simplifiedHTML.replace(regex, `<b>${searchText}</b>`);
+        const div = document.createElement('div');
+        div.className = 'sentence';
+
+        const escapedSimplified = escapeHtml(s.simplified);
+        const escapedSearch = escapeHtml(searchText);
+        const simplifiedHTML = escapedSimplified.replace(
+            new RegExp(escapedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+            `<b>${escapedSearch}</b>`
+        );
 
         div.innerHTML = `
             <div class="sen-card">
                 <div class="sen-sim" style="display:${showSim ? 'block' : 'none'}">${simplifiedHTML}</div>
-                <div class="sen-pin" style="display:${showPin ? 'block' : 'none'}">${s.pinyin}</div>
-                <div class="sen-eng" style="display:${showMean ? 'block' : 'none'}">${s.english || ""}</div>
+                <div class="sen-pin" style="display:${showPin ? 'block' : 'none'}">${escapeHtml(s.pinyin)}</div>
+                <div class="sen-eng" style="display:${showMean ? 'block' : 'none'}">${escapeHtml(s.english || '')}</div>
             </div>
         `;
         sentencesGrid.appendChild(div);

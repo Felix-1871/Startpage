@@ -1,5 +1,5 @@
 import { openModal } from '../modals/modals.js';
-import { getStorage, setStorage, showHide, invoke } from '../../src/helpers.js';
+import { getStorage, setStorage, showHide, parseStorage } from '../../src/helpers.js';
 
 export const ANKI_SETTINGS = {
     "char_zhuyin": { label: 'Show Zhuyin', key: 'backtext-zhuyin', default: 'false', type: 'select' },
@@ -16,7 +16,7 @@ export const ANKI_SETTINGS = {
 
 export function loadSettingsForDeck(deckName) {
     if (!deckName) return {};
-    const saved = JSON.parse(localStorage.getItem(`anki.settings.${deckName}`) || "{}");
+    const saved = parseStorage(`anki.settings.${deckName}`, {});
     
     const settings = {};
     for (const name in ANKI_SETTINGS) {
@@ -93,7 +93,7 @@ export function openAnkiSettings(deckName, onComplete) {
         fields.push(field);
     }
 
-    const saved = JSON.parse(localStorage.getItem(`anki.settings.${deckName}`) || "{}");
+    const saved = parseStorage(`anki.settings.${deckName}`, {});
     const currentValues = {};
     for (const name in ANKI_SETTINGS) {
         currentValues[name] = saved[name] !== undefined ? saved[name] : ANKI_SETTINGS[name].default;
