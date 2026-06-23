@@ -9,18 +9,20 @@ services:
       - NGINX_PORT=80
 
   lute:
-    image: ghcr.io/felix-1871/lute:latest
+    # Pin to a specific release tag for reproducible deploys; update intentionally.
+    image: ghcr.io/felix-1871/lute:3.7.0
     ports:
       - "5001:5001"
     volumes:
       - ./lute_data:/lute_data
       - ./lute_backup:/lute_backup
   anki-desktop:
+    # chrislongros/anki-desktop auto-fetches latest Anki; pinned tags are not reliable for this image.
     image: chrislongros/anki-desktop:latest
     container_name: anki-desktop
     ports:
-      - "3000:3000"    # HTTP
-      - "3001:3001"    # HTTPS (optional)
+      - "3000:3000"
+      - "3001:3001"
     volumes:
       - ./anki_data:/config
     environment:
@@ -29,6 +31,8 @@ services:
       - TZ=Europe/Berlin
       - DOCKER_MODS=linuxserver/mods:universal-package-install
       - INSTALL_PACKAGES=fonts-noto-cjk
+    # seccomp=unconfined is required for Anki Desktop GUI/audio in this container image.
+    # This weakens syscall filtering; only use on trusted local/dev hosts.
     security_opt:
       - seccomp=unconfined
     shm_size: 1gb

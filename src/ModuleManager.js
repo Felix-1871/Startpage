@@ -1,7 +1,8 @@
 export class ModuleManager {
     constructor() {
-        this.activeModules = new Map(); 
-        this.registry = []; 
+        this.activeModules = new Map();
+        this.registry = [];
+        this.cleanups = new Map();
     }
 
     registerModule(name, path, description, slots) {
@@ -19,23 +20,16 @@ export class ModuleManager {
 
     async loadModule(name, path, targetSelector) {
         if (this.activeModules.has(name)) {
-            
-            
             return;
         }
 
         try {
-            
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = `${path}/${name}.css`;
-            link.id = `style-${name}`;
-            document.head.appendChild(link);
+            await this.loadCSS(name, path);
 
-            
             const response = await fetch(`${path}/${name}.html`);
+            if (!response.ok) throw new Error(`Failed to load ${path}/${name}.html`);
             const html = await response.text();
-            
+
             const target = document.querySelector(targetSelector);
             if (target) {
                 target.innerHTML = html;
@@ -43,10 +37,12 @@ export class ModuleManager {
                 console.warn(`Target container ${targetSelector} not found for module ${name}`);
             }
 
-            
             const module = await import(`../${path}/${name}.js`);
             if (module.init) {
-                module.init();
+                const cleanup = await module.init(this);
+                if (typeof cleanup === 'function') {
+                    this.cleanups.set(name, cleanup);
+                }
             }
 
             this.activeModules.set(name, { path, targetSelector });
@@ -59,11 +55,19 @@ export class ModuleManager {
         const info = this.activeModules.get(name);
         if (!info) return;
 
-        
+        const cleanup = this.cleanups.get(name);
+        if (cleanup) {
+            try {
+                cleanup();
+            } catch (error) {
+                console.error(`Cleanup failed for module ${name}:`, error);
+            }
+            this.cleanups.delete(name);
+        }
+
         const link = document.getElementById(`style-${name}`);
         if (link) link.remove();
 
-        
         const target = document.querySelector(info.targetSelector);
         if (target) target.innerHTML = '';
 

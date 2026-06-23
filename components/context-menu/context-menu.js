@@ -1,103 +1,33 @@
-import { linkData, renderCategories, renderLinks, syncLinksFromJson, syncLinksOverwrite, getSyncChanges, applyChange } from '../tabs/tabs.js';
-import { findBestIcon } from '../../src/icon-manager.js';
+import { linkData, renderCategories, renderLinks } from '../tabs/tabs.js';
+import { defaultContextMenuConfig } from '../../src/config/defaults.js';
+import { parseStorage } from '../../src/helpers.js';
+import { escapeHtml } from '../../src/dom-utils.js';
 import { openLinkModal } from '../../src/link-manager.js';
 import { bookmarks, renderBookmarks, saveBookmarks } from '../bookmarks/bookmarks.js';
-import { openModal, showAlert, showConfirm, showPrompt } from '../modals/modals.js';
+import { openModal, showConfirm } from '../modals/modals.js';
 import { updateAnkiStats } from '../anki/anki.js';
 import { renderLute } from '../lute/lute.js';
+import {
+    saveAndRefresh,
+    showSyncModalQueue,
+    updateSyncTimer,
+    initSyncService,
+    runInteractiveSync,
+    runFullSync,
+    performAutoSync,
+    stopSyncTimer,
+} from '../../src/sync-service.js';
+
+export { saveAndRefresh, showSyncModalQueue, updateSyncTimer, runInteractiveSync, runFullSync };
 
 let contextMenu;
-let modalContainer;
-
-function saveLinkData() {
-    localStorage.setItem('linkData', JSON.stringify(linkData));
-}
 
 function loadLinkData() {
-    const storedLinkData = localStorage.getItem('linkData');
-    if (storedLinkData) {
+    const stored = parseStorage('linkData', null);
+    if (stored) {
         linkData.length = 0;
-        JSON.parse(storedLinkData).forEach(item => linkData.push(item));
+        stored.forEach(item => linkData.push(item));
     }
-}
-
-async function performAutoSync() {
-    const success = await syncLinksFromJson();
-    if (success) {
-        saveAndRefresh();
-    }
-}
-
-function saveAndRefresh() {
-    saveLinkData();
-    const activeCategoryItem = document.querySelector(".category-item.active");
-    const activeIndex = activeCategoryItem ? parseInt(activeCategoryItem.dataset.index) : 0;
-    renderCategories(activeIndex);
-    renderLinks(activeIndex < linkData.length ? activeIndex : 0);
-}
-
-async function showSyncModalQueue(changes) {
-    if (changes.length === 0) {
-        await showAlert('No changes detected.');
-        return;
-    }
-
-    let index = 0;
-
-    async function showNext() {
-        if (index >= changes.length) {
-            saveAndRefresh();
-            modalContainer.style.display = 'none'; 
-            contextMenu.style.display = 'none'; 
-            await showAlert('Sync complete!');
-            return;
-        }
-
-        const change = changes[index];
-        modalContainer.innerHTML = '';
-        modalContainer.style.display = 'flex';
-
-        const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content';
-
-        const h3 = document.createElement('h3');
-        h3.textContent = `Sync Change (${index + 1}/${changes.length})`;
-        modalContent.appendChild(h3);
-
-        const p = document.createElement('p');
-        p.textContent = change.description;
-        p.style.marginBottom = '20px';
-        modalContent.appendChild(p);
-
-        const buttons = document.createElement('div');
-        buttons.className = 'modal-buttons';
-
-        const acceptBtn = document.createElement('button');
-        acceptBtn.textContent = 'Accept';
-        acceptBtn.className = 'save-button';
-        acceptBtn.onclick = () => { applyChange(change, 'accept'); index++; showNext(); };
-        buttons.appendChild(acceptBtn);
-
-        if (change.type === 'updated' || change.type === 'new') {
-            const keepBothBtn = document.createElement('button');
-            keepBothBtn.textContent = 'Keep Both';
-            keepBothBtn.className = 'save-button';
-            keepBothBtn.style.backgroundColor = '#c4a7e7';
-            keepBothBtn.onclick = () => { applyChange(change, 'keep-both'); index++; showNext(); };
-            buttons.appendChild(keepBothBtn);
-        }
-
-        const rejectBtn = document.createElement('button');
-        rejectBtn.textContent = 'Reject';
-        rejectBtn.className = 'cancel-button';
-        rejectBtn.onclick = () => { applyChange(change, 'reject'); index++; showNext(); };
-        buttons.appendChild(rejectBtn);
-
-        modalContent.appendChild(buttons);
-        modalContainer.appendChild(modalContent);
-    }
-
-    await showNext();
 }
 
 const ACTION_MAP = {
@@ -158,13 +88,19 @@ const ACTION_MAP = {
     },
     'update-anki': () => { updateAnkiStats(); contextMenu.style.display = 'none'; },
     'update-lute': () => { renderLute(); contextMenu.style.display = 'none'; },
-    'sync': async () => { const changes = await getSyncChanges(); showSyncModalQueue(changes); contextMenu.style.display = 'none'; },
+    'sync': async () => { await runInteractiveSync(); contextMenu.style.display = 'none'; },
+    'interactive-sync': async () => { await runInteractiveSync(); contextMenu.style.display = 'none'; },
+    'full-sync': async () => { await runFullSync(); contextMenu.style.display = 'none'; },
     'add-category': () => openModal('Add Category', [{ name: 'category', label: 'Name', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }], {}, (data) => { linkData.push({ category: data.category, icon: data.icon || './img/icons/default-category.svg', links: [] }); saveAndRefresh(); contextMenu.style.display = 'none'; }),
     'add-link': () => {
-        const activeIdx = document.querySelector('.category-item.active')?.dataset.index || 0;
-        openLinkModal('Add Link', { type: 'tab' }, (data) => { 
-            linkData[activeIdx].links.push(data); 
-            saveAndRefresh(); 
+        const activeIdx = parseInt(document.querySelector('.category-item.active')?.dataset.index ?? '0', 10);
+        openLinkModal('Add Link', { type: 'tab' }, (data) => {
+            if (!linkData[activeIdx]) {
+                console.warn('No active category to add link to');
+                return;
+            }
+            linkData[activeIdx].links.push(data);
+            saveAndRefresh();
             contextMenu.style.display = 'none';
         });
     },
@@ -181,49 +117,8 @@ const ACTION_MAP = {
 function renderContextMenu(type = 'global', index = null, subIndex = null) {
     if (!contextMenu) return;
     contextMenu.innerHTML = '';
-    
-    const configStr = localStorage.getItem('contextMenuConfig');
-    let config;
-    if (configStr) {
-        config = JSON.parse(configStr);
-    } else {
-        config = {
-            'global': [
-                { title: 'System Actions', items: [
-                    { id: 'settings', label: 'Settings', enabled: true },
-                    { id: 'update-anki', label: 'Update Anki', enabled: true },
-                    { id: 'update-lute', label: 'Update Lute', enabled: true }
-                ]},
-                { title: 'Sync Actions', items: [
-                    { id: 'sync', label: 'Sync', enabled: true }
-                ]},
-                { title: 'Add Actions', items: [
-                    { id: 'add-category', label: 'Add New Category', enabled: true },
-                    { id: 'add-link', label: 'Add New Link', enabled: true },
-                    { id: 'add-bookmark', label: 'Add New Bookmark', enabled: true }
-                ]}
-            ],
-            'category': [
-                { title: 'Category Actions', items: [
-                    { id: 'edit-category', label: 'Edit Category', enabled: true },
-                    { id: 'remove-category', label: 'Remove Category', enabled: true }
-                ]}
-            ],
-            'link': [
-                { title: 'Link Actions', items: [
-                    { id: 'edit-link', label: 'Edit Link', enabled: true },
-                    { id: 'remove-link', label: 'Remove Link', enabled: true }
-                ]}
-            ],
-            'bookmark': [
-                { title: 'Bookmark Actions', items: [
-                    { id: 'edit-bookmark', label: 'Edit Bookmark', enabled: true },
-                    { id: 'remove-bookmark', label: 'Remove Bookmark', enabled: true }
-                ]}
-            ]
-        };
-    }
 
+    const config = parseStorage('contextMenuConfig', defaultContextMenuConfig);
     const sections = config[type] || config['global'];
 
     sections.forEach(sec => {
@@ -232,14 +127,14 @@ function renderContextMenu(type = 'global', index = null, subIndex = null) {
 
         const div = document.createElement('div');
         div.className = 'context-menu-section';
-        div.innerHTML = `<div class="context-menu-title">${sec.title}</div>`;
+        div.innerHTML = `<div class="context-menu-title">${escapeHtml(sec.title)}</div>`;
         const ul = document.createElement('ul');
         enabledItems.forEach(item => {
             const li = document.createElement('li');
             li.textContent = item.label;
             li.className = 'context-menu-action-item';
-            li.onclick = (e) => { 
-                e.stopPropagation(); 
+            li.onclick = (e) => {
+                e.stopPropagation();
                 if (ACTION_MAP[item.id]) {
                     ACTION_MAP[item.id](index, subIndex);
                 }
@@ -251,42 +146,25 @@ function renderContextMenu(type = 'global', index = null, subIndex = null) {
     });
 }
 
-
-let syncIntervalId = null;
-
-export function updateSyncTimer() {
-    if (syncIntervalId) {
-        clearInterval(syncIntervalId);
-        syncIntervalId = null;
-    }
-
-    const autoEnabled = localStorage.getItem('sync.autoEnabled') !== 'false';
-    const interval = parseInt(localStorage.getItem('sync.interval') || '3600000');
-
-    if (autoEnabled) {
-        syncIntervalId = setInterval(performAutoSync, interval);
-    }
-}
-
 export function init() {
     contextMenu = document.getElementById('context-menu');
-    modalContainer = document.getElementById('modal-container');
+    const modalContainer = document.getElementById('modal-container');
 
+    initSyncService({ contextMenu, modalContainer });
     loadLinkData();
-    
+
     const autoEnabled = localStorage.getItem('sync.autoEnabled') !== 'false';
     if (autoEnabled) {
-        performAutoSync(); 
+        performAutoSync();
     }
-    
+
     renderCategories();
     renderLinks(0);
-
     updateSyncTimer();
 
-    document.addEventListener('contextmenu', (e) => {
+    const onContextMenu = (e) => {
         e.preventDefault();
-        
+
         const categoryItem = e.target.closest('.category-item');
         const glassLink = e.target.closest('.glass-link');
         const bookmarkItem = e.target.closest('.bookmark-item');
@@ -301,14 +179,14 @@ export function init() {
         } else {
             renderContextMenu();
         }
-        
+
         contextMenu.style.display = 'flex';
         contextMenu.style.alignContent = 'flex-start';
         contextMenu.style.width = 'fit-content';
         contextMenu.style.height = 'auto';
         contextMenu.style.maxHeight = 'none';
         contextMenu.style.overflow = 'visible';
-        
+
         const sections = contextMenu.querySelectorAll('.context-menu-section');
         sections.forEach(s => {
             s.style.width = '200px';
@@ -341,11 +219,20 @@ export function init() {
 
         contextMenu.style.top = `${top}px`;
         contextMenu.style.left = `${left}px`;
-    });
+    };
 
-    document.addEventListener('click', (e) => {
+    const onDocumentClick = (e) => {
         if (contextMenu && !contextMenu.contains(e.target)) {
             contextMenu.style.display = 'none';
         }
-    });
+    };
+
+    document.addEventListener('contextmenu', onContextMenu);
+    document.addEventListener('click', onDocumentClick);
+
+    return () => {
+        stopSyncTimer();
+        document.removeEventListener('contextmenu', onContextMenu);
+        document.removeEventListener('click', onDocumentClick);
+    };
 }

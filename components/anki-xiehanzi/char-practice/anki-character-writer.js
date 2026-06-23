@@ -1,13 +1,6 @@
+import { getStorage, setStorage, showHide, parseStorage } from '../../../src/helpers.js';
 
-import { getStorage, setStorage, showHide } from '../../../src/helpers.js';
-
-
-const link = document.createElement('link');
-link.rel = 'stylesheet';
-link.href = 'components/anki-xiehanzi/char-practice/anki-character-writer.css';
-document.head.appendChild(link);
-
-let characters = "";
+let characters = '';
 let frontBack = "front";
 
 export function initCharacterWriter(side) {
@@ -145,11 +138,10 @@ export function handleWriterPrefChange(id) {
 export function saveCharacterToList(char) {
     if (!char) return;
     const key = 'anki-writing-list';
-    let list = JSON.parse(localStorage.getItem(key) || '[]');
+    const list = parseStorage(key, []);
     
     if (!list.includes(char)) {
         list.push(char);
         localStorage.setItem(key, JSON.stringify(list));
-        console.log(`Saved character '${char}' to writing list.`);
     }
 }
