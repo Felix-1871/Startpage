@@ -22,14 +22,37 @@ let closeModuleSelector;
 let contextMenuConfig;
 let searchEngines;
 
+function isSearchEngine(engine) {
+    return engine && typeof engine === 'object'
+        && typeof engine.value === 'string'
+        && typeof engine.label === 'string'
+        && typeof engine.url === 'string'
+        && typeof engine.icon === 'string';
+}
+
 function isSearchEnginesShape(value) {
     return value && typeof value === 'object' && !Array.isArray(value)
-        && Object.values(value).every((engines) => Array.isArray(engines));
+        && Object.values(value).every((engines) => Array.isArray(engines) && engines.every(isSearchEngine));
+}
+
+function isContextMenuItem(item) {
+    return item && typeof item === 'object'
+        && typeof item.id === 'string'
+        && typeof item.label === 'string'
+        && typeof item.enabled === 'boolean';
+}
+
+function isContextMenuSection(section) {
+    return section && typeof section === 'object'
+        && typeof section.title === 'string'
+        && Array.isArray(section.items)
+        && section.items.every(isContextMenuItem);
 }
 
 function isContextMenuConfigShape(value) {
     return value && typeof value === 'object'
-        && ['global', 'category', 'link', 'bookmark'].every((key) => Array.isArray(value[key]));
+        && ['global', 'category', 'link', 'bookmark'].every((key) =>
+            Array.isArray(value[key]) && value[key].every(isContextMenuSection));
 }
 
 function loadSearchEngines() {

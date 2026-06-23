@@ -104,7 +104,6 @@ export function createAnkiCore({ storageKey, disconnectedMessage = 'Anki disconn
                         newScript.onerror = resolve;
                         document.head.appendChild(newScript);
                     });
-                    injectedScripts.push(newScript);
                 } else {
                     newScript.textContent = oldScript.textContent;
                     document.head.appendChild(newScript);
