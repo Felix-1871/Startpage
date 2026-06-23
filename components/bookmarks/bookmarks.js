@@ -1,4 +1,5 @@
 import { createLinkElement, setupHoverMenu } from '../../src/link-manager.js';
+import { parseStorage } from '../../src/helpers.js';
 
 export const bookmarks = [];
 
@@ -10,10 +11,10 @@ export function saveBookmarks() {
 }
 
 export function loadBookmarks() {
-    const stored = localStorage.getItem('bookmarks');
+    const stored = parseStorage('bookmarks', null);
     if (stored) {
         bookmarks.length = 0;
-        JSON.parse(stored).forEach(b => bookmarks.push(b));
+        stored.forEach(b => bookmarks.push(b));
     }
 }
 

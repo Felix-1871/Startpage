@@ -4,7 +4,30 @@ let simpleIcons = [];
 let simpleIconsPromise = null;
 let iconList = [];
 let iconListPromise = null;
+let iconIndex = null;
+let iconIndexSourceLength = -1;
 const iconCache = {};
+
+function buildIconIndex(iconFiles) {
+    const index = new Map();
+    iconFiles.forEach(iconFile => {
+        const iconName = iconFile.toLowerCase().replace('.svg', '');
+        if (!index.has(iconName)) {
+            index.set(iconName, []);
+        }
+        index.get(iconName).push(iconFile);
+    });
+    return index;
+}
+
+async function getIconIndex() {
+    const currentIconList = await getIconList();
+    if (!iconIndex || iconIndexSourceLength !== currentIconList.length) {
+        iconIndex = buildIconIndex(currentIconList);
+        iconIndexSourceLength = currentIconList.length;
+    }
+    return { currentIconList, index: iconIndex };
+}
 
 async function loadSimpleIcons() {
     if (simpleIconsPromise) return simpleIconsPromise;
@@ -30,6 +53,8 @@ export async function getIconList() {
             const response = await fetch('./icons.json');
             if (response.ok) {
                 iconList = await response.json();
+                iconIndex = null;
+                iconIndexSourceLength = -1;
             } else {
                 console.warn('icons.json not found, falling back to empty list. Run updateIconList.sh to generate it.');
             }
@@ -55,17 +80,17 @@ export async function findBestIcon(url, currentIcon = null, currentColor = null)
     }
 
     await loadSimpleIcons();
-    const currentIconList = await getIconList();
+    const { currentIconList, index } = await getIconIndex();
 
     try {
         const urlObj = new URL(url);
         const hostname = urlObj.hostname.toLowerCase().replace(/^www\./, '');
-        
+
         if (iconCache[hostname]) return iconCache[hostname];
 
         const hostnameWithDot = hostname.replace(/\./g, 'dot');
         const parts = hostname.split('.').filter(p => p !== 'com' && p !== 'org' && p !== 'net' && p !== 'io' && p !== 'pl');
-        
+
         const exactTerms = new Set([
             hostname,
             hostnameWithDot,
@@ -78,7 +103,6 @@ export async function findBestIcon(url, currentIcon = null, currentColor = null)
         if (hostname.includes('store.ubi')) exactTerms.add('ubisoft');
         if (hostname.includes('blizzard')) exactTerms.add('battledotnet');
 
-        
         if (parts.includes('google')) {
             parts.forEach(p => {
                 if (p !== 'google') {
@@ -88,22 +112,17 @@ export async function findBestIcon(url, currentIcon = null, currentColor = null)
             });
         }
 
-        const exactMatches = [];
+        const exactMatches = [
+            ...(index.get(hostname) || []),
+            ...(index.get(hostnameWithDot) || [])
+        ];
+
         const partialMatches = [];
 
-        
-        currentIconList.forEach(iconFile => {
-            const iconName = iconFile.toLowerCase().replace('.svg', '');
-            if (iconName === hostname || iconName === hostnameWithDot) {
-                exactMatches.push(iconFile);
-            }
-        });
-
-        
         if (exactMatches.length === 0) {
             currentIconList.forEach(iconFile => {
                 const iconName = iconFile.toLowerCase().replace('.svg', '');
-                
+
                 if (exactTerms.has(iconName)) {
                     exactMatches.push(iconFile);
                     return;

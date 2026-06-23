@@ -1,0 +1,15 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: |
+          find . -name '*.js' -not -path './lib/*' -print0 | xargs -0 -I{} node --check {}

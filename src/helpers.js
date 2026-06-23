@@ -1,3 +1,12 @@
+export function parseStorage(key, fallback, storageType = localStorage) {
+    try {
+        const raw = storageType.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+    } catch {
+        console.warn(`Corrupt localStorage key: ${key}`);
+        return fallback;
+    }
+}
 
 export async function invoke(action, version, params = {}) {
     const ANKI_CONNECT_URL = 'http://127.0.0.1:8765';
