@@ -18,10 +18,17 @@ function mimeForFilename(filename) {
 
 export function createAnkiCore({ storageKey, disconnectedMessage = 'Anki disconnected', onDeckSelected, processOptions = {} }) {
     let activeBlobUrls = [];
+    const injectedScripts = [];
 
     function clearBlobUrls() {
         activeBlobUrls.forEach(url => URL.revokeObjectURL(url));
         activeBlobUrls = [];
+        injectedScripts.forEach((script) => {
+            if (script.parentNode) {
+                script.parentNode.removeChild(script);
+            }
+        });
+        injectedScripts.length = 0;
     }
 
     async function processAnkiHtml(container, html) {
@@ -97,10 +104,12 @@ export function createAnkiCore({ storageKey, disconnectedMessage = 'Anki disconn
                         newScript.onerror = resolve;
                         document.head.appendChild(newScript);
                     });
+                    injectedScripts.push(newScript);
                 } else {
                     newScript.textContent = oldScript.textContent;
                     document.head.appendChild(newScript);
                 }
+                injectedScripts.push(newScript);
             } catch {
                 // script injection may fail for some Anki card content
             }

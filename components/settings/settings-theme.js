@@ -2,9 +2,7 @@ import { parseStorage } from '../../src/helpers.js';
 
 export function applyTheme() {
     const bg = localStorage.getItem('theme.backgroundImage');
-    if (bg) {
-        document.body.style.backgroundImage = bg === 'none' ? 'none' : `url('${bg}')`;
-    }
+    document.body.style.backgroundImage = bg && bg !== 'none' ? `url('${bg}')` : 'none';
 
     const colors = parseStorage('theme.colors', {});
     for (const [varName, value] of Object.entries(colors)) {

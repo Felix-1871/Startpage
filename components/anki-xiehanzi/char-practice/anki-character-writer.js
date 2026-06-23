@@ -1,4 +1,4 @@
-import { getStorage, setStorage, showHide } from '../../../src/helpers.js';
+import { getStorage, setStorage, showHide, parseStorage } from '../../../src/helpers.js';
 
 let characters = '';
 let frontBack = "front";
@@ -138,7 +138,7 @@ export function handleWriterPrefChange(id) {
 export function saveCharacterToList(char) {
     if (!char) return;
     const key = 'anki-writing-list';
-    let list = JSON.parse(localStorage.getItem(key) || '[]');
+    const list = parseStorage(key, []);
     
     if (!list.includes(char)) {
         list.push(char);

@@ -3,16 +3,21 @@ import { parseStorage } from '../../src/helpers.js';
 import { showAlert, showPrompt } from '../modals/modals.js';
 
 export function init() {
-    const searchEngines = parseStorage('searchEngines', defaultSearchEngines);
+    const searchEngines = parseStorage('searchEngines', JSON.parse(JSON.stringify(defaultSearchEngines)));
 
     function setupCustomDropdown(dropdownElementId, hiddenInputId, listElementId, categories) {
         const dropdownInput = document.getElementById(dropdownElementId);
         const hiddenInput = document.getElementById(hiddenInputId);
         const dropdownList = document.getElementById(listElementId);
-        const dropdownContainer = dropdownInput.parentElement;
 
-        if (!dropdownInput || !hiddenInput || !dropdownList || !dropdownContainer) {
+        if (!dropdownInput || !hiddenInput || !dropdownList) {
             console.error('Dropdown elements not found for:', dropdownElementId);
+            return;
+        }
+
+        const dropdownContainer = dropdownInput.parentElement;
+        if (!dropdownContainer) {
+            console.error('Dropdown container not found for:', dropdownElementId);
             return;
         }
 

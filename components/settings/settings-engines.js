@@ -1,5 +1,13 @@
 import { escapeHtml } from '../../src/dom-utils.js';
 
+function parseDragPayload(event) {
+    try {
+        return JSON.parse(event.dataTransfer.getData('text/plain'));
+    } catch {
+        return null;
+    }
+}
+
 function showEngineModal(searchEngines, saveSearchEngines, renderSearchEngineEditor, category, index = null) {
     const isEdit = index !== null;
     const engine = isEdit ? searchEngines[category][index] : { label: '', value: '', url: '', icon: '' };
@@ -276,13 +284,12 @@ export function createSearchEngineEditor(searchEngines, saveSearchEngines) {
                 engineEl.ondrop = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    if (data.type === 'engine') {
-                        const sourceEngine = searchEngines[data.category].splice(data.index, 1)[0];
-                        searchEngines[category].splice(eIdx, 0, sourceEngine);
-                        saveSearchEngines();
-                        renderSearchEngineEditor();
-                    }
+                    const data = parseDragPayload(e);
+                    if (!data || data.type !== 'engine') return;
+                    const sourceEngine = searchEngines[data.category].splice(data.index, 1)[0];
+                    searchEngines[category].splice(eIdx, 0, sourceEngine);
+                    saveSearchEngines();
+                    renderSearchEngineEditor();
                 };
 
                 enginesList.appendChild(engineEl);
@@ -300,7 +307,8 @@ export function createSearchEngineEditor(searchEngines, saveSearchEngines) {
 
             catEl.ondrop = (e) => {
                 e.preventDefault();
-                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                const data = parseDragPayload(e);
+                if (!data) return;
                 if (data.type === 'search-category') {
                     const entries = Object.entries(searchEngines);
                     const sourceIdx = entries.findIndex(([cat]) => cat === data.category);

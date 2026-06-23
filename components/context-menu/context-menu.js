@@ -14,6 +14,8 @@ import {
     initSyncService,
     runInteractiveSync,
     runFullSync,
+    performAutoSync,
+    stopSyncTimer,
 } from '../../src/sync-service.js';
 
 export { saveAndRefresh, showSyncModalQueue, updateSyncTimer, runInteractiveSync, runFullSync };
@@ -91,8 +93,12 @@ const ACTION_MAP = {
     'full-sync': async () => { await runFullSync(); contextMenu.style.display = 'none'; },
     'add-category': () => openModal('Add Category', [{ name: 'category', label: 'Name', type: 'text' }, { name: 'icon', label: 'Icon', type: 'select-icon' }], {}, (data) => { linkData.push({ category: data.category, icon: data.icon || './img/icons/default-category.svg', links: [] }); saveAndRefresh(); contextMenu.style.display = 'none'; }),
     'add-link': () => {
-        const activeIdx = document.querySelector('.category-item.active')?.dataset.index || 0;
+        const activeIdx = parseInt(document.querySelector('.category-item.active')?.dataset.index ?? '0', 10);
         openLinkModal('Add Link', { type: 'tab' }, (data) => {
+            if (!linkData[activeIdx]) {
+                console.warn('No active category to add link to');
+                return;
+            }
             linkData[activeIdx].links.push(data);
             saveAndRefresh();
             contextMenu.style.display = 'none';
@@ -138,14 +144,6 @@ function renderContextMenu(type = 'global', index = null, subIndex = null) {
         div.appendChild(ul);
         contextMenu.appendChild(div);
     });
-}
-
-async function performAutoSync() {
-    const { syncLinksFromJson } = await import('../tabs/tabs.js');
-    const success = await syncLinksFromJson();
-    if (success) {
-        saveAndRefresh();
-    }
 }
 
 export function init() {
@@ -233,6 +231,7 @@ export function init() {
     document.addEventListener('click', onDocumentClick);
 
     return () => {
+        stopSyncTimer();
         document.removeEventListener('contextmenu', onContextMenu);
         document.removeEventListener('click', onDocumentClick);
     };

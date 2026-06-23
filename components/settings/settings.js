@@ -22,8 +22,21 @@ let closeModuleSelector;
 let contextMenuConfig;
 let searchEngines;
 
+function isSearchEnginesShape(value) {
+    return value && typeof value === 'object' && !Array.isArray(value)
+        && Object.values(value).every((engines) => Array.isArray(engines));
+}
+
+function isContextMenuConfigShape(value) {
+    return value && typeof value === 'object'
+        && ['global', 'category', 'link', 'bookmark'].every((key) => Array.isArray(value[key]));
+}
+
 function loadSearchEngines() {
-    searchEngines = parseStorage('searchEngines', JSON.parse(JSON.stringify(defaultSearchEngines)));
+    const stored = parseStorage('searchEngines', null);
+    searchEngines = isSearchEnginesShape(stored)
+        ? stored
+        : JSON.parse(JSON.stringify(defaultSearchEngines));
 }
 
 function saveSearchEngines() {
@@ -31,7 +44,10 @@ function saveSearchEngines() {
 }
 
 function loadContextMenuConfig() {
-    contextMenuConfig = parseStorage('contextMenuConfig', JSON.parse(JSON.stringify(defaultContextMenuConfig)));
+    const stored = parseStorage('contextMenuConfig', null);
+    contextMenuConfig = isContextMenuConfigShape(stored)
+        ? stored
+        : JSON.parse(JSON.stringify(defaultContextMenuConfig));
 }
 
 function saveContextMenuConfig() {

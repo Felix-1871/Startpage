@@ -100,7 +100,7 @@ export async function showSyncModalQueue(changes) {
     await showNext();
 }
 
-async function performAutoSync() {
+export async function performAutoSync() {
     const success = await syncLinksFromJson();
     if (success) {
         saveAndRefresh();

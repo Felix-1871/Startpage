@@ -274,8 +274,10 @@ export function init() {
 
     globalHoverMenu = setupHoverMenu();
 
+    let createdHoverMenu = false;
     globalCategoryHoverMenu = document.getElementById('global-category-hover-menu');
     if (!globalCategoryHoverMenu) {
+        createdHoverMenu = true;
         globalCategoryHoverMenu = document.createElement('div');
         globalCategoryHoverMenu.id = 'global-category-hover-menu';
         globalCategoryHoverMenu.className = 'category-hover-menu';
@@ -285,37 +287,53 @@ export function init() {
         document.body.appendChild(globalCategoryHoverMenu);
     }
 
-    if (categoryList) {
-        categoryList.addEventListener('wheel', (e) => {
-            if (e.deltaY !== 0) {
-                e.preventDefault();
-                categoryList.scrollLeft += e.deltaY;
-            }
-        });
+    const onWheel = (e) => {
+        if (e.deltaY !== 0) {
+            e.preventDefault();
+            categoryList.scrollLeft += e.deltaY;
+        }
+    };
 
-        categoryList.addEventListener('click', (e) => {
-            const categoryItem = e.target.closest('.category-item');
-            if (categoryItem) {
-                const previouslyActive = document.querySelector('.category-item.active');
-                if (previouslyActive) {
-                    previouslyActive.classList.remove('active');
-                }
-                categoryItem.classList.add('active');
-                renderLinks(categoryItem.dataset.index);
+    const onCategoryClick = (e) => {
+        const categoryItem = e.target.closest('.category-item');
+        if (categoryItem) {
+            const previouslyActive = document.querySelector('.category-item.active');
+            if (previouslyActive) {
+                previouslyActive.classList.remove('active');
             }
-        });
-    }
+            categoryItem.classList.add('active');
+            renderLinks(categoryItem.dataset.index);
+        }
+    };
 
-    window.addEventListener('resize', () => {
+    const onResize = () => {
         checkCategoryOverflow();
         const activeCategoryItem = document.querySelector('.category-item.active');
         if (activeCategoryItem) {
             renderLinks(activeCategoryItem.dataset.index);
         }
-    });
+    };
+
+    if (categoryList) {
+        categoryList.addEventListener('wheel', onWheel);
+        categoryList.addEventListener('click', onCategoryClick);
+    }
+
+    window.addEventListener('resize', onResize);
 
     if (linkData.length > 0) {
         renderCategories();
         renderLinks(0);
     }
+
+    return () => {
+        if (categoryList) {
+            categoryList.removeEventListener('wheel', onWheel);
+            categoryList.removeEventListener('click', onCategoryClick);
+        }
+        window.removeEventListener('resize', onResize);
+        if (createdHoverMenu && globalCategoryHoverMenu?.parentNode) {
+            globalCategoryHoverMenu.parentNode.removeChild(globalCategoryHoverMenu);
+        }
+    };
 }

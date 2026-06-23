@@ -57,7 +57,11 @@ export class ModuleManager {
 
         const cleanup = this.cleanups.get(name);
         if (cleanup) {
-            cleanup();
+            try {
+                cleanup();
+            } catch (error) {
+                console.error(`Cleanup failed for module ${name}:`, error);
+            }
             this.cleanups.delete(name);
         }
 

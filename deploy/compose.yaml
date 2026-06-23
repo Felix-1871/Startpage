@@ -17,8 +17,8 @@ services:
       - ./lute_data:/lute_data
       - ./lute_backup:/lute_backup
   anki-desktop:
-    # Pin to a specific release tag for reproducible deploys; update intentionally.
-    image: chrislongros/anki-desktop:24.11
+    # chrislongros/anki-desktop auto-fetches latest Anki; pinned tags are not reliable for this image.
+    image: chrislongros/anki-desktop:latest
     container_name: anki-desktop
     ports:
       - "3000:3000"

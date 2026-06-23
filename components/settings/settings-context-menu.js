@@ -1,5 +1,13 @@
 import { escapeHtml } from '../../src/dom-utils.js';
 
+function parseDragPayload(event) {
+    try {
+        return JSON.parse(event.dataTransfer.getData('text/plain'));
+    } catch {
+        return null;
+    }
+}
+
 export function renderContextMenuEditor(contextMenuConfig, saveContextMenuConfig) {
     const listContainer = document.getElementById('context-menu-categories-list');
     const typeSelector = document.getElementById('context-menu-type-selector');
@@ -79,13 +87,12 @@ export function renderContextMenuEditor(contextMenuConfig, saveContextMenuConfig
             itemEl.ondrop = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                if (data.type === 'item') {
-                    const sourceItem = contextMenuConfig[currentType][data.sIdx].items.splice(data.iIdx, 1)[0];
-                    contextMenuConfig[currentType][sIdx].items.splice(iIdx, 0, sourceItem);
-                    saveContextMenuConfig();
-                    renderContextMenuEditor(contextMenuConfig, saveContextMenuConfig);
-                }
+                const data = parseDragPayload(e);
+                if (!data || data.type !== 'item') return;
+                const sourceItem = contextMenuConfig[currentType][data.sIdx].items.splice(data.iIdx, 1)[0];
+                contextMenuConfig[currentType][sIdx].items.splice(iIdx, 0, sourceItem);
+                saveContextMenuConfig();
+                renderContextMenuEditor(contextMenuConfig, saveContextMenuConfig);
             };
 
             itemsList.appendChild(itemEl);
@@ -103,7 +110,8 @@ export function renderContextMenuEditor(contextMenuConfig, saveContextMenuConfig
 
         secEl.ondrop = (e) => {
             e.preventDefault();
-            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const data = parseDragPayload(e);
+            if (!data) return;
             if (data.type === 'section') {
                 const sourceSec = contextMenuConfig[currentType].splice(data.sIdx, 1)[0];
                 contextMenuConfig[currentType].splice(sIdx, 0, sourceSec);

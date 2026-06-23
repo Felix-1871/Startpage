@@ -26,8 +26,10 @@ export function init() {
         const todoInput = document.getElementById('todo-input');
         if (todoInput) {
             const addTodo = () => {
-                if (todoInput.value.trim() !== '') {
-                    todos.push({ text: todoInput.value.trim(), done: false });
+                const text = todoInput.value.trim();
+                if (text !== '') {
+                    todos.push({ text, done: false });
+                    todoInput.value = '';
                     saveTodos();
                     renderTodos();
                 }
