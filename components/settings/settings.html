@@ -5,6 +5,7 @@
             <li class="settings-category-item" data-category="modules">Modules</li>
             <li class="settings-category-item" data-category="theming">Theming</li>
             <li class="settings-category-item" data-category="tabs" id="settings-category-tabs">Tabs</li>
+            <li class="settings-category-item" data-category="notion" id="settings-category-notion">Notion</li>
             <li class="settings-category-item" data-category="anki" id="settings-category-anki-xiehanzi">Anki Xiehanzi</li>
             <li class="settings-category-item" data-category="lute" id="settings-category-lute">Lute</li>
             <li class="settings-category-item" data-category="searchbar" id="settings-category-searchbar">Search Bar</li>
@@ -119,6 +120,65 @@
                     <button id="hard-sync-btn" class="settings-btn" style="background-color: var(--love);">Hard Sync (Overwrite All)</button>
                 </div>
                 <p class="settings-description" style="margin-top: 10px; color: var(--love);">Warning: Hard Sync will delete all your local changes and strictly follow <code>tabs.json</code>.</p>
+            </div>
+        </div>
+        <div id="settings-content-notion" class="settings-section">
+            <div class="settings-header">
+                <h3>Notion Settings</h3>
+                <p>Connect to your Notion workspace via a local API proxy.</p>
+            </div>
+
+            <div class="settings-group">
+                <h4>Setup</h4>
+                <p class="settings-description">Create an integration at <a href="https://www.notion.so/my-integrations" target="_blank" rel="noopener">notion.so/my-integrations</a>, copy the token, and share pages with it. Start the proxy: <code>python3 scripts/notion-proxy.py</code></p>
+            </div>
+
+            <div class="settings-group">
+                <h4>Connection</h4>
+                <div class="settings-field">
+                    <label for="notion-token-input">Integration Token:</label>
+                    <input type="password" id="notion-token-input" class="anki-input" placeholder="secret_...">
+                </div>
+                <div class="settings-field" style="margin-top: 15px;">
+                    <label for="notion-proxy-url-input">Proxy URL:</label>
+                    <input type="text" id="notion-proxy-url-input" class="anki-input" placeholder="http://localhost:3001">
+                </div>
+                <button id="save-notion-settings-btn" class="settings-btn" style="margin-top: 10px;">Save Notion Settings</button>
+                <p id="notion-settings-status" class="status-msg"></p>
+            </div>
+
+            <div class="settings-group">
+                <h4>Display</h4>
+                <div class="settings-field" style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="notion-expand-toggle">Expand to full center (when in center-right):</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="notion-expand-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p class="settings-description">Hides the left glass pane and expands the Notion module to the full glass box width.</p>
+            </div>
+
+            <div class="settings-group">
+                <h4>Auto Refresh</h4>
+                <div class="settings-field" style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="notion-refresh-toggle">Enable Auto Refresh:</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="notion-refresh-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="settings-field" style="margin-top: 20px;">
+                    <label for="notion-refresh-interval">Refresh Interval:</label>
+                    <select id="notion-refresh-interval" class="anki-select">
+                        <option value="600000">Every 10 minutes</option>
+                        <option value="1800000">Every 30 minutes</option>
+                        <option value="3600000">Every hour</option>
+                        <option value="21600000">Every 6 hours</option>
+                        <option value="86400000">Every 24 hours</option>
+                    </select>
+                </div>
+                <button id="notion-manual-refresh-btn" class="settings-btn" style="margin-top: 15px;">Refresh Pages Now</button>
             </div>
         </div>
         <div id="settings-content-anki" class="settings-section">

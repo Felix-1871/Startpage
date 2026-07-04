@@ -120,13 +120,14 @@ export async function openSettings() {
         renderClockWeatherSettings();
         renderThemingSettings();
         renderTabsSyncSettings();
+        renderNotionSettings();
     } catch (error) {
         console.error('Failed to open settings:', error);
     }
 }
 
 function checkTabsVisibility() {
-    const modules = ['tabs', 'anki', 'anki-xiehanzi', 'lute', 'searchbar', 'clock-weather'];
+    const modules = ['tabs', 'notion', 'anki', 'anki-xiehanzi', 'lute', 'searchbar', 'clock-weather'];
     modules.forEach(mod => {
         const isActive = moduleManager.activeModules.has(mod);
         const categoryItem = document.getElementById(`settings-category-${mod}`);
@@ -1039,6 +1040,69 @@ function renderTabsSyncSettings() {
             
             import('../context-menu/context-menu.js').then(m => m.saveAndRefresh());
         }
+    };
+}
+
+function renderNotionSettings() {
+    const tokenInput = document.getElementById('notion-token-input');
+    const proxyInput = document.getElementById('notion-proxy-url-input');
+    const expandToggle = document.getElementById('notion-expand-toggle');
+    const refreshToggle = document.getElementById('notion-refresh-toggle');
+    const refreshInterval = document.getElementById('notion-refresh-interval');
+    const saveBtn = document.getElementById('save-notion-settings-btn');
+    const manualRefreshBtn = document.getElementById('notion-manual-refresh-btn');
+    const statusEl = document.getElementById('notion-settings-status');
+
+    if (!tokenInput) return;
+
+    tokenInput.value = localStorage.getItem('notion.token') || '';
+    proxyInput.value = localStorage.getItem('notion.proxyUrl') || 'http://localhost:3001';
+    expandToggle.checked = localStorage.getItem('notion.expandFullCenter') === 'true';
+    refreshToggle.checked = localStorage.getItem('notion.autoRefresh') !== 'false';
+    refreshInterval.value = localStorage.getItem('notion.refreshInterval') || '3600000';
+
+    saveBtn.onclick = () => {
+        localStorage.setItem('notion.token', tokenInput.value.trim());
+        localStorage.setItem('notion.proxyUrl', proxyInput.value.trim() || 'http://localhost:3001');
+        localStorage.setItem('notion.expandFullCenter', expandToggle.checked);
+        localStorage.setItem('notion.autoRefresh', refreshToggle.checked);
+        localStorage.setItem('notion.refreshInterval', refreshInterval.value);
+
+        statusEl.textContent = 'Settings saved.';
+        statusEl.style.color = 'var(--foam)';
+
+        import('../notion/notion.js').then(m => {
+            if (m.updateNotionLayout) m.updateNotionLayout();
+            if (m.restartRefreshTimer) m.restartRefreshTimer();
+            if (m.refreshPages) m.refreshPages();
+        });
+    };
+
+    expandToggle.onchange = () => {
+        localStorage.setItem('notion.expandFullCenter', expandToggle.checked);
+        import('../notion/notion.js').then(m => {
+            if (m.updateNotionLayout) m.updateNotionLayout();
+        });
+    };
+
+    refreshToggle.onchange = () => {
+        localStorage.setItem('notion.autoRefresh', refreshToggle.checked);
+    };
+
+    refreshInterval.onchange = () => {
+        localStorage.setItem('notion.refreshInterval', refreshInterval.value);
+    };
+
+    manualRefreshBtn.onclick = () => {
+        import('../notion/notion.js').then(async m => {
+            if (m.refreshPages) {
+                statusEl.textContent = 'Refreshing...';
+                statusEl.style.color = 'var(--iris)';
+                await m.refreshPages();
+                statusEl.textContent = 'Pages refreshed.';
+                statusEl.style.color = 'var(--foam)';
+            }
+        });
     };
 }
 

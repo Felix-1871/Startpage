@@ -1,0 +1,31 @@
+<div class="notion-root">
+  <div class="notion-header">
+    <span class="notion-title">Notion</span>
+    <span class="notion-status-dot" id="notion-status-dot" title="Proxy status"></span>
+  </div>
+  <div class="notion-body">
+    <div class="notion-list-panel" id="notion-list-panel">
+      <div class="notion-categories" id="notion-categories"></div>
+      <div class="notion-pages-list" id="notion-pages-list"></div>
+    </div>
+    <div class="notion-viewer-panel" id="notion-viewer-panel">
+      <div class="notion-viewer-nav">
+        <button type="button" class="notion-nav-btn" id="notion-refresh-btn" title="Refresh pages">Refresh</button>
+        <button type="button" class="notion-nav-btn" id="notion-open-tab-btn" title="Open in Notion" disabled>Open in Notion</button>
+      </div>
+      <div class="notion-viewer-content" id="notion-viewer-content">
+        <div class="notion-viewer-empty" id="notion-viewer-empty">
+          <p>Select a page to view</p>
+          <p class="notion-viewer-hint">Published pages embed read-only. Private pages open in Notion.</p>
+        </div>
+        <iframe id="notion-viewer-iframe" class="notion-viewer-iframe hidden" title="Notion page viewer"
+          sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-modals"></iframe>
+        <div class="notion-viewer-fallback hidden" id="notion-viewer-fallback">
+          <p class="notion-fallback-title" id="notion-fallback-title"></p>
+          <p class="notion-fallback-msg">This page cannot be embedded. Open it in Notion for full interaction.</p>
+          <a class="notion-fallback-link" id="notion-fallback-link" href="#" target="_blank" rel="noopener">Open in Notion</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

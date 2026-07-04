@@ -3,8 +3,9 @@ import { createLinkElement, setupHoverMenu } from '../../src/link-manager.js';
 
 export const linkData = [];
 
-let categoryList, linksGrid, categoriesHeader;
+let categoryList, linksGrid, categoriesHeader, tabsRoot;
 let globalHoverMenu, globalCategoryHoverMenu;
+let isSidebarLayout = false;
 
 export async function fetchExternalLinks() {
     const response = await fetch('tabs.json');
@@ -211,23 +212,7 @@ export function renderCategories(activeIndex = 0) {
         li.dataset.index = index;
         li.innerHTML = `<img src="${category.icon}" alt="${category.category}" class="category-icon"> <span class="category-text">${category.category}</span>`;
         categoryList.appendChild(li);
-
-        li.addEventListener("mouseenter", () => {
-            if (categoriesHeader.classList.contains('icons-only')) {
-                const rect = li.getBoundingClientRect();
-                globalCategoryHoverMenu.textContent = category.category;
-                globalCategoryHoverMenu.style.display = 'block';
-                
-                const top = rect.top - globalCategoryHoverMenu.offsetHeight - 5;
-                const left = rect.left + (rect.width / 2) - (globalCategoryHoverMenu.offsetWidth / 2);
-                
-                globalCategoryHoverMenu.style.top = `${top}px`;
-                globalCategoryHoverMenu.style.left = `${left}px`;
-            }
-        });
-        li.addEventListener("mouseleave", () => {
-            globalCategoryHoverMenu.style.display = 'none';
-        });
+        setupCategoryHover(li, category);
     });
     checkCategoryOverflow();
 }
@@ -245,21 +230,66 @@ export function renderLinks(categoryIndex) {
 
 function checkCategoryOverflow() {
     if (!categoriesHeader || !categoryList) return;
+
+    if (isSidebarLayout) {
+        categoriesHeader.classList.add('icons-only');
+        return;
+    }
+
     const containerWidth = categoriesHeader.clientWidth;
     categoriesHeader.classList.remove('icons-only');
-    
+
     const totalWidth = Array.from(categoryList.children).reduce((acc, child) => acc + child.offsetWidth, 0);
-    
+
     if (totalWidth > containerWidth || linkData.length > 7) {
         categoriesHeader.classList.add('icons-only');
     }
 }
 
+function applyLayoutVariant() {
+    if (!tabsRoot) return;
+    const slotId = tabsRoot.parentElement?.id;
+    isSidebarLayout = slotId === 'midcenterleft-target';
+
+    if (isSidebarLayout) {
+        tabsRoot.classList.add('layout-sidebar');
+    } else {
+        tabsRoot.classList.remove('layout-sidebar');
+    }
+}
+
+function setupCategoryHover(li, category) {
+    li.addEventListener('mouseenter', () => {
+        if (categoriesHeader.classList.contains('icons-only')) {
+            const rect = li.getBoundingClientRect();
+            globalCategoryHoverMenu.textContent = category.category;
+            globalCategoryHoverMenu.style.display = 'block';
+
+            if (isSidebarLayout) {
+                const top = rect.top + (rect.height / 2) - (globalCategoryHoverMenu.offsetHeight / 2);
+                const left = rect.right + 5;
+                globalCategoryHoverMenu.style.top = `${top}px`;
+                globalCategoryHoverMenu.style.left = `${left}px`;
+            } else {
+                const top = rect.top - globalCategoryHoverMenu.offsetHeight - 5;
+                const left = rect.left + (rect.width / 2) - (globalCategoryHoverMenu.offsetWidth / 2);
+                globalCategoryHoverMenu.style.top = `${top}px`;
+                globalCategoryHoverMenu.style.left = `${left}px`;
+            }
+        }
+    });
+    li.addEventListener('mouseleave', () => {
+        globalCategoryHoverMenu.style.display = 'none';
+    });
+}
+
 export function init() {
+    tabsRoot = document.querySelector('.tabs-root');
     categoryList = document.getElementById("category-list");
     linksGrid = document.getElementById("links-grid");
     categoriesHeader = document.querySelector('.categories-header');
 
+    applyLayoutVariant();
     globalHoverMenu = setupHoverMenu();
 
     globalCategoryHoverMenu = document.getElementById('global-category-hover-menu');
@@ -275,6 +305,7 @@ export function init() {
 
     if (categoryList) {
         categoryList.addEventListener('wheel', (e) => {
+            if (isSidebarLayout) return;
             if (e.deltaY !== 0) {
                 e.preventDefault();
                 categoryList.scrollLeft += e.deltaY;

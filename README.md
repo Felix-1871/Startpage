@@ -19,9 +19,29 @@
     - Streamlined code and added gui setup
     - Improved upon already existing elements
   
-## Sync
+ ## Sync
  The site will refresh links every hour (configurable), but you can refresh anytime you want using right click context menu. There are two types of syncing, full sync (will overwrite everything), or interactive sync where you will be prompted each time there's a conflict.
  It will try to automatically choose an icon and adapt the colour from simple-icons
+
+ ## Notion Integration
+ The Notion module provides a live list of pages from your workspace via the Notion API, with an inline viewer for published pages.
+
+ ### Setup
+ 1. Create an integration at [notion.so/my-integrations](https://www.notion.so/my-integrations) and copy the **Internal Integration Token**.
+ 2. In Notion, open each page or parent page you want visible and use **Share → Invite** to add your integration.
+ 3. Start the local API proxy (required — the Notion API blocks direct browser requests):
+    ```
+    python3 scripts/notion-proxy.py
+    ```
+ 4. Open **Settings → Notion**, paste your token, and click **Save Notion Settings**.
+
+ ### Viewing pages
+ - **Published pages** (`public_url` from the API) load in the embedded iframe (read-only).
+ - **Private pages** cannot be embedded; use **Open in Notion** for full editing.
+ - Enable **Expand to full center** in Notion settings when the module is in the center-right slot to use the full glass box width.
+
+ ### Tabs layout variant
+ When the **tabs** module is assigned to the center-left slot (via Settings → Modules), categories appear in a vertical scrollable sidebar with a 3-column link grid to the right.
 
  ## Setup
  1. Download an icon set (ie simple-icons) and add icons directory to /img
