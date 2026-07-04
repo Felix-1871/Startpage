@@ -9,7 +9,8 @@ async function initApp() {
     manager.registerModule('anki', 'components/anki', 'Basic Anki review using AnkiConnect.', ['midleft-target']);
     manager.registerModule('anki-xiehanzi', 'components/anki-xiehanzi', 'Chinese character practice and review using Anki.', ['midleft-target']);
     manager.registerModule('todo', 'components/todo', 'Simple todo list manager.', ['midcenterleft-target']);
-    manager.registerModule('tabs', 'components/tabs', 'Categorized bookmarks with JSON sync.', ['midcenterright-target']);
+    manager.registerModule('tabs', 'components/tabs', 'Categorized bookmarks with JSON sync.', ['midcenterleft-target', 'midcenterright-target']);
+    manager.registerModule('notion', 'components/notion', 'Live Notion page browser with inline viewer.', ['midcenterright-target', 'midcenterleft-target']);
     manager.registerModule('lute', 'components/lute', 'Lute reading integration.', ['midright-target']);
     manager.registerModule('bookmarks', 'components/bookmarks', 'A dock for your favorite bookmarks.', ['bottom-target']);
     

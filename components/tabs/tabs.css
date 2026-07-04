@@ -6,6 +6,68 @@
   overflow: visible; 
 }
 
+#midcenterleft-target {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tabs-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.tabs-root.layout-sidebar {
+  flex-direction: row;
+}
+
+.tabs-root.layout-sidebar .categories-header {
+  width: 72px;
+  flex-shrink: 0;
+  border-bottom: none;
+  border-right: 1px solid var(--border-strong);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.tabs-root.layout-sidebar #category-list {
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  white-space: normal;
+  width: 100%;
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: auto;
+  }
+}
+
+.tabs-root.layout-sidebar .category-item {
+  flex-direction: column;
+  padding: 8px 6px;
+  justify-content: center;
+  text-align: center;
+}
+
+.tabs-root.layout-sidebar .category-text {
+  display: none;
+}
+
+.tabs-root.layout-sidebar .category-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.tabs-root.layout-sidebar .links-grid {
+  flex: 1;
+  min-width: 0;
+}
+
 .categories-header {
   border-bottom: 1px solid var(--border-strong);
   color: var(--text);
